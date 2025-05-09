@@ -1,23 +1,212 @@
 "use client";
 
-import { useState } from "react";
-import { Search, Plus, MoveUpRight, ChevronRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import {
+  Search,
+  Plus,
+  MoveUpRight,
+  ChevronRight,
+  ArrowRight,
+} from "lucide-react";
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Area,
+} from "recharts";
 import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { RespiratoryChart } from "@/components/respiratory-chart";
-import { LungVisualization } from "@/components/lung-visualization";
+import { Progress } from "@/components/ui/progress";
 import { CourseManagement } from "@/components/courseManage";
+import Image from "next/image";
+
+// Import organ components
+import HeartComponent from "@/components/heart-component";
+import LiverComponent from "@/components/liver-component";
+import LungsModel from "@/components/lungs-model";
+
+// Other organ components will be imported here as they are created
+
+// Define types for weight trend data
+interface WeightTrendData {
+  name: string;
+  value: number;
+  change: number;
+}
+
+// Function to generate weight trend data
+const generateWeightTrendData = (): WeightTrendData[] => {
+  // Sample data points for the weight trend
+  return [
+    { name: "Week 1", value: 5, change: +5 }, // Week 1, starting point
+    { name: "Week 3", value: -8, change: -10 }, // Week 3, dip
+    { name: "Week 4", value: 7, change: +5 }, // Week 4, peak
+    { name: "Week 5", value: 3, change: -2 }, // Week 5, end point
+  ];
+};
+
+// Function to generate SVG path from data points
+const generatePath = (data: WeightTrendData[]): string => {
+  // Map data to coordinates
+  const points = data.map((point: WeightTrendData, index: number) => {
+    // Calculate x position based on index
+    const x = index * (270 / (data.length - 1));
+    // Calculate y position (invert the value since SVG y-axis is inverted)
+    const y = point.value;
+    return { x, y };
+  });
+
+  // Generate the SVG path string
+  let pathD = `M${points[0].x},${points[0].y}`;
+
+  // Create a smooth curve through the points
+  for (let i = 0; i < points.length - 1; i++) {
+    const x1 = points[i].x;
+    const y1 = points[i].y;
+    const x2 = points[i + 1].x;
+    const y2 = points[i + 1].y;
+
+    // Control points for the curve
+    const cpx1 = x1 + (x2 - x1) / 3;
+    const cpy1 = y1;
+    const cpx2 = x2 - (x2 - x1) / 3;
+    const cpy2 = y2;
+
+    pathD += ` C${cpx1},${cpy1} ${cpx2},${cpy2} ${x2},${y2}`;
+  }
+
+  return pathD;
+};
+
+// Function to create tooltip content
+const createTooltipContent = (point: WeightTrendData): string => {
+  const change = point.change > 0 ? `+${point.change}` : point.change;
+  return `${point.name}: ${change} kg`;
+};
+
+// Function to calculate BMI indicator position
+const calculateBmiPosition = (bmi: number): number => {
+  // BMI ranges
+  // Underweight: < 18.5
+  // Normal: 18.5 - 24.9
+  // Overweight: 25 - 29.9
+  // Obese: >= 30
+
+  if (bmi < 18.5) {
+    // Position in the underweight range (0-25%)
+    return (bmi / 18.5) * 25;
+  } else if (bmi < 25) {
+    // Position in the normal range (25-50%)
+    return 25 + ((bmi - 18.5) / 6.5) * 25;
+  } else if (bmi < 30) {
+    // Position in the overweight range (50-75%)
+    return 50 + ((bmi - 25) / 5) * 25;
+  } else {
+    // Position in the obese range (75-100%)
+    // Cap at 100%
+    return Math.min(75 + ((bmi - 30) / 10) * 25, 100);
+  }
+};
+
+// Custom tooltip component for the weight trend chart
+const CustomTooltip = ({ 
+  active, 
+  payload, 
+  label 
+}: { 
+  active?: boolean; 
+  payload?: any[]; 
+  label?: string 
+}) => {
+  if (active && payload && payload.length) {
+    const change =
+      payload[0].payload.change > 0
+        ? `+${payload[0].payload.change}`
+        : payload[0].payload.change;
+    return (
+      <div className="bg-white p-2 rounded-xl shadow-sm border border-gray-100">
+        <p className="text-xs font-medium text-blue-500">{`${label}: ${change} kg`}</p>
+      </div>
+    );
+  }
+  return null;
+};
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("overview");
+  const [animationComplete, setAnimationComplete] = useState(false);
+  const [selectedOrgan, setSelectedOrgan] = useState("heart");
+  const weightTrendData = generateWeightTrendData();
+
+  // Restore selected organ from localStorage on component mount
+  useEffect(() => {
+    const savedOrgan = localStorage.getItem("selectedOrgan");
+    if (savedOrgan) {
+      setSelectedOrgan(savedOrgan);
+    }
+  }, []);
+
+  // Save selected organ to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("selectedOrgan", selectedOrgan);
+  }, [selectedOrgan]);
+
+  // Trigger animation when component mounts
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setAnimationComplete(true);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []);
+  
+  // CSS for organ switcher circles
+  const organSwitcherStyle = `
+    .organ-switcher-circle {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      border-bottom: 4px solid #E5E7EB;
+      justify-content: center;
+      // box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+    }
+    .organ-switcher-circle:hover {
+      border-bottom: 2px solid #3b82f6;
+      transition: border 0.1s ease-in-out;
+    }
+
+    // .organ-switcher-circle.active {
+    //   border-bottom: 1px solid #3b82f6;
+    //   transform: translateY(-5px);
+    // }
+    
+    .organ-switcher-container {
+      position: relative;
+      z-index: 10;
+      margin-top: -30px;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(8px);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    }
+  `;
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="mx-auto max-w-7xl px-2 sm:px-4 md:px-6">
-        <header className="flex flex-col gap-4 mb-8">
-          {/* Top row: Logo and profile icons */}
+    <div className="min-h-screen bg-gray-200">
+      <style jsx>{organSwitcherStyle}</style>
+      <div className="h-full">
+        {/* <header className="flex flex-col gap-4 mb-8">
           <div className="flex justify-between items-center w-full">
             <div className="flex items-center gap-2">
               <div className="bg-blue-500 rounded-md p-1">
@@ -109,7 +298,6 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Bottom row: Tabs - full width on mobile, auto width on desktop */}
           <div className="w-full">
             <Tabs
               value={activeTab}
@@ -144,377 +332,214 @@ export default function Dashboard() {
               </TabsList>
             </Tabs>
           </div>
-        </header>
+        </header> */}
 
-        <main className="w-full overflow-x-hidden">
+        <main className="w-full h-full">
           {activeTab === "overview" ? (
-            <>
-              <div className="mb-6 px-2">
-                <h1 className="text-2xl md:text-3xl font-bold">Overview</h1>
-                <h2 className="text-xl md:text-3xl font-normal">
-                  Patient Health
-                </h2>
+            <div className="px-6 py-8 bg-gradient-to-b from-gray-200 to-white min-h-screen">
+          
+              {/* Digital Twin Navigation */}
+              <div className="flex justify-center items-center w-full mb-12">
+                <div className="flex bg-gray-100 rounded-full p-1 shadow-sm w-auto">
+                  <Button
+                    variant="ghost"
+                    className="rounded-full px-8 py-4 text-gray-700 hover:bg-transparent hover:text-gray-900 font-medium"
+                  >
+                    Overall Progress
+                  </Button>
+                  <Button 
+                    className="rounded-full px-8 py-4 bg-blue-500 text-white hover:bg-blue-600 font-medium"
+                  >
+                    Digital Twin
+                  </Button>
+                  <Button 
+                    variant="ghost"
+                    className="rounded-full px-8 py-4 text-gray-700 hover:bg-transparent hover:text-gray-900 font-medium"
+                    >
+                    Courses
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="rounded-full px-8 py-4 text-gray-700 hover:bg-transparent hover:text-gray-900 font-medium"
+                  >
+                    Upload
+                  </Button>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 px-2">
-                {/* Left column - Lung visualization */}
-                <div className="lg:col-span-5 relative">
-                  <div className="absolute top-4 left-4 z-10 bg-[#4569cd] rounded-full p-2 sm:p-3 shadow-sm">
-                    <div className="text-2xl sm:text-4xl font-light text-white">
-                      8%
+              {/* Main Content */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                {/* Left column - Organ visualization with organ switcher */}
+                <div className="lg:col-span-4 flex flex-col justify-center items-center mt-8">
+                  {/* Dynamic organ visualization based on selected organ */}
+                  {selectedOrgan === 'heart' && (
+                    <div className="relative w-full max-w-lg mb-6 mt-14">
+                      <div className="relative h-[400px] w-full flex items-center justify-center">
+                        <div className="absolute w-full h-full rounded-full bg-gradient-to-b from-pink-50 to-transparent opacity-30 z-0"></div>
+                        <Image
+                          src="/heart.png"
+                          alt="Heart 3D Model"
+                          width={350}
+                          height={350}
+                          className="object-contain z-10"
+                        />
+                      </div>
+                    </div>
+                  )}
+                  {selectedOrgan === 'lungs' && (
+                    <div className="relative w-full max-w-lg mb-6">
+                      <div className="relative h-[400px] w-full flex items-center justify-center">
+                        <div className="absolute w-full h-full rounded-full bg-gradient-to-b from-blue-50 to-transparent opacity-30 z-0"></div>
+                        <LungsModel />
+                      </div>
+                    </div>
+                  )}
+                  {selectedOrgan === 'liver' && (
+                    <div className="relative w-full max-w-lg mb-6 mt-[3.5rem]">
+                      <div className="relative h-[400px] w-full flex items-center justify-center">
+                        <div className="absolute w-full h-full rounded-full bg-gradient-to-b from-yellow-50 to-transparent opacity-30 z-0"></div>
+                        <Image
+                          src="/liver.png" /* Replace with liver.png when available */
+                          alt="Liver 3D Model"
+                          width={350}
+                          height={350}
+                          className="object-contain z-10"
+                        />
+                      </div>
+                    </div>
+                  )}
+                  {selectedOrgan === 'brain' && (
+                    <div className="relative w-full max-w-lg mb-6">
+                      <div className="relative h-[400px] w-full flex items-center justify-center">
+                        <div className="absolute w-full h-full rounded-full bg-gradient-to-b from-purple-50 to-transparent opacity-30 z-0"></div>
+                        <Image
+                          src="/heart.png" /* Replace with brain.png when available */
+                          alt="Brain 3D Model"
+                          width={350}
+                          height={350}
+                          className="object-contain z-10"
+                          style={{
+                            filter:
+                              "drop-shadow(0px 10px 15px rgba(128, 0, 255, 0.5))",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Organ Switcher Circles */}
+                  <div className="cursor-pointer w-full mt-20">
+                    <div className="flex justify-center items-center gap-8 w-full">
+                      <div 
+                        className={`organ-switcher-circle ${selectedOrgan === 'heart' ? 'active' : ''}`}
+                        onClick={() => setSelectedOrgan('heart')}
+                      >
+                        <Image
+                          src="/heart.png"
+                          alt="Heart"
+                          width={50}
+                          height={50}
+                          className="object-contain"
+                        />
+                      </div>
+                      <div 
+                        className={`organ-switcher-circle  ${selectedOrgan === 'lungs' ? 'active' : ''}`}
+                        onClick={() => setSelectedOrgan('lungs')}
+                      >
+                        <Image
+                          src="/lungs.png"
+                          alt="Lungs"
+                          width={50}
+                          height={50}
+                          className="object-contain"
+                        />
+                      </div>
+                      <div 
+                        className={`organ-switcher-circle  ${selectedOrgan === 'liver' ? 'active' : ''}`}
+                        onClick={() => setSelectedOrgan('liver')}
+                      >
+                        <Image
+                          src="/liver.png" /* Replace with liver.png when available */
+                          alt="Liver"
+                          width={50}
+                          height={50}
+                          className="object-contain"
+                        />
+                      </div>
+                      <div 
+                        className={`organ-switcher-circle  ${selectedOrgan === 'brain' ? 'active' : ''}`}
+                        onClick={() => setSelectedOrgan('brain')}
+                      >
+                        <Image
+                          src="/heart.png" /* Replace with brain.png when available */
+                          alt="Brain"
+                          width={50}
+                          height={50}
+                          className="object-contain"
+                        />
+                      </div>
                     </div>
                   </div>
+                </div>
 
-                  <div className="relative h-[400px] sm:h-[500px] md:h-[600px] w-full">
-                    <LungVisualization />
-                  </div>
-
-                  <Card className="absolute bottom-16 right-4 w-48 sm:w-64 shadow-md">
-                    <CardContent className="p-2 sm:p-3">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Avatar className="h-6 w-6">
-                          <AvatarImage
-                            src="/placeholder.svg?height=24&width=24"
-                            alt="User"
-                          />
-                          <AvatarFallback className="bg-blue-500 text-white text-xs">
-                            JD
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-gray-600 text-xs sm:text-sm">
-                          Dr. Mary
+                {/* Right column - Dynamic content based on selected organ */}
+                <div className="lg:col-span-8">
+                  {selectedOrgan === 'heart' && <HeartComponent />}
+                  {selectedOrgan === 'lungs' && (
+                    <div className="text-center p-8 bg-white rounded-3xl shadow-sm">
+                      <h3 className="text-2xl font-semibold mb-4">Lungs Component</h3>
+                      <p className="text-gray-600 mb-6">Lungs data will be displayed here. Create a separate LiverComponent for detailed implementation.</p>
+                    </div>
+                  )}
+                  {selectedOrgan === 'liver' && <LiverComponent />}
+                  {selectedOrgan === 'brain' && (
+                    <div className="text-center p-8 bg-white rounded-3xl shadow-sm">
+                      <h3 className="text-2xl font-semibold mb-4">Brain Component</h3>
+                      <p className="text-gray-600 mb-6">Brain data will be displayed here. Create a separate BrainComponent for detailed implementation.</p>
+                    </div>
+                  )}
+                  {/* <div className="flex justify-end mb-6">
+                    <div className="inline-flex items-center gap-6 bg-white rounded-full py-2 px-4 shadow-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-center w-6 h-6 rounded-full bg-red-100">
+                          <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
+                              stroke="#FF0000"
+                              strokeWidth="2"
+                            />
+                            <path
+                              d="M12 6V12L16 14"
+                              stroke="#FF0000"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                        </div>
+                        <span className="text-sm font-medium">
+                          2314 Kcal burned
                         </span>
                       </div>
-                      <div className="font-medium text-sm sm:text-base">
-                        Monday
+                      <div className="text-sm font-medium">
+                        2314 Kcal Consumed
                       </div>
-                      <div className="font-bold text-sm sm:text-base">
-                        10:00-11:30
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        General Consultation
-                      </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </div> */}
 
-                  <Card className="absolute bottom-4 left-4 w-32 sm:w-36 shadow-md bg-white">
-                    <CardContent className="p-2 sm:p-3 flex flex-col items-center">
-                      <div className="text-xs sm:text-sm font-medium text-gray-500">
-                        Heart rate
-                      </div>
-                      <div className="text-xl sm:text-2xl font-bold">96.5%</div>
-                      <div className="w-full h-12 sm:h-16 mt-2">
-                        <svg viewBox="0 0 100 30" className="w-full h-full">
-                          <path
-                            d="M0,15 Q10,5 20,15 T40,15 T60,15 T80,15 T100,15"
-                            fill="none"
-                            stroke="#3b82f6"
-                            strokeWidth="2"
-                          />
-                        </svg>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
+                  {/* Main Stats Grid */}
 
-                {/* Right column - Stats and cards */}
-                <div className="lg:col-span-7">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <Card className="shadow-sm">
-                      <CardContent className="p-3 sm:p-4">
-                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-0 mb-4">
-                          <h3 className="font-medium">Medication</h3>
-                          <div className="flex items-center gap-2">
-                            <div className="relative flex-1 sm:flex-none">
-                              {/* <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                              <input
-                                type="text"
-                                placeholder="Search..."
-                                className="pl-8 pr-2 py-1 text-sm rounded-md border border-gray-200 w-full sm:w-32 md:w-40"
-                              /> */}
-                            </div>
-                            <Button
-                              size="icon"
-                              variant="outline"
-                              className="h-8 w-8 rounded-full"
-                            >
-                              <Plus className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="outline"
-                              className="h-8 w-8"
-                            >
-                              <svg
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                              >
-                                <path
-                                  d="M4 21V8L12 2L20 8V21H4Z"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                              </svg>
-                            </Button>
-                          </div>
-                        </div>
 
-                        <div className="space-y-4">
-                          <div className="p-3 bg-gray-50 rounded-lg">
-                            <div className="flex justify-between items-center">
-                              <span className="text-gray-600">Paracetamol</span>
-                              <span className="font-bold text-xl">25%</span>
-                            </div>
-                          </div>
-                          <div className="p-3 bg-gray-50 rounded-lg">
-                            <div className="flex justify-between items-center">
-                              <span className="text-gray-600">Influenza</span>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="shadow-sm">
-                      <CardContent className="p-3 sm:p-4">
-                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-0 mb-2">
-                          <h3 className="font-medium">Scan</h3>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 gap-1 w-full sm:w-auto justify-between sm:justify-start"
-                          >
-                            Cardiology
-                            <MoveUpRight className="h-4 w-4" />
-                          </Button>
-                        </div>
-
-                        <div className="flex items-end gap-4 mt-4">
-                          <div>
-                            <div className="text-gray-500 text-sm">
-                              Respiratory
-                            </div>
-                            <div className="text-2xl font-bold">523</div>
-                          </div>
-                          <div className="flex-1 h-16">
-                            <RespiratoryChart />
-                          </div>
-                        </div>
-
-                        <div className="mt-4">
-                          <div className="text-gray-500 text-sm">Total</div>
-                          <div className="text-2xl font-bold">1,276</div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Card className="shadow-sm">
-                      <CardContent className="p-3 sm:p-4">
-                        <div className="flex items-center gap-2 mb-4">
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage
-                              src="/placeholder.svg?height=32&width=32"
-                              alt="William"
-                            />
-                            <AvatarFallback className="bg-blue-500 text-white">
-                              W
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="font-medium">William</span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="ml-auto h-8 w-8"
-                          >
-                            <svg
-                              width="16"
-                              height="16"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                d="M19 21V5C19 3.89543 18.1046 3 17 3H7C5.89543 3 5 3.89543 5 5V21L8.5 19L12 21L15.5 19L19 21Z"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                          </Button>
-                        </div>
-
-                        <div className="space-y-4">
-                          <div>
-                            <div className="text-gray-500 text-sm">
-                              Heart Rate
-                            </div>
-                            <div className="text-2xl sm:text-3xl font-bold">
-                              110{" "}
-                              <span className="text-base sm:text-lg font-normal">
-                                bpm
-                              </span>
-                            </div>
-                          </div>
-
-                          <div>
-                            <div className="text-gray-500 text-sm">
-                              Temperature
-                            </div>
-                            <div className="text-2xl sm:text-3xl font-bold">
-                              34.7°C
-                            </div>
-                          </div>
-
-                          <div>
-                            <div className="text-gray-500 text-sm">Blood</div>
-                            <div className="text-2xl sm:text-3xl font-bold">
-                              98%
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="mt-4 flex justify-end">
-                          <Button
-                            size="icon"
-                            className="rounded-full bg-blue-500 h-10 w-10"
-                          >
-                            <ChevronRight className="h-5 w-5" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="shadow-sm bg-gray-900 text-white relative overflow-hidden">
-                      <CardContent className="p-3 sm:p-4 relative z-10">
-                        <div className="flex justify-between">
-                          <div className="text-xs text-gray-400">
-                            Bisphosphonate drugs
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-8 w-8 rounded-full text-white hover:text-white hover:bg-white/20"
-                            >
-                              <svg
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                              >
-                                <circle
-                                  cx="12"
-                                  cy="12"
-                                  r="10"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                />
-                                <path
-                                  d="M12 8V16"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                />
-                                <path
-                                  d="M8 12H16"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                />
-                              </svg>
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-8 w-8 rounded-full text-white hover:text-white hover:bg-white/20"
-                            >
-                              <svg
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                              >
-                                <circle
-                                  cx="12"
-                                  cy="12"
-                                  r="10"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                />
-                                <path
-                                  d="M15 9L9 15"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                />
-                                <path
-                                  d="M9 9L15 15"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                  strokeLinecap="round"
-                                />
-                              </svg>
-                            </Button>
-                          </div>
-                        </div>
-
-                        <div className="mt-16 sm:mt-24">
-                          <h3 className="text-xl sm:text-2xl font-bold">
-                            Osteoporosis
-                          </h3>
-                        </div>
-
-                        <div className="mt-4 flex justify-between items-center">
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            className="rounded-full h-10 w-10 text-white hover:text-white hover:bg-white/20"
-                          >
-                            <svg
-                              width="20"
-                              height="20"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <circle
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                              />
-                              <path
-                                d="M8 12H16"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                              />
-                            </svg>
-                          </Button>
-                          <Button
-                            size="icon"
-                            className="rounded-full bg-white text-black h-10 w-10"
-                          >
-                            <MoveUpRight className="h-5 w-5" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
+                  {/* Bottom Stats Grid */}
+                  
                 </div>
               </div>
-            </>
+            </div>
           ) : activeTab === "courses" ? (
             <CourseManagement />
           ) : (

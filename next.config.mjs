@@ -1,3 +1,5 @@
+import path from 'path';
+
 let userConfig = undefined
 try {
   // try to import ESM first
@@ -26,6 +28,15 @@ const nextConfig = {
     webpackBuildWorker: true,
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,
+  },
+  webpack: (config) => {
+    // Add support for importing three.js modules
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'three': path.join(process.cwd(), 'node_modules/three'),
+    };
+    
+    return config;
   },
 }
 

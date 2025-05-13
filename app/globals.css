@@ -57,3 +57,276 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Inputbox styles */
+.inputbox {
+  position: relative;
+  margin-top: 10px;
+  width: 100%;
+}
+
+.inputbox input {
+  position: relative;
+  width: 100%;
+  padding: 20px 10px 10px;
+  background: transparent;
+  outline: none;
+  box-shadow: none;
+  border: none;
+  color: white;
+  font-size: 1em;
+  letter-spacing: 0.05em;
+  transition: 0.5s;
+  z-index: 10;
+}
+
+.inputbox span {
+  position: absolute;
+  left: 0;
+  padding: 20px 10px 10px;
+  font-size: 1em;
+  color: #1D4ED8;
+  letter-spacing: 0.05em;
+  transition: 0.5s;
+  pointer-events: none;
+}
+
+.inputbox input:valid ~span,
+.inputbox input:focus ~span {
+  color: #1D4ED8;
+  transform: translateX(-10px) translateY(-34px);
+  font-size: 0.75em;
+}
+
+.inputbox i {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 2px;
+  background:#1D4ED8;
+  border-radius: 4px;
+  transition: 0.5s;
+  pointer-events: none;
+  z-index: 9;
+}
+
+.inputbox input:valid ~i,
+.inputbox input:focus ~i {
+  height: 44px;
+}
+
+.dark .inputbox span {
+  color: #3B82F6;
+}
+
+.dark .inputbox input:valid ~span,
+.dark .inputbox input:focus ~span {
+  color: #3B82F6;
+}
+
+.dark .inputbox i {
+  background: #3B82F6;
+}
+
+/* File Upload Folder Animation */
+.file-upload-container {
+  --transition: 350ms;
+  --folder-W: 120px;
+  --folder-H: 80px;
+  margin-top: 80px !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 10px;
+  background: linear-gradient(135deg, #60a5fa, #2563eb);
+  border-radius: 15px;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+  height: calc(var(--folder-H) * 2);
+  position: relative;
+  width: 100%;
+  max-width: 250px;
+  margin: 1rem auto;
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.file-upload-dragging {
+  transform: scale(1.05);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+}
+
+.file-upload-dragging .folder {
+  animation-play-state: paused;
+}
+
+.folder {
+  position: absolute;
+  top: -20px;
+  left: calc(50% - 60px);
+  animation: float 2.5s infinite ease-in-out;
+  transition: transform var(--transition) ease;
+}
+
+.folder:hover {
+  transform: scale(1.05);
+}
+
+.folder .front-side,
+.folder .back-side {
+  position: absolute;
+  transition: transform var(--transition);
+  transform-origin: bottom center;
+}
+
+.folder .back-side::before,
+.folder .back-side::after {
+  content: "";
+  display: block;
+  background-color: white;
+  opacity: 0.5;
+  z-index: 0;
+  width: var(--folder-W);
+  height: var(--folder-H);
+  position: absolute;
+  transform-origin: bottom center;
+  border-radius: 15px;
+  transition: transform 350ms;
+  z-index: 0;
+}
+
+.file-upload-container:hover .back-side::before {
+  transform: rotateX(-5deg) skewX(5deg);
+}
+.file-upload-container:hover .back-side::after {
+  transform: rotateX(-15deg) skewX(12deg);
+}
+
+.folder .front-side {
+  z-index: 1;
+}
+
+.file-upload-container:hover .front-side {
+  transform: rotateX(-40deg) skewX(15deg);
+}
+
+.folder .tip {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  width: 80px;
+  height: 20px;
+  border-radius: 12px 12px 0 0;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  position: absolute;
+  top: -10px;
+  z-index: 2;
+}
+
+.folder .cover {
+  background: linear-gradient(135deg, #60a5fa, #2563eb);
+  width: var(--folder-W);
+  height: var(--folder-H);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+}
+
+.custom-file-upload {
+  font-size: 1.1em;
+  color: #ffffff;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: background var(--transition) ease;
+  display: inline-block;
+  width: 100%;
+  padding: 10px 35px;
+  position: relative;
+}
+
+.custom-file-upload:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.custom-file-upload input[type="file"] {
+  display: none;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-20px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+/* Liquid Switch */
+.liquid-switch {
+  --primary: #000;
+  --secondary: #ffffff;
+  --time: 0.6s;
+  appearance: none;
+  position: relative;
+  cursor: pointer;
+  width: 3.5em;
+  aspect-ratio: 2 / 1;
+  background: var(--primary);
+  border-radius: 20em;
+  box-shadow: 0 0 0 0.15em var(--secondary), 0 0 0 0.2em rgba(37, 99, 235, 0.3);
+  transform: translateX(0.5px);
+  transition: transform var(--time) cubic-bezier(0.75, 0, 0.75, 10);
+  filter: blur(0.1em) contrast(10);
+  mix-blend-mode: darken;
+  overflow: hidden;
+}
+
+.liquid-switch::before {
+  content: "";
+  position: absolute;
+  width: 200%;
+  height: 100%;
+  transform: translate(-25%, -50%);
+  left: 50%;
+  top: 50%;
+  background: radial-gradient(
+      closest-side circle at 12.5% 50%,
+      var(--secondary) 50%,
+      #0000 0
+    ),
+    radial-gradient(
+      closest-side circle at 87.5% 50%,
+      var(--secondary) 50%,
+      #0000 0
+    ),
+    #000;
+  transition: transform var(--time) cubic-bezier(0.75, 0, 0.75, 1.3);
+}
+
+.liquid-switch:checked {
+  transform: translateX(-0.5px);
+}
+
+.liquid-switch:checked::before {
+  transform: translate(-75%, -50%);
+}
+
+.dark .liquid-switch {
+  --primary: #000;
+  --secondary: #1e293b;
+  filter: blur(0.1em) contrast(15);
+}
+
+/* Fix for Safari to ensure the switch is visible properly */
+@supports (-webkit-appearance: none) {
+  .liquid-switch {
+    -webkit-appearance: none;
+  }
+}

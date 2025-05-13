@@ -1,0 +1,38 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="200" height="200" rx="10" fill="#F0F9FF" />
+  
+  <!-- File 1 -->
+  <rect x="40" y="30" width="80" height="100" rx="4" fill="white" stroke="#3B82F6" stroke-width="2" />
+  <line x1="60" y1="50" x2="100" y2="50" stroke="#BFDBFE" stroke-width="2" stroke-linecap="round" />
+  <line x1="60" y1="70" x2="100" y2="70" stroke="#BFDBFE" stroke-width="2" stroke-linecap="round" />
+  <line x1="60" y1="90" x2="100" y2="90" stroke="#BFDBFE" stroke-width="2" stroke-linecap="round" />
+  <line x1="60" y1="110" x2="80" y2="110" stroke="#BFDBFE" stroke-width="2" stroke-linecap="round" />
+  
+  <!-- Medical Symbol on File 1 -->
+  <rect x="45" y="45" width="10" height="70" rx="1" fill="#3B82F6" />
+  <rect x="35" y="75" width="30" height="10" rx="1" fill="#3B82F6" />
+  
+  <!-- File 2 (Slightly Shifted) -->
+  <rect x="50" y="40" width="80" height="100" rx="4" fill="white" stroke="#3B82F6" stroke-width="2" />
+  <line x1="70" y1="60" x2="110" y2="60" stroke="#BFDBFE" stroke-width="2" stroke-linecap="round" />
+  <line x1="70" y1="80" x2="110" y2="80" stroke="#BFDBFE" stroke-width="2" stroke-linecap="round" />
+  <line x1="70" y1="100" x2="110" y2="100" stroke="#BFDBFE" stroke-width="2" stroke-linecap="round" />
+  <line x1="70" y1="120" x2="90" y2="120" stroke="#BFDBFE" stroke-width="2" stroke-linecap="round" />
+  
+  <!-- File 3 (More Shifted) -->
+  <rect x="60" y="50" width="80" height="100" rx="4" fill="white" stroke="#3B82F6" stroke-width="2" />
+  <line x1="80" y1="70" x2="120" y2="70" stroke="#BFDBFE" stroke-width="2" stroke-linecap="round" />
+  <line x1="80" y1="90" x2="120" y2="90" stroke="#BFDBFE" stroke-width="2" stroke-linecap="round" />
+  <line x1="80" y1="110" x2="120" y2="110" stroke="#BFDBFE" stroke-width="2" stroke-linecap="round" />
+  <line x1="80" y1="130" x2="100" y2="130" stroke="#BFDBFE" stroke-width="2" stroke-linecap="round" />
+  
+  <!-- Pulse Line at Bottom -->
+  <path d="M30 160H60L70 140L80 180L90 130L100 160L110 140L130 160" stroke="#EF4444" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+  
+  <!-- Stethoscope Icon -->
+  <circle cx="150" cy="50" r="15" fill="#DBEAFE" />
+  <path d="M140 65C140 65 130 75 130 85C130 90 135 95 140 95C145 95 150 90 150 85C150 75 140 65 140 65" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" />
+  <path d="M140 65C140 65 160 65 170 65C180 65 180 75 170 85" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" />
+  <circle cx="170" cy="85" r="5" fill="#93C5FD" stroke="#3B82F6" stroke-width="2" />
+</svg> 

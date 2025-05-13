@@ -92,7 +92,19 @@ function Loader() {
   );
 }
 
-function CameraController({ focusPosition, isFocusing }: CameraControllerProps) {
+interface CameraControllerProps {
+  focusPosition: THREE.Vector3 | null;
+  isFocusing: boolean;
+  xOffset?: number; // Optional x-axis offset
+  yOffset?: number; // Optional y-axis offset
+}
+
+function CameraController({ 
+  focusPosition, 
+  isFocusing, 
+  xOffset = 0.5, // Default x offset
+  yOffset = -1  // Default y offset
+}: CameraControllerProps) {
   const { camera } = useThree();
   // Using any for the ref type to avoid complex typing issues with OrbitControls
   const controlsRef = useRef<any>(null);
@@ -112,19 +124,19 @@ function CameraController({ focusPosition, isFocusing }: CameraControllerProps) 
     cancelAnimation();
     
     if (isFocusing && focusPosition) {
-      // Camera position exactly in front of the dot, maintaining the same x coordinate
-      // and only modifying the z-distance for proper viewing
+      // Use the props for offsets to control camera position
+      // Camera position with intentional offset on x and y axis
       const targetPosition = new THREE.Vector3(
-        focusPosition.x,                 // Keep the exact x position of the dot
-        focusPosition.y,                 // Keep the exact y position of the dot
-        focusPosition.z + 2         // Position camera directly in front at a fixed distance
+        focusPosition.x + xOffset, // Shift camera position on x-axis
+        focusPosition.y + yOffset, // Shift camera position on y-axis
+        focusPosition.z + 2.5       // Position camera at a fixed distance
       );
       
-      // Look directly at the dot position
+      // Still look directly at the dot position
       const lookAtPosition = new THREE.Vector3(
-        focusPosition.x,                 // Target exactly at dot's x position
-        focusPosition.y,                 // Target exactly at dot's y position
-        focusPosition.z                  // Target exactly at dot's z position
+        focusPosition.x,           // Target exactly at dot's x position
+        focusPosition.y,           // Target exactly at dot's y position
+        focusPosition.z            // Target exactly at dot's z position
       );
       
       // Animate camera movement with spring physics for more natural motion
@@ -252,6 +264,9 @@ export default function LungsModel() {
   const [focusPosition, setFocusPosition] = useState<THREE.Vector3 | null>(null);
   const [showInfoPanel, setShowInfoPanel] = useState(false);
   const [expandedInfo, setExpandedInfo] = useState(false);
+  // Add camera offset state values
+  const [cameraXOffset, setCameraXOffset] = useState(0.5);
+  const [cameraYOffset, setCameraYOffset] = useState(0.2);
   
   // Define detailed organ information
   const organData: Record<string, OrganInfo> = {
@@ -323,20 +338,33 @@ export default function LungsModel() {
     return acc;
   }, {} as Record<string, THREE.Vector3>);
   
-  // Handler for organ click events
+  // Handler for organ click events from any source (dot or model)
   const handleOrganClick = (organType: string, position: THREE.Vector3) => {
     if (organType !== 'other') {
       setFocusOrgan(organType);
       
-      // Use the organPositions directly for more accuracy
-      // This ensures we zoom to the exact position where the dot is located
-      setFocusPosition(new THREE.Vector3().copy(organPositions[organType]));
+      // Use the predefined organ position for exact dot position
+      const exactDotPosition = organPositions[organType].clone();
+      setFocusPosition(exactDotPosition);
       
       // Show info panel after a short delay to allow camera animation
       setTimeout(() => {
         setShowInfoPanel(true);
       }, 300);
     }
+  };
+  
+  // Handler specifically for clicking on the organ dots
+  const handleDotClick = (organType: string) => {
+    // Always use the exact position from our organData
+    const exactPosition = organData[organType].position.clone();
+    setFocusOrgan(organType);
+    setFocusPosition(exactPosition);
+    
+    // Show info panel after a short delay to allow camera animation
+    setTimeout(() => {
+      setShowInfoPanel(true);
+    }, 300);
   };
   
   // Reset focus to show full model
@@ -361,7 +389,9 @@ export default function LungsModel() {
     // Small delay before changing focus
     setTimeout(() => {
       setFocusOrgan(organType);
-      setFocusPosition(new THREE.Vector3().copy(organPositions[organType]));
+      // Use exact dot position from our organ data
+      const exactPosition = organData[organType].position.clone();
+      setFocusPosition(exactPosition);
       
       // Show new info panel after transition
       setTimeout(() => {
@@ -379,7 +409,7 @@ export default function LungsModel() {
         {Object.entries(organData).map(([organType, data]) => (
           <button 
             key={organType}
-            onClick={() => focusOrgan ? switchToOrgan(organType) : handleOrganClick(organType, organPositions[organType])}
+            onClick={() => focusOrgan ? switchToOrgan(organType) : handleDotClick(organType)}
             className={`px-3 py-1.5 text-xs font-medium rounded-md shadow-sm transition-all duration-200 flex items-center ${
               focusOrgan === organType 
                 ? 'bg-white border-l-4 pl-2' 
@@ -398,15 +428,48 @@ export default function LungsModel() {
       
       {/* If focused on an organ, show reset button */}
       {focusOrgan && (
-        <button 
-          onClick={resetFocus}
-          className="absolute top-4 right-4 z-10 bg-white text-gray-700 px-4 py-2 rounded-md shadow-sm hover:bg-gray-50 transition-colors border border-gray-200"
-        >
-          View Full Model
-        </button>
+        <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
+          <button 
+            onClick={resetFocus}
+            className="bg-white text-gray-700 px-4 py-2 rounded-md shadow-sm hover:bg-gray-50 transition-colors border border-gray-200"
+          >
+            View Full Model
+          </button>
+          
+          {/* Camera offset controls */}
+          {/* <div className="bg-white p-3 rounded-md shadow-sm border border-gray-200">
+            <h4 className="text-sm font-medium mb-2">Camera Adjustments</h4>
+            
+            <div className="flex flex-col gap-3">
+              <div>
+                <label className="text-xs text-gray-600 block mb-1">Horizontal Shift</label>
+                <input
+                  type="range"
+                  min="-2"
+                  max="2"
+                  step="0.1"
+                  value={cameraXOffset}
+                  onChange={(e) => setCameraXOffset(parseFloat(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+              
+              <div>
+                <label className="text-xs text-gray-600 block mb-1">Vertical Shift</label>
+                <input
+                  type="range"
+                  min="-2"
+                  max="2"
+                  step="0.1"
+                  value={cameraYOffset}
+                  onChange={(e) => setCameraYOffset(parseFloat(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+            </div>
+          </div> */}
+        </div>
       )}
-      
-      
       
       {error ? (
         <div className="flex items-center justify-center h-full">
@@ -465,7 +528,7 @@ export default function LungsModel() {
                         key={organType}
                         position={data.position}
                         organType={organType}
-                        onClick={() => handleOrganClick(organType, data.position)}
+                        onClick={() => handleDotClick(organType)}
                         isActive={false}
                         color={data.color}
                         size={dotSize}
@@ -481,7 +544,9 @@ export default function LungsModel() {
           
           <CameraController 
             focusPosition={focusPosition} 
-            isFocusing={!!focusOrgan} 
+            isFocusing={!!focusOrgan}
+            xOffset={cameraXOffset} // Use state value for dynamic control
+            yOffset={cameraYOffset} // Use state value for dynamic control
           />
         </Canvas>
       )}

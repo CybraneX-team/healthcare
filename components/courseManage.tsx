@@ -39,14 +39,14 @@ export function CourseManagement() {
       id: "3",
       title: "Protein Intake and Muscle Growth",
       duration: "15:20",
-      videoId: "JGwWNGJdvx8", // Example YouTube video ID
+      videoId: "JGwWNGJdvx8", // yt vid ID
       completed: false,
     },
     {
       id: "4",
       title: "Optimizing Fat Loss Strategies",
       duration: "22:15",
-      videoId: "kJQP7kiw5Fk", // Example YouTube video ID
+      videoId: "kJQP7kiw5Fk", //yt vid ID
       completed: false,
     },
   ];
@@ -56,7 +56,7 @@ export function CourseManagement() {
   };
 
   const handleVideoComplete = (videoId: string) => {
-    // Calculate new completion percentage
+    // completion percentage
     const totalVideos = courseVideos.length;
     const completedVideos = courseVideos.filter(
       (video) => video.completed || video.videoId === videoId
@@ -70,7 +70,9 @@ export function CourseManagement() {
     <div className="px-2 pb-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Customized Pathway</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-black">
+            Customized Pathway
+          </h1>
           <div className="flex items-center gap-2 mt-1">
             <span className="text-gray-600">Likelihood of Success:</span>
             <span className="text-blue-500 font-medium flex items-center">
@@ -122,15 +124,17 @@ export function CourseManagement() {
             </CardContent>
           </Card>
 
-          <h2 className="text-xl font-semibold mb-4">Course Videos</h2>
+          <h2 className="text-xl font-semibold mb-4 text-black">
+            Course Videos
+          </h2>
           <div className="space-y-3">
             {courseVideos.map((video) => (
               <Card
                 key={video.id}
                 className={`cursor-pointer transition-colors ${
                   selectedVideo === video.videoId
-                    ? "border-blue-500 bg-blue-50"
-                    : ""
+                    ? "border-blue-500 bg-blue-50 text-black"
+                    : "bg-white text-black"
                 }`}
                 onClick={() => handleVideoSelect(video.videoId)}
               >
@@ -160,10 +164,10 @@ export function CourseManagement() {
 
         {/* Right column - Progress and action items */}
         <div className="lg:col-span-1">
-          <Card className="mb-6">
+          <Card className="mb-6 bg-white">
             <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold">
+              <div className="flex items-center justify-between mb-2 ">
+                <h3 className="font-semibold text-black">
                   Simulation: Drop body fat percentage
                 </h3>
                 <Badge
@@ -177,24 +181,24 @@ export function CourseManagement() {
             </CardContent>
           </Card>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-6">
-            <Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-6 ">
+            <Card className="bg-white">
               <CardContent className="p-4">
-                <h3 className="font-semibold mb-4">Clinics</h3>
+                <h3 className="font-semibold mb-4 text-black">Clinics</h3>
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="bg-blue-100 p-2 rounded-full">
                       <User className="h-5 w-5 text-blue-500" />
                     </div>
                     <div className="flex-grow">
-                      <div className="flex justify-between">
+                      <div className="flex justify-between text-black">
                         <span className="font-medium">Open Office Hours</span>
                       </div>
                       <Progress value={75} className="h-2 mt-2" />
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 text-black">
                     <div className="bg-blue-100 p-2 rounded-full">
                       <svg
                         className="h-5 w-5 text-blue-500"
@@ -211,7 +215,7 @@ export function CourseManagement() {
                       </svg>
                     </div>
                     <div className="flex-grow">
-                      <div className="flex justify-between">
+                      <div className="flex justify-between text-black">
                         <span className="font-medium">Supplement Clinic</span>
                       </div>
                       <Progress value={60} className="h-2 mt-2" />
@@ -219,7 +223,7 @@ export function CourseManagement() {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <div className="bg-blue-100 p-2 rounded-full">
+                    <div className="bg-blue-100 p-2 rounded-full ">
                       <svg
                         className="h-5 w-5 text-blue-500"
                         fill="none"
@@ -235,7 +239,7 @@ export function CourseManagement() {
                       </svg>
                     </div>
                     <div className="flex-grow">
-                      <div className="flex justify-between">
+                      <div className="flex justify-between text-black">
                         <span className="font-medium">Medication Clinic</span>
                       </div>
                       <Progress value={40} className="h-2 mt-2" />
@@ -245,14 +249,14 @@ export function CourseManagement() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-white">
               <CardContent className="p-4">
-                <h3 className="font-semibold mb-4">Action Items</h3>
+                <h3 className="font-semibold mb-4 text-black">Action Items</h3>
                 <div className="space-y-3">
                   <div className="flex items-start gap-3">
                     <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
                     <div>
-                      <p className="font-medium">
+                      <p className="font-medium text-black">
                         Increase daily protein intake
                       </p>
                     </div>
@@ -261,21 +265,25 @@ export function CourseManagement() {
                   <div className="flex items-start gap-3">
                     <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
                     <div>
-                      <p className="font-medium">Take berberine supplement</p>
+                      <p className="font-medium text-black">
+                        Take berberine supplement
+                      </p>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-3">
                     <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
                     <div>
-                      <p className="font-medium">Reduce sugar consumption</p>
+                      <p className="font-medium text-black">
+                        Reduce sugar consumption
+                      </p>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-3">
                     <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
                     <div>
-                      <p className="font-medium">
+                      <p className="font-medium text-black">
                         Perform strength training x3 week
                       </p>
                     </div>
@@ -284,15 +292,15 @@ export function CourseManagement() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-white">
               <CardContent className="p-4">
-                <h3 className="font-semibold mb-3">Completion</h3>
+                <h3 className="font-semibold mb-3 text-black">Completion</h3>
                 <Progress value={completionPercentage} className="h-3" />
-                <div className="text-right mt-2 font-bold text-lg">
+                <div className="text-right mt-2 font-bold text-lg text-black">
                   {completionPercentage}%
                 </div>
 
-                <h3 className="font-semibold mt-6 mb-3">Team</h3>
+                <h3 className="font-semibold mt-6 mb-3 text-black">Team</h3>
                 <div className="flex -space-x-2">
                   <Avatar className="border-2 border-white">
                     <AvatarImage

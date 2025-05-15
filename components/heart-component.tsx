@@ -187,10 +187,7 @@ export const HeartComponent = () => {
                           value > 0 ? `+${value}` : value
                         }
                       />
-                      <Tooltip 
-                        content={<CustomTooltip />} 
-                        wrapperStyle={{ zIndex: 1000 }}
-                      />
+                      <Tooltip content={<CustomTooltip />} />
                       <Line
                         type="monotone"
                         dataKey="value"
@@ -201,25 +198,6 @@ export const HeartComponent = () => {
                           strokeWidth: 2,
                           stroke: "white",
                         }}
-                        dot={{
-                          r: 4,
-                          strokeWidth: 2,
-                          stroke: "white",
-                          fill: "#3b82f6",
-                        }}
-                        isAnimationActive={true}
-                        animationDuration={1000}
-                        animationEasing="ease-in-out"
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="value"
-                        stroke="none"
-                        fillOpacity={0.2}
-                        fill="url(#weightGradient)"
-                        isAnimationActive={true}
-                        animationDuration={1000}
-                        animationEasing="ease-in-out"
                       />
                     </LineChart>
                   </ResponsiveContainer>
@@ -228,10 +206,89 @@ export const HeartComponent = () => {
             </Card>
           </motion.div>
 
+          {/* Alternative Card design (hidden) */}
+          <div className="hidden md:col-span-7 h-full">
+            <Card className="shadow-sm border-0 bg-white rounded-3xl hover:shadow-md transition-shadow duration-300 text-black">
+              <CardContent className="p-8">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold">Weight Trend</h3>
+                  <span className="text-xs text-gray-500">Monthly</span>
+                </div>
+                <div className="h-[220px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={weightTrendData}
+                      margin={{
+                        top: 10,
+                        right: 30,
+                        left: 0,
+                        bottom: 5,
+                      }}
+                    >
+                      <defs>
+                        <linearGradient
+                          id="weightGradient"
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="5%"
+                            stopColor="#3b82f6"
+                            stopOpacity={0.2}
+                          />
+                          <stop
+                            offset="95%"
+                            stopColor="#3b82f6"
+                            stopOpacity={0}
+                          />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        vertical={false}
+                        stroke="#f3f4f6"
+                      />
+                      <XAxis
+                        dataKey="name"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 10, fill: "#9ca3af" }}
+                      />
+                      <YAxis
+                        domain={[-10, 10]}
+                        ticks={[-10, 0, 10]}
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 10, fill: "#9ca3af" }}
+                        tickFormatter={(value) =>
+                          value > 0 ? `+${value}` : value
+                        }
+                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Line
+                        type="monotone"
+                        dataKey="value"
+                        stroke="#3b82f6"
+                        strokeWidth={2}
+                        activeDot={{
+                          r: 6,
+                          strokeWidth: 2,
+                          stroke: "white",
+                        }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
           {/* Stats Cards */}
           <motion.div variants={itemVariants} className="md:col-span-5">
             <Card className="shadow-sm border-0 bg-white rounded-3xl h-full hover:shadow-md transition-shadow duration-300">
-              <CardContent className="p-8 h-full">
+              <CardContent className="p-8 h-full text-black">
                 <div className="flex flex-col justify-between h-full">
                   {/* Total Weight */}
                   <div className="flex justify-between items-start">

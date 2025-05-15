@@ -1,0 +1,113 @@
+/* Mobile Dashboard Styles */
+
+/* Hide scrollbar but allow scrolling */
+.scrollbar-none {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Bottom nav styles */
+.bottom-nav-shadow {
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* Floating navigation dock animation */
+@keyframes float-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Apply animation to the dock */
+.fixed.bottom-0 > div {
+  animation: float-up 0.5s ease-out forwards;
+}
+
+/* Drawer pull indicator animation */
+.drawer-pull {
+  transition: transform 0.2s ease-in-out;
+}
+
+.drawer-pull:active {
+  transform: scaleX(1.2);
+}
+
+/* Organ item styles */
+.organ-item {
+  transition: all 0.2s ease;
+}
+
+.organ-item:active {
+  transform: scale(0.95);
+}
+
+/* Mobile-specific card styles */
+.card-mobile {
+  border-radius: 16px;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-mobile:active {
+  transform: scale(0.98);
+}
+
+/* Bottom safe area padding for mobile devices */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .safe-area-bottom {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 8px);
+  }
+}
+
+/* Bottom navbar with backdrop blur */
+.bottom-navbar {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Stat card hover effect */
+.stat-card {
+  transition: transform 0.2s ease;
+}
+
+.stat-card:active {
+  transform: translateY(-2px);
+}
+
+/* Responsive padding adjustments */
+@media (max-width: 350px) {
+  .xs-padding {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+}
+
+/* Tab button active state */
+.tab-active {
+  position: relative;
+}
+
+.tab-active::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #3b82f6;
+} 

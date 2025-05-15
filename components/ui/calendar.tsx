@@ -2,10 +2,11 @@
 
 import * as React from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { DayPicker } from "react-day-picker"
+import { DayPicker, useNavigation } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>
 
@@ -15,6 +16,91 @@ function Calendar({
   showOutsideDays = true,
   ...props
 }: CalendarProps) {
+  const months = [
+    "January", "February", "March", "April", "May", "June", 
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  // Custom caption component with month and year selection
+  function CustomCaption(props: any) {
+    const { goToMonth, nextMonth, previousMonth } = useNavigation();
+    const currentMonth = props.displayMonth;
+    
+    // Get month and year from displayed date
+    const month = currentMonth.getMonth();
+    const year = currentMonth.getFullYear();
+    
+    // Generate list of years (100 years in the past to current year)
+    const currentYear = new Date().getFullYear();
+    const years = Array.from({ length: 100 }, (_, i) => currentYear - 99 + i);
+    
+    // Handle month change
+    const handleMonthChange = (value: string) => {
+      const newMonth = new Date(currentMonth);
+      newMonth.setMonth(parseInt(value));
+      goToMonth(newMonth);
+    };
+    
+    // Handle year change
+    const handleYearChange = (value: string) => {
+      const newMonth = new Date(currentMonth);
+      newMonth.setFullYear(parseInt(value));
+      goToMonth(newMonth);
+    };
+    
+    return (
+      <div className="flex justify-center items-center space-x-2 pt-1 px-10 relative">
+        <div className="flex-1">
+          <Select value={month.toString()} onValueChange={handleMonthChange}>
+            <SelectTrigger className="h-8 w-full text-xs">
+              <SelectValue placeholder="Month" />
+            </SelectTrigger>
+            <SelectContent>
+              {months.map((monthName, i) => (
+                <SelectItem key={i} value={i.toString()}>
+                  {monthName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="flex-1">
+          <Select value={year.toString()} onValueChange={handleYearChange}>
+            <SelectTrigger className="h-8 w-full text-xs">
+              <SelectValue placeholder="Year" />
+            </SelectTrigger>
+            <SelectContent className="max-h-60">
+              {years.map((year) => (
+                <SelectItem key={year} value={year.toString()}>
+                  {year}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <button
+          onClick={() => previousMonth && goToMonth(previousMonth)}
+          disabled={!previousMonth}
+          className="absolute left-1 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 flex items-center justify-center"
+          aria-label="Previous month"
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+        
+        <button
+          onClick={() => nextMonth && goToMonth(nextMonth)}
+          disabled={!nextMonth}
+          className="absolute right-1 h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 flex items-center justify-center"
+          aria-label="Next month"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
+    );
+  }
+
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
@@ -23,8 +109,8 @@ function Calendar({
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
         caption: "flex justify-center pt-1 relative items-center",
-        caption_label: "text-sm font-medium",
-        nav: "space-x-1 flex items-center",
+        caption_label: "hidden",
+        nav: "space-x-1 flex items-center hidden",
         nav_button: cn(
           buttonVariants({ variant: "outline" }),
           "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
@@ -56,6 +142,7 @@ function Calendar({
       components={{
         IconLeft: ({ ...props }) => <ChevronLeft className="h-4 w-4" />,
         IconRight: ({ ...props }) => <ChevronRight className="h-4 w-4" />,
+        Caption: CustomCaption
       }}
       {...props}
     />

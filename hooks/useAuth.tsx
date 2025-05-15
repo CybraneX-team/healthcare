@@ -2,11 +2,19 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { 
+  signInWithEmail, 
+  signInWithApple, 
+  createUserWithEmail, 
+  signOut as firebaseSignOut,
+  getCurrentUser,
+  auth
+} from "@/utils/firebase";
 
 interface User {
   id: string;
-  email: string;
-  fullName: string;
+  email: string | null;
+  fullName: string | null;
   avatar?: string | null;
 }
 
@@ -14,8 +22,9 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (userData: any) => Promise<void>;
-  logout: () => void;
+  loginWithApple: () => Promise<void>;
+  signup: (email: string, password: string, userData?: any) => Promise<void>;
+  logout: () => Promise<void>;
   isAuthenticated: boolean;
 }
 
@@ -26,44 +35,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // Check if user is logged in when the app loads
+  // Check if user is logged in when the app loads and listen for auth state changes
   useEffect(() => {
-    const checkAuthStatus = () => {
-      try {
-        // In a real app, you would check localStorage, cookies, or make an API call
-        const storedUser = localStorage.getItem("healthcare_user");
+    const unsubscribe = auth.onAuthStateChanged((firebaseUser) => {
+      if (firebaseUser) {
+        // User is signed in
+        const userData: User = {
+          id: firebaseUser.uid,
+          email: firebaseUser.email,
+          fullName: firebaseUser.displayName,
+          avatar: firebaseUser.photoURL
+        };
+        setUser(userData);
+      } else {
+        // User is signed out
         
-        if (storedUser) {
-          setUser(JSON.parse(storedUser));
+        // For development purposes only - remove in production
+        // This sets a fake user when not authenticated, to test the UI
+        if (process.env.NODE_ENV === 'development') {
+          const devUser: User = {
+            id: 'dev-user-123',
+            email: 'test@example.com',
+            fullName: 'Test User',
+            avatar: null
+          };
+          setUser(devUser);
+        } else {
+          setUser(null);
         }
-      } catch (error) {
-        console.error("Auth check failed:", error);
-      } finally {
-        setLoading(false);
       }
-    };
+      setLoading(false);
+    });
     
-    checkAuthStatus();
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
     setLoading(true);
     
     try {
-      // In a real app, you would make an API call to your backend
-      // Simulating API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Check if email is in valid format
+      if (!email || !email.includes('@') || !email.includes('.')) {
+        throw new Error("Invalid email format. Please enter a valid email address.");
+      }
       
-      // Create a fake user for demo purposes
-      const user: User = {
-        id: "user-123",
-        email,
-        fullName: "Demo User",
-        avatar: null
-      };
-      
-      setUser(user);
-      localStorage.setItem("healthcare_user", JSON.stringify(user));
+      const userCredential = await signInWithEmail(email, password);
+      // Auth state listener will update the user state
     } catch (error) {
       console.error("Login failed:", error);
       throw error;
@@ -72,24 +90,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signup = async (userData: any) => {
+  const loginWithApple = async () => {
     setLoading(true);
     
     try {
-      // In a real app, you would make an API call to your backend
-      // Simulating API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const userCredential = await signInWithApple();
+      // Auth state listener will update the user state
+    } catch (error) {
+      console.error("Apple login failed:", error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signup = async (email: string, password: string, userData?: any) => {
+    setLoading(true);
+    
+    try {
+      // Check if email is in valid format
+      if (!email || !email.includes('@') || !email.includes('.')) {
+        throw new Error("Invalid email format. Please enter a valid email address.");
+      }
       
-      // Create a user based on the provided data
-      const user: User = {
-        id: "user-" + Date.now().toString(),
-        email: userData.email,
-        fullName: userData.fullName,
-        avatar: userData.avatar
-      };
+      const userCredential = await createUserWithEmail(email, password);
+      // Auth state listener will update the user state
       
-      setUser(user);
-      localStorage.setItem("healthcare_user", JSON.stringify(user));
+      // Additional user data could be stored in Firestore or another database here
     } catch (error) {
       console.error("Signup failed:", error);
       throw error;
@@ -98,10 +125,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem("healthcare_user");
-    router.push("/auth");
+  const logout = async () => {
+    try {
+      await firebaseSignOut();
+      // Auth state listener will update the user state
+      router.push("/auth");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
   };
 
   return (
@@ -110,6 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         loading,
         login,
+        loginWithApple,
         signup,
         logout,
         isAuthenticated: !!user

@@ -1,63 +1,46 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Dashboard from "@/components/dashboard";
+import DashboardMobile from "@/components/dashboard-mobile";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function DashboardPage() {
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      className="p-8"
-    >
-      <div className="max-w-7xl mx-auto">
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">
-            Welcome to Your Healthcare Dashboard
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Your personal health information center
-          </p>
-        </header>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.1, duration: 0.4 }}
-            className="bg-white p-6 rounded-xl shadow-sm border border-gray-100"
-          >
-            <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
-            <p className="text-gray-600">
-              Your dashboard is set up and ready to use.
-            </p>
-          </motion.div>
-          
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.4 }}
-            className="bg-white p-6 rounded-xl shadow-sm border border-gray-100"
-          >
-            <h2 className="text-xl font-semibold mb-4">Health Records</h2>
-            <p className="text-gray-600">
-              Your uploaded files and medical records will appear here.
-            </p>
-          </motion.div>
-          
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3, duration: 0.4 }}
-            className="bg-white p-6 rounded-xl shadow-sm border border-gray-100"
-          >
-            <h2 className="text-xl font-semibold mb-4">Upcoming Appointments</h2>
-            <p className="text-gray-600">
-              No upcoming appointments. Schedule your first appointment.
-            </p>
-          </motion.div>
-        </div>
-      </div>
-    </motion.div>
-  );
+  const { isAuthenticated, loading } = useAuth();
+  const router = useRouter();
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    // If not loading and not authenticated, redirect to login
+    // Skip this check in development mode
+    if (!loading && !isAuthenticated && !isDevelopment) {
+      router.push("/auth/login");
+    }
+  }, [isAuthenticated, loading, router, isDevelopment]);
+
+  // Check if device is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    // Initial check
+    checkMobile();
+    
+    // Add event listener for window resize
+    window.addEventListener('resize', checkMobile);
+    
+    // Cleanup event listener
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Show nothing while loading or if not authenticated (except in development)
+  if ((loading || !isAuthenticated) && !isDevelopment) {
+    return null;
+  }
+
+  // Render the appropriate dashboard based on screen size
+  return isMobile ? <DashboardMobile /> : <Dashboard />;
 } 

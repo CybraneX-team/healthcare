@@ -126,7 +126,8 @@ export default function UploadPage() {
   };
   
   const handleFinish = () => {
-    router.push("/component-dashboard");
+    // Redirect to login page instead of dashboard
+    router.push("/auth/login?setup=complete");
   };
   
   const formatFileSize = (bytes: number) => {
@@ -349,17 +350,17 @@ export default function UploadPage() {
       )}
       
       <div className="flex justify-between mt-8">
-        <Button 
+        {/* <Button 
           variant="outline" 
           onClick={() => router.push("/component-dashboard")}
           className="flex items-center gap-2"
         >
           <span>Skip for now</span>
-        </Button>
+        </Button> */}
         
         <Button 
           onClick={handleFinish}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+          className="flex items-center gap-2 ml-20 bg-blue-600 hover:bg-blue-700"
         >
           <span>Complete Setup</span>
           <ArrowRight className="h-4 w-4" />

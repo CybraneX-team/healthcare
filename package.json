@@ -46,6 +46,7 @@
     "cmdk": "1.0.4",
     "date-fns": "4.1.0",
     "embla-carousel-react": "8.5.1",
+    "firebase": "^11.7.1",
     "framer-motion": "^12.10.5",
     "input-otp": "1.4.1",
     "lucide-react": "^0.454.0",
@@ -61,7 +62,7 @@
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
     "three": "^0.176.0",
-    "vaul": "^0.9.6",
+    "vaul": "^0.9.9",
     "zod": "^3.24.1"
   },
   "devDependencies": {

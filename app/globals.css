@@ -58,6 +58,12 @@
   }
 }
 
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
 /* Inputbox styles */
 .inputbox {
   position: relative;
@@ -73,7 +79,7 @@
   outline: none;
   box-shadow: none;
   border: none;
-  color: white;
+  color: #fff;
   font-size: 1em;
   letter-spacing: 0.05em;
   transition: 0.5s;
@@ -105,6 +111,7 @@
   width: 100%;
   height: 2px;
   background:#1D4ED8;
+  /* border: 1px solid #1D4ED8; */
   border-radius: 4px;
   transition: 0.5s;
   pointer-events: none;

@@ -1,88 +1,24 @@
-// Firebase configuration and utility functions
-import { initializeApp } from "firebase/app";
+import { auth, db, storage } from './firebase';
 import { 
-  getAuth, 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword,
-  signInWithPopup,
-  OAuthProvider,
-  User as FirebaseUser,
-  UserCredential,
-  updateProfile
-} from "firebase/auth";
-import { getAnalytics } from "firebase/analytics";
-import { 
-  getFirestore, 
   doc, 
-  setDoc, 
   getDoc, 
-  updateDoc,
-  collection,
+  setDoc, 
+  updateDoc, 
+  collection, 
+  getDocs,
   query,
   where,
-  getDocs,
   Timestamp
-} from "firebase/firestore";
+} from 'firebase/firestore';
 import {
-  getStorage,
   ref,
   uploadBytes,
-  getDownloadURL,
-  uploadString
-} from "firebase/storage";
+  uploadString,
+  getDownloadURL
+} from 'firebase/storage';
+import { updateProfile } from 'firebase/auth';
 
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyB_TZFGHsU9nFwPMlJR2lCJyynwAFZcRmk",
-  authDomain: "healthcare-17c9a.firebaseapp.com",
-  projectId: "healthcare-17c9a",
-  storageBucket: "healthcare-17c9a.appspot.com",
-  messagingSenderId: "555586732707",
-  appId: "1:555586732707:web:ec71dfdfd7cfe966883516",
-  measurementId: "G-S02Y5D2MVE"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = getStorage(app);
-let analytics: any = null;
-
-// Only initialize analytics on the client side
-if (typeof window !== 'undefined') {
-  analytics = getAnalytics(app);
-}
-
-// Email & Password Authentication
-export const signInWithEmail = async (email: string, password: string): Promise<UserCredential> => {
-  return signInWithEmailAndPassword(auth, email, password);
-};
-
-export const createUserWithEmail = async (email: string, password: string): Promise<UserCredential> => {
-  return createUserWithEmailAndPassword(auth, email, password);
-};
-
-// Apple Authentication
-export const signInWithApple = async (): Promise<UserCredential> => {
-  const provider = new OAuthProvider('apple.com');
-  provider.addScope('email');
-  provider.addScope('name');
-  
-  return signInWithPopup(auth, provider);
-};
-
-// Sign out
-export const signOut = async (): Promise<void> => {
-  return auth.signOut();
-};
-
-// Get current user
-export const getCurrentUser = (): FirebaseUser | null => {
-  return auth.currentUser;
-};
-
-// Firestore User Functions
+// User data interface
 export interface UserData {
   email: string;
   fullName: string;
@@ -91,6 +27,8 @@ export interface UserData {
   medications?: string;
   phone?: string;
   avatarUrl?: string;
+  documents?: Record<string, any[]>;
+  documentUploadComplete?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -140,7 +78,6 @@ export const getUserProfile = async (userId: string): Promise<UserData | null> =
   }
 };
 
-// Firebase Storage Functions
 // Upload avatar image to Firebase Storage
 export const uploadAvatar = async (userId: string, file: File | string): Promise<string> => {
   try {
@@ -163,6 +100,11 @@ export const uploadAvatar = async (userId: string, file: File | string): Promise
         photoURL: downloadURL
       });
     }
+    
+    // Also update in Firestore
+    await saveUserProfile(userId, {
+      avatarUrl: downloadURL
+    });
     
     return downloadURL;
   } catch (error) {
@@ -201,4 +143,27 @@ export const uploadDocument = async (userId: string, file: File, category: strin
   }
 };
 
-export { app, auth, db, storage, analytics }; 
+// Get all documents for a user
+export const getUserDocuments = async (userId: string, category?: string) => {
+  try {
+    const documentsRef = collection(db, "users", userId, "documents");
+    
+    let q;
+    if (category) {
+      q = query(documentsRef, where("category", "==", category));
+    } else {
+      q = query(documentsRef);
+    }
+    
+    const querySnapshot = await getDocs(q);
+    const documents = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    
+    return documents;
+  } catch (error) {
+    console.error("Error getting user documents:", error);
+    throw error;
+  }
+}; 

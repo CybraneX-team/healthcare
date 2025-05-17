@@ -197,9 +197,6 @@ export default function SignupPage() {
     setIsSubmitting(true);
     
     try {
-      // Show success animation before redirecting
-      setShowSuccess(true);
-      
       // Call the Firebase signup function with proper parameters
       const userData = {
         fullName: profile.fullName,
@@ -212,6 +209,9 @@ export default function SignupPage() {
       
       await signup(profile.email, profile.password, userData);
       
+      // Show success animation before redirecting
+      setShowSuccess(true);
+      
       // Wait for the animation to complete before redirecting
       setTimeout(() => {
         // Redirect to file upload
@@ -221,6 +221,7 @@ export default function SignupPage() {
       setIsSubmitting(false);
       setShowSuccess(false);
       setError("An error occurred during signup. Please try again.");
+      console.error("Signup error:", err);
     }
   };
 

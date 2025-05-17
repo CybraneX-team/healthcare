@@ -28,11 +28,15 @@ import { CourseManagement } from "@/components/courseManage";
 import { ProfileDropdown } from "@/components/ui/profile-dropdown";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRouter, useSearchParams } from "next/navigation";
 
 // Import organ components
 import HeartComponent from "@/components/heart-component";
 import LiverComponent from "@/components/liver-component";
 import LungsModel from "@/components/lungs-model";
+import { PatientSection } from "./PatientSection";
+import { LabsSection } from "./labSection";
+import { ServicesProductsSection } from "./ServicesSection";
 
 // Other organ components will be imported here as they are created
 
@@ -188,10 +192,20 @@ const switcherItemVariants = {
 };
 
 export default function Dashboard() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState("overview");
   const [animationComplete, setAnimationComplete] = useState(false);
   const [selectedOrgan, setSelectedOrgan] = useState("heart");
   const weightTrendData = generateWeightTrendData();
+
+  // Initial setup - check URL for tab parameter on component mount
+  useEffect(() => {
+    const tabParam = searchParams.get("tab");
+    if (tabParam && ["overview", "progress", "courses", "labs", "services", "admin", "upload"].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   // Restore selected organ from localStorage on component mount
   useEffect(() => {
@@ -251,14 +265,23 @@ export default function Dashboard() {
     }
   `;
 
+  // Function to handle tab changes
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    // Update URL without causing a page refresh
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", tab);
+    router.push(url.pathname + url.search);
+  };
+
   return (
     <div className="min-h-screen bg-gray-200">
       <style jsx>{organSwitcherStyle}</style>
-      {/* <style jsx global>{`
+      <style jsx global>{`
         body {
-          overflow: hidden;
+          overflow: ${activeTab === "overview" ? "hidden" : "auto"};
         }
-      `}</style> */}
+      `}</style>
       <div className="h-full">
 
         <main className="w-full h-full">
@@ -269,32 +292,65 @@ export default function Dashboard() {
                 <Button
                   variant="ghost"
                   className={`rounded-full px-6 py-2 ${activeTab === "progress" ? "bg-blue-500 text-white" : "text-gray-700"} text-sm`}
-                  onClick={() => setActiveTab("progress")}
+                  onClick={() => handleTabChange("progress")}
                 >
                   Overall Progress
                 </Button>
                 <Button 
                   variant="ghost"
                   className={`rounded-full px-6 py-2 ${activeTab === "overview" ? "bg-blue-500 text-white" : "text-gray-700"} text-sm`}
-                  onClick={() => setActiveTab("overview")}
+                  onClick={() => handleTabChange("overview")}
                 >
                   Digital Twin
                 </Button>
                 <Button 
                   variant="ghost"
                   className={`rounded-full px-6 py-2 ${activeTab === "courses" ? "bg-blue-500 text-white" : "text-gray-700"} text-sm`}
-                  onClick={() => setActiveTab("courses")}
+                  onClick={() => handleTabChange("courses")}
                 >
                   Courses
                 </Button>
                 <Button
                   variant="ghost"
+                  onClick={() => handleTabChange("labs")}
+                  className={`rounded-full px-8 py-4 ${
+                    activeTab === "labs"
+                      ? "bg-blue-500 text-white hover:bg-blue-600"
+                      : "text-gray-700 hover:bg-transparent hover:text-gray-900"
+                  } font-medium`}
+                >
+                  Labs
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => handleTabChange("services")}
+                  className={`rounded-full px-8 py-4 ${
+                    activeTab === "services"
+                      ? "bg-blue-500 text-white hover:bg-blue-600"
+                      : "text-gray-700 hover:bg-transparent hover:text-gray-900"
+                  } font-medium`}
+                >
+                  Services
+                </Button>
+                <Button
+                  variant="ghost"
                   className={`rounded-full px-6 py-2 ${activeTab === "upload" ? "bg-blue-500 text-white" : "text-gray-700"} text-sm`}
-                  onClick={() => setActiveTab("upload")}
+                  onClick={() => handleTabChange("upload")}
                 >
                   Upload
                 </Button>
               </div>
+
+              <Button
+                variant="ghost"
+                onClick={() => handleTabChange("admin")}
+                className={`rounded-xl px-8 py-4 ${
+                  "bg-blue-500 text-white hover:bg-blue-600 absolute left-10"
+                  // :"text-gray-700 hover:bg-transparent hover:text-gray-900"
+                } font-medium`}
+              >
+                Admin
+              </Button>
               
               {/* Profile dropdown - positioned absolutely to the right */}
               <div className="absolute right-0 top-1/2 transform -translate-y-1/2">
@@ -302,9 +358,9 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-
           {activeTab === "overview" ? (
-            <div className="px-6 py-0 bg-gradient-to-b from-gray-200 to-white min-h-screen">
+            
+            <div className="digital-twin px-6 py-0 bg-gradient-to-b from-gray-200 to-white h-screen overflow-hidden">
               {/* Main Content */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
                 {/* Left column - Organ visualization with organ switcher */}
@@ -322,8 +378,8 @@ export default function Dashboard() {
                       >
                         <div className="relative h-[400px] w-full flex items-center justify-center">
                           {/* BrainStorm  */}
-                          <div className="absolute  h-full rounded-[50%] w-full bg-gradient-to-b from-pink-400 to-transparent opacity-30 z-0"></div>
-                          <div className="absolute w-[90%] h-[90%] rounded-[50%] border-4 border-white/30 shadow-[0_0_15px_rgba(255,255,255,0.7)] animate-pulse z-1"></div>
+                          <div className="absolute  h-96 w-96 rounded-[50%]  bg-gradient-to-b from-pink-400 to-transparent opacity-30 z-0"></div>
+                          <div className="absolute w-96 h-96 rounded-[50%] border-4 border-white/30 shadow-[0_0_15px_rgba(255,255,255,0.7)] animate-pulse z-1"></div>
                           <motion.div
                             initial={{ y: 10 }}
                             animate={{ y: [10, 0, 10] }}
@@ -549,6 +605,12 @@ export default function Dashboard() {
             <div className="bg-gradient-to-b from-gray-200 to-white min-h-screen">
               <CourseManagement />
             </div>
+          ) : activeTab === "labs" ? (
+            <LabsSection />
+          ) : activeTab === "services" ? (
+            <ServicesProductsSection />
+          ) : activeTab === "admin" ? (
+            <PatientSection />
           ) : activeTab === "upload" ? (
             <div className="px-6 bg-gradient-to-b from-gray-200 to-white min-h-screen">
               <div className="p-8 bg-white rounded-3xl shadow-sm mt-4">

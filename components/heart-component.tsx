@@ -13,6 +13,8 @@ import {
   ResponsiveContainer,
   Area,
 } from "recharts";
+import { useState } from "react";
+import FoodIntakeModal from "./FoodIntakeModal";
 
 // Function to generate weight trend data
 const generateWeightTrendData = () => {
@@ -113,6 +115,7 @@ const itemVariants = {
 
 export const HeartComponent = () => {
   const weightTrendData = generateWeightTrendData();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
     <motion.div
@@ -121,6 +124,12 @@ export const HeartComponent = () => {
       animate="visible"
       exit="exit"
     >
+      {/* Food Intake Modal */}
+      <FoodIntakeModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+      />
+
       {/* Organ Image is now handled in dashboard.tsx */}
 
       {/* Right column - Stats and cards */}
@@ -349,44 +358,54 @@ export const HeartComponent = () => {
                   <span className="text-sm">Normal</span>
                   <div className="text-4xl font-bold">20.5</div>
                 </div>
-
+                {/* 
                 <div className="bg-gray-50 p-6 rounded-2xl">
                   <div className="text-xs pb-4 text-gray-600 mb-4">
                     Healthy weight for height
                     <br />
                     61.3 kg - 82.5 kg
                   </div>
-                  {/* Weight Range Labels */}
+                  <!-- Weight Range Labels -->
                   <div className="flex justify-between text-xs text-gray-500 mb-1">
                     <span>Below 61Kg</span>
                     <span>61 - 82Kg</span>
                     <span>83-99Kg</span>
                     <span>99Kg</span>
                   </div>
-                  {/* BMI Scale */}
+                  <!-- BMI Scale -->
                   <div className="relative mb-2">
-                    {/* Dynamic BMI Scale using CSS for better visual match */}
+                    <!-- Dynamic BMI Scale using CSS for better visual match -->
                     <div className="h-2 w-full rounded-full overflow-hidden flex">
-                      {/* We'll use dynamic widths based on BMI ranges */}
+                      <!-- We'll use dynamic widths based on BMI ranges -->
                       <div className="h-full bg-[#2c3e50] w-[25%] transition-all duration-500"></div>
                       <div className="h-full bg-[#3498db] w-[25%] transition-all duration-500"></div>
                       <div className="h-full bg-[#e67e22] w-[25%] transition-all duration-500"></div>
                       <div className="h-full bg-[#e74c3c] w-[25%] transition-all duration-500"></div>
                     </div>
-                    {/* Dynamic indicator position based on BMI value */}
+                    <!-- Dynamic indicator position based on BMI value -->
                     <div
                       className="h-3 w-3 bg-white border border-gray-300 rounded-full absolute -top-0.5 transform -translate-x-1/2 transition-all duration-500 hover:scale-125"
                       style={{ left: `${calculateBmiPosition(20.5)}%` }} // Using the BMI value of 20.5 from the display
                     ></div>
                   </div>
 
-                  {/* Status Labels */}
+                  <!-- Status Labels -->
                   <div className="flex justify-between text-xs text-gray-500">
                     <span>Underweight</span>
                     <span className="text-blue-500 font-medium">You</span>
                     <span>Overweight</span>
                     <span>Obese Above</span>
                   </div>
+                </div>
+                */}
+                
+                <div className="mt-28">
+                  <button 
+                    className="w-[70%] bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-4 rounded-full transition-colors duration-300"
+                    onClick={() => setIsModalOpen(true)}
+                  >
+                    Upload Data
+                  </button>
                 </div>
               </CardContent>
             </Card>

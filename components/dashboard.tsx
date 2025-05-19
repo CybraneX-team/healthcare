@@ -25,8 +25,6 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { CourseManagement } from "@/components/courseManage";
-import { LabsSection } from "./labSection";
-import { ServicesProductsSection } from "./ServicesSection";
 import { ProfileDropdown } from "@/components/ui/profile-dropdown";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -334,28 +332,7 @@ export default function Dashboard() {
                 >
                   Courses
                 </Button>
-                <Button
-                  variant="ghost"
-                  onClick={() => handleTabChange("labs")}
-                  className={`rounded-full px-8 py-4 ${
-                    activeTab === "labs"
-                      ? "bg-blue-500 text-white hover:bg-blue-600"
-                      : "text-gray-700 hover:bg-transparent hover:text-gray-900"
-                  } font-medium`}
-                >
-                  Labs
-                </Button>
-                <Button
-                  variant="ghost"
-                  onClick={() => handleTabChange("services")}
-                  className={`rounded-full px-8 py-4 ${
-                    activeTab === "services"
-                      ? "bg-blue-500 text-white hover:bg-blue-600"
-                      : "text-gray-700 hover:bg-transparent hover:text-gray-900"
-                  } font-medium`}
-                >
-                  Services
-                </Button>
+
                 <Button
                   variant="ghost"
                   className={`rounded-full px-6 py-2 ${

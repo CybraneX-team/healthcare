@@ -19,8 +19,8 @@ import { VideoPlayer } from "./video-player";
 export function CourseManagement() {
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const [completionPercentage, setCompletionPercentage] = useState(67);
-
-  const courseVideos = [
+  const [videoCompleted, setVideoCompleted] = useState(false);
+  const [courseVideos, setCourseVideos] = useState([
     {
       id: "1",
       title: "Introduction to Nutrition Basics",
@@ -49,19 +49,28 @@ export function CourseManagement() {
       videoId: "kJQP7kiw5Fk", //yt vid ID
       completed: false,
     },
-  ];
+  ]);
 
+  const toggle = () => {
+    setVideoCompleted(!videoCompleted);
+  };
   const handleVideoSelect = (videoId: string) => {
     setSelectedVideo(videoId);
   };
 
   const handleVideoComplete = (videoId: string) => {
-    // completion percentage
-    const totalVideos = courseVideos.length;
-    const completedVideos = courseVideos.filter(
-      (video) => video.completed || video.videoId === videoId
-    ).length;
+    // Update the completed status for the current video
+    const updatedVideos = courseVideos.map((video) =>
+      video.videoId === videoId ? { ...video, completed: true } : video
+    );
 
+    setCourseVideos(updatedVideos);
+
+    // Calculate completion percentage
+    const totalVideos = updatedVideos.length;
+    const completedVideos = updatedVideos.filter(
+      (video) => video.completed
+    ).length;
     const newPercentage = Math.round((completedVideos / totalVideos) * 100);
     setCompletionPercentage(newPercentage);
   };
@@ -72,7 +81,9 @@ export function CourseManagement() {
         <div className="bg-white rounded-3xl shadow-sm p-6 mb-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold">Customized Pathway</h1>
+              <h1 className="text-2xl md:text-3xl font-bold">
+                Customized Pathway
+              </h1>
               <div className="flex items-center gap-2 mt-1">
                 <span className="text-gray-600">Likelihood of Success:</span>
                 <span className="text-blue-500 font-medium flex items-center">
@@ -94,8 +105,13 @@ export function CourseManagement() {
               </div>
             </div>
             <Avatar className="h-10 w-10 mt-2 md:mt-0">
-              <AvatarImage src="/placeholder.svg?height=40&width=40" alt="User" />
-              <AvatarFallback className="bg-blue-500 text-white">JD</AvatarFallback>
+              <AvatarImage
+                src="/placeholder.svg?height=40&width=40"
+                alt="User"
+              />
+              <AvatarFallback className="bg-blue-500 text-white">
+                JD
+              </AvatarFallback>
             </Avatar>
           </div>
 
@@ -151,7 +167,11 @@ export function CourseManagement() {
                           <span>{video.duration}</span>
                         </div>
                       </div>
-                      <Button variant="ghost" size="sm" className="flex-shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="flex-shrink-0"
+                      >
                         <PlayCircle className="h-5 w-5" />
                       </Button>
                     </CardContent>
@@ -190,7 +210,9 @@ export function CourseManagement() {
                         </div>
                         <div className="flex-grow">
                           <div className="flex justify-between">
-                            <span className="font-medium">Open Office Hours</span>
+                            <span className="font-medium">
+                              Open Office Hours
+                            </span>
                           </div>
                           <Progress value={75} className="h-2 mt-2" />
                         </div>
@@ -221,7 +243,7 @@ export function CourseManagement() {
           </div>
         </div>
       </div>
-      
+
       <div className="px-2 pb-8 hidden">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <div>
@@ -250,7 +272,9 @@ export function CourseManagement() {
           </div>
           <Avatar className="h-10 w-10 mt-2 md:mt-0">
             <AvatarImage src="/placeholder.svg?height=40&width=40" alt="User" />
-            <AvatarFallback className="bg-blue-500 text-white">JD</AvatarFallback>
+            <AvatarFallback className="bg-blue-500 text-white">
+              JD
+            </AvatarFallback>
           </Avatar>
         </div>
 
@@ -294,8 +318,8 @@ export function CourseManagement() {
                   onClick={() => handleVideoSelect(video.videoId)}
                 >
                   <CardContent className="p-4 flex items-center gap-3">
-                    <div className="flex-shrink-0">
-                      {video.completed ? (
+                    <div className="flex-shrink-0" onClick={toggle}>
+                      {selectedVideo === video.videoId && videoCompleted ? (
                         <CheckCircle className="h-6 w-6 text-green-500" />
                       ) : (
                         <Circle className="h-6 w-6 text-gray-300" />
@@ -308,6 +332,9 @@ export function CourseManagement() {
                         <span>{video.duration}</span>
                       </div>
                     </div>
+                    <Button variant="ghost" size="sm" className="flex-shrink-0">
+                      <PlayCircle className="h-5 w-5" />
+                    </Button>
                   </CardContent>
                 </Card>
               ))}
@@ -400,10 +427,12 @@ export function CourseManagement() {
 
               <Card className="bg-white">
                 <CardContent className="p-4">
-                  <h3 className="font-semibold mb-4 text-black">Action Items</h3>
+                  <h3 className="font-semibold mb-4 text-black">
+                    Action Items
+                  </h3>
                   <div className="space-y-3">
                     <div className="flex items-start gap-3">
-                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                      <Circle className="h-5 w-5 text-gray-300 mt-0.5" />
                       <div>
                         <p className="font-medium text-black">
                           Increase daily protein intake
@@ -414,7 +443,18 @@ export function CourseManagement() {
                     <div className="flex items-start gap-3">
                       <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
                       <div>
-                        <p className="font-medium text-black">Reduce sugar consumption</p>
+                        <p className="font-medium text-black">
+                          Take berberine supplement
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                      <div>
+                        <p className="font-medium text-black">
+                          Reduce sugar consumption
+                        </p>
                       </div>
                     </div>
 

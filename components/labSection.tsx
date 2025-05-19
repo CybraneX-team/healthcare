@@ -368,7 +368,7 @@ export function LabsSection() {
             <div className={`p-5 ${isExpanded ? "bg-blue-50" : "bg-white"}`}>
               <div className="flex justify-between items-start mb-3">
                 <div>
-                  <h3 className="font-semibold text-lg text-black max-w-xs">
+                  <h3 className="font-semibold text-lg text-black ">
                     {center.name}
                   </h3>
                   <div className="flex items-center text-gray-500 text-sm mt-1">
@@ -517,11 +517,11 @@ export function LabsSection() {
       </div>
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-        <div className="relative w-full md:w-64">
+        <div className="relative w-full md:w-72">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Search centers or diagnostics..."
+            placeholder="Search centers or diagnostics"
             className="pl-10 pr-4 py-2 w-full rounded-full border bg-white text-gray-700 border-gray-400 focus:outline-none bg-transparent"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -562,26 +562,19 @@ export function LabsSection() {
         </Tabs>
       </div>
 
-      {/* Three column container with absolute positioning for cards */}
+      {/* Two column container with absolute positioning for cards */}
       <div className="relative">
         {/* First column */}
-        <div className="absolute left-0 top-0 w-full lg:w-1/3 pr-0 lg:pr-4">
+        <div className="absolute left-0 top-0 w-full lg:w-1/2 pr-0 lg:pr-4">
           {filteredCenters
-            .filter((_, index) => index % 3 === 0)
+            .filter((_, index) => index % 2 === 0)
             .map(renderCenterCard)}
         </div>
 
         {/* Second column */}
-        <div className="absolute left-0 lg:left-1/3 top-0 w-full lg:w-1/3 pr-0 lg:pr-4 mt-0 lg:mt-0">
+        <div className="absolute left-0 lg:left-1/2 top-0 w-full lg:w-1/2 pr-0 lg:pr-4 mt-0 lg:mt-0">
           {filteredCenters
-            .filter((_, index) => index % 3 === 1)
-            .map(renderCenterCard)}
-        </div>
-
-        {/* Third column */}
-        <div className="absolute left-0 lg:left-2/3 top-0 w-full lg:w-1/3 mt-0 lg:mt-0">
-          {filteredCenters
-            .filter((_, index) => index % 3 === 2)
+            .filter((_, index) => index % 2 === 1)
             .map(renderCenterCard)}
         </div>
 
@@ -590,9 +583,8 @@ export function LabsSection() {
           style={{
             height:
               Math.max(
-                filteredCenters.filter((_, i) => i % 3 === 0).length * 250,
-                filteredCenters.filter((_, i) => i % 3 === 1).length * 250,
-                filteredCenters.filter((_, i) => i % 3 === 2).length * 250
+                filteredCenters.filter((_, i) => i % 2 === 0).length * 250,
+                filteredCenters.filter((_, i) => i % 2 === 1).length * 250
               ) + (expandedCenterId ? 500 : 0), // Increased height to accommodate map
           }}
         />

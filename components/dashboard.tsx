@@ -25,6 +25,8 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { CourseManagement } from "@/components/courseManage";
+import { LabsSection } from "./labSection";
+import { ServicesProductsSection } from "./ServicesSection";
 import { ProfileDropdown } from "@/components/ui/profile-dropdown";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -122,14 +124,14 @@ const calculateBmiPosition = (bmi: number): number => {
 };
 
 // Custom tooltip component for the weight trend chart
-const CustomTooltip = ({ 
-  active, 
-  payload, 
-  label 
-}: { 
-  active?: boolean; 
-  payload?: any[]; 
-  label?: string 
+const CustomTooltip = ({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: any[];
+  label?: string;
 }) => {
   if (active && payload && payload.length) {
     const change =
@@ -147,48 +149,48 @@ const CustomTooltip = ({
 
 // Define animation variants for organ images
 const mainOrganVariants = {
-  hidden: { 
+  hidden: {
     opacity: 0,
-    scale: 0.8 
+    scale: 0.8,
   },
-  visible: { 
-    opacity: 1, 
+  visible: {
+    opacity: 1,
     scale: 1,
-    transition: { 
+    transition: {
       duration: 0.4,
-      ease: "easeOut"
-    }
+      ease: "easeOut",
+    },
   },
-  exit: { 
-    opacity: 0, 
+  exit: {
+    opacity: 0,
     scale: 0.9,
-    transition: { 
+    transition: {
       duration: 0.3,
-      ease: "easeIn" 
-    }
-  }
+      ease: "easeIn",
+    },
+  },
 };
 
 const switcherVariants = {
   hidden: { y: 20, opacity: 0 },
-  visible: { 
-    y: 0, 
+  visible: {
+    y: 0,
     opacity: 1,
-    transition: { 
+    transition: {
       duration: 0.3,
       ease: "easeOut",
-      staggerChildren: 0.05
-    }
-  }
+      staggerChildren: 0.05,
+    },
+  },
 };
 
 const switcherItemVariants = {
   hidden: { scale: 0.9, opacity: 0 },
-  visible: { 
-    scale: 1, 
+  visible: {
+    scale: 1,
     opacity: 1,
-    transition: { duration: 0.2 }
-  }
+    transition: { duration: 0.2 },
+  },
 };
 
 export default function Dashboard() {
@@ -202,7 +204,18 @@ export default function Dashboard() {
   // Initial setup - check URL for tab parameter on component mount
   useEffect(() => {
     const tabParam = searchParams.get("tab");
-    if (tabParam && ["overview", "progress", "courses", "labs", "services", "admin", "upload"].includes(tabParam)) {
+    if (
+      tabParam &&
+      [
+        "overview",
+        "progress",
+        "courses",
+        "labs",
+        "services",
+        "admin",
+        "upload",
+      ].includes(tabParam)
+    ) {
       setActiveTab(tabParam);
     }
   }, [searchParams]);
@@ -227,7 +240,7 @@ export default function Dashboard() {
     }, 500);
     return () => clearTimeout(timer);
   }, []);
-  
+
   // CSS for organ switcher circles
   const organSwitcherStyle = `
     .organ-switcher-circle {
@@ -283,7 +296,6 @@ export default function Dashboard() {
         }
       `}</style>
       <div className="h-full">
-
         <main className="w-full h-full">
           {/* Digital Twin Navigation - Moved outside conditionals so it stays in same position */}
           <div className="px-6 pt-8 pb-12">
@@ -291,22 +303,34 @@ export default function Dashboard() {
               <div className="flex bg-gray-100 rounded-full p-1 overflow-hidden">
                 <Button
                   variant="ghost"
-                  className={`rounded-full px-6 py-2 ${activeTab === "progress" ? "bg-blue-500 text-white" : "text-gray-700"} text-sm`}
-                  onClick={() => handleTabChange("progress")}
+                  className={`rounded-full px-6 py-2 ${
+                    activeTab === "progress"
+                      ? "bg-blue-500 text-white"
+                      : "text-gray-700"
+                  } text-sm`}
+                  onClick={() => setActiveTab("progress")}
                 >
                   Overall Progress
                 </Button>
-                <Button 
+                <Button
                   variant="ghost"
-                  className={`rounded-full px-6 py-2 ${activeTab === "overview" ? "bg-blue-500 text-white" : "text-gray-700"} text-sm`}
-                  onClick={() => handleTabChange("overview")}
+                  className={`rounded-full px-6 py-2 ${
+                    activeTab === "overview"
+                      ? "bg-blue-500 text-white"
+                      : "text-gray-700"
+                  } text-sm`}
+                  onClick={() => setActiveTab("overview")}
                 >
                   Digital Twin
                 </Button>
-                <Button 
+                <Button
                   variant="ghost"
-                  className={`rounded-full px-6 py-2 ${activeTab === "courses" ? "bg-blue-500 text-white" : "text-gray-700"} text-sm`}
-                  onClick={() => handleTabChange("courses")}
+                  className={`rounded-full px-6 py-2 ${
+                    activeTab === "courses"
+                      ? "bg-blue-500 text-white"
+                      : "text-gray-700"
+                  } text-sm`}
+                  onClick={() => setActiveTab("courses")}
                 >
                   Courses
                 </Button>
@@ -334,24 +358,39 @@ export default function Dashboard() {
                 </Button>
                 <Button
                   variant="ghost"
-                  className={`rounded-full px-6 py-2 ${activeTab === "upload" ? "bg-blue-500 text-white" : "text-gray-700"} text-sm`}
-                  onClick={() => handleTabChange("upload")}
+                  className={`rounded-full px-6 py-2 ${
+                    activeTab === "labs"
+                      ? "bg-blue-500 text-white"
+                      : "text-gray-700"
+                  } text-sm`}
+                  onClick={() => setActiveTab("labs")}
+                >
+                  Labs
+                </Button>
+                <Button
+                  variant="ghost"
+                  className={`rounded-full px-6 py-2 ${
+                    activeTab === "services"
+                      ? "bg-blue-500 text-white"
+                      : "text-gray-700"
+                  } text-sm`}
+                  onClick={() => setActiveTab("services")}
+                >
+                  Services
+                </Button>
+                <Button
+                  variant="ghost"
+                  className={`rounded-full px-6 py-2 ${
+                    activeTab === "upload"
+                      ? "bg-blue-500 text-white"
+                      : "text-gray-700"
+                  } text-sm`}
+                  onClick={() => setActiveTab("upload")}
                 >
                   Upload
                 </Button>
               </div>
 
-              <Button
-                variant="ghost"
-                onClick={() => handleTabChange("admin")}
-                className={`rounded-xl px-8 py-4 ${
-                  "bg-blue-500 text-white hover:bg-blue-600 absolute left-10"
-                  // :"text-gray-700 hover:bg-transparent hover:text-gray-900"
-                } font-medium`}
-              >
-                Admin
-              </Button>
-              
               {/* Profile dropdown - positioned absolutely to the right */}
               <div className="absolute right-0 top-1/2 transform -translate-y-1/2">
                 <ProfileDropdown />
@@ -359,7 +398,6 @@ export default function Dashboard() {
             </div>
           </div>
           {activeTab === "overview" ? (
-            
             <div className="digital-twin px-6 py-0 bg-gradient-to-b from-gray-200 to-white h-screen overflow-hidden">
               {/* Main Content */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
@@ -367,8 +405,8 @@ export default function Dashboard() {
                 <div className="lg:col-span-4 flex flex-col justify-center items-center mt-8">
                   {/* Dynamic organ visualization based on selected organ */}
                   <AnimatePresence mode="wait">
-                    {selectedOrgan === 'heart' && (
-                      <motion.div 
+                    {selectedOrgan === "heart" && (
+                      <motion.div
                         key="heart"
                         className="relative w-full max-w-lg mb-6 mt-14"
                         variants={mainOrganVariants}
@@ -383,7 +421,11 @@ export default function Dashboard() {
                           <motion.div
                             initial={{ y: 10 }}
                             animate={{ y: [10, 0, 10] }}
-                            transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                            transition={{
+                              repeat: Infinity,
+                              duration: 3,
+                              ease: "easeInOut",
+                            }}
                           >
                             <Image
                               src="/heart.png"
@@ -396,8 +438,8 @@ export default function Dashboard() {
                         </div>
                       </motion.div>
                     )}
-                    {selectedOrgan === 'lungs' && (
-                      <motion.div 
+                    {selectedOrgan === "lungs" && (
+                      <motion.div
                         key="lungs"
                         className="relative w-full max-w-lg mb-6"
                         variants={mainOrganVariants}
@@ -411,8 +453,8 @@ export default function Dashboard() {
                         </div>
                       </motion.div>
                     )}
-                    {selectedOrgan === 'liver' && (
-                      <motion.div 
+                    {selectedOrgan === "liver" && (
+                      <motion.div
                         key="liver"
                         className="relative w-full max-w-lg mb-6 mt-[3.5rem]"
                         variants={mainOrganVariants}
@@ -425,7 +467,11 @@ export default function Dashboard() {
                           <motion.div
                             initial={{ y: 10 }}
                             animate={{ y: [10, 0, 10] }}
-                            transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                            transition={{
+                              repeat: Infinity,
+                              duration: 3,
+                              ease: "easeInOut",
+                            }}
                           >
                             <Image
                               src="/liver.png"
@@ -438,8 +484,8 @@ export default function Dashboard() {
                         </div>
                       </motion.div>
                     )}
-                    {selectedOrgan === 'brain' && (
-                      <motion.div 
+                    {selectedOrgan === "brain" && (
+                      <motion.div
                         key="brain"
                         className="relative w-full max-w-lg mb-6"
                         variants={mainOrganVariants}
@@ -452,7 +498,11 @@ export default function Dashboard() {
                           <motion.div
                             initial={{ y: 10 }}
                             animate={{ y: [10, 0, 10] }}
-                            transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                            transition={{
+                              repeat: Infinity,
+                              duration: 3,
+                              ease: "easeInOut",
+                            }}
                           >
                             <Image
                               src="/heart.png"
@@ -470,20 +520,25 @@ export default function Dashboard() {
                       </motion.div>
                     )}
                   </AnimatePresence>
-                  
+
                   {/* Organ Switcher Circles */}
-                  <motion.div 
+                  <motion.div
                     className="cursor-pointer w-full mt-20"
                     variants={switcherVariants}
                     initial="hidden"
                     animate="visible"
                   >
                     <div className="flex justify-center items-center gap-8 w-full">
-                      <motion.div 
-                        className={`organ-switcher-circle ${selectedOrgan === 'heart' ? 'active' : ''}`}
-                        onClick={() => setSelectedOrgan('heart')}
+                      <motion.div
+                        className={`organ-switcher-circle ${
+                          selectedOrgan === "heart" ? "active" : ""
+                        }`}
+                        onClick={() => setSelectedOrgan("heart")}
                         variants={switcherItemVariants}
-                        whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
+                        whileHover={{
+                          scale: 1.05,
+                          transition: { duration: 0.2 },
+                        }}
                         whileTap={{ scale: 0.95 }}
                       >
                         <Image
@@ -494,11 +549,16 @@ export default function Dashboard() {
                           className="object-contain"
                         />
                       </motion.div>
-                      <motion.div 
-                        className={`organ-switcher-circle ${selectedOrgan === 'lungs' ? 'active' : ''}`}
-                        onClick={() => setSelectedOrgan('lungs')}
+                      <motion.div
+                        className={`organ-switcher-circle ${
+                          selectedOrgan === "lungs" ? "active" : ""
+                        }`}
+                        onClick={() => setSelectedOrgan("lungs")}
                         variants={switcherItemVariants}
-                        whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
+                        whileHover={{
+                          scale: 1.05,
+                          transition: { duration: 0.2 },
+                        }}
                         whileTap={{ scale: 0.95 }}
                       >
                         <Image
@@ -509,11 +569,16 @@ export default function Dashboard() {
                           className="object-contain"
                         />
                       </motion.div>
-                      <motion.div 
-                        className={`organ-switcher-circle ${selectedOrgan === 'liver' ? 'active' : ''}`}
-                        onClick={() => setSelectedOrgan('liver')}
+                      <motion.div
+                        className={`organ-switcher-circle ${
+                          selectedOrgan === "liver" ? "active" : ""
+                        }`}
+                        onClick={() => setSelectedOrgan("liver")}
                         variants={switcherItemVariants}
-                        whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
+                        whileHover={{
+                          scale: 1.05,
+                          transition: { duration: 0.2 },
+                        }}
                         whileTap={{ scale: 0.95 }}
                       >
                         <Image
@@ -524,11 +589,16 @@ export default function Dashboard() {
                           className="object-contain"
                         />
                       </motion.div>
-                      <motion.div 
-                        className={`organ-switcher-circle ${selectedOrgan === 'brain' ? 'active' : ''}`}
-                        onClick={() => setSelectedOrgan('brain')}
+                      <motion.div
+                        className={`organ-switcher-circle ${
+                          selectedOrgan === "brain" ? "active" : ""
+                        }`}
+                        onClick={() => setSelectedOrgan("brain")}
                         variants={switcherItemVariants}
-                        whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
+                        whileHover={{
+                          scale: 1.05,
+                          transition: { duration: 0.2 },
+                        }}
                         whileTap={{ scale: 0.95 }}
                       >
                         <Image
@@ -545,18 +615,28 @@ export default function Dashboard() {
 
                 {/* Right column - Dynamic content based on selected organ */}
                 <div className="lg:col-span-8">
-                  {selectedOrgan === 'heart' && <HeartComponent />}
-                  {selectedOrgan === 'lungs' && (
+                  {selectedOrgan === "heart" && <HeartComponent />}
+                  {selectedOrgan === "lungs" && (
                     <div className="text-center p-8 bg-white rounded-3xl shadow-sm">
-                      <h3 className="text-2xl font-semibold mb-4">Lungs Component</h3>
-                      <p className="text-gray-600 mb-6">Lungs data will be displayed here. Create a separate LiverComponent for detailed implementation.</p>
+                      <h3 className="text-2xl font-semibold mb-4">
+                        Lungs Component
+                      </h3>
+                      <p className="text-gray-600 mb-6">
+                        Lungs data will be displayed here. Create a separate
+                        LiverComponent for detailed implementation.
+                      </p>
                     </div>
                   )}
-                  {selectedOrgan === 'liver' && <LiverComponent />}
-                  {selectedOrgan === 'brain' && (
+                  {selectedOrgan === "liver" && <LiverComponent />}
+                  {selectedOrgan === "brain" && (
                     <div className="text-center p-8 bg-white rounded-3xl shadow-sm">
-                      <h3 className="text-2xl font-semibold mb-4">Brain Component</h3>
-                      <p className="text-gray-600 mb-6">Brain data will be displayed here. Create a separate BrainComponent for detailed implementation.</p>
+                      <h3 className="text-2xl font-semibold mb-4">
+                        Brain Component
+                      </h3>
+                      <p className="text-gray-600 mb-6">
+                        Brain data will be displayed here. Create a separate
+                        BrainComponent for detailed implementation.
+                      </p>
                     </div>
                   )}
                   {/* <div className="flex justify-end mb-6">
@@ -595,9 +675,7 @@ export default function Dashboard() {
 
                   {/* Main Stats Grid */}
 
-
                   {/* Bottom Stats Grid */}
-                  
                 </div>
               </div>
             </div>
@@ -609,13 +687,15 @@ export default function Dashboard() {
             <LabsSection />
           ) : activeTab === "services" ? (
             <ServicesProductsSection />
-          ) : activeTab === "admin" ? (
-            <PatientSection />
           ) : activeTab === "upload" ? (
             <div className="px-6 bg-gradient-to-b from-gray-200 to-white min-h-screen">
               <div className="p-8 bg-white rounded-3xl shadow-sm mt-4">
-                <h2 className="text-2xl font-semibold mb-4">Upload Documents</h2>
-                <p className="text-gray-600">This section allows you to upload medical documents.</p>
+                <h2 className="text-2xl font-semibold mb-4">
+                  Upload Documents
+                </h2>
+                <p className="text-gray-600">
+                  This section allows you to upload medical documents.
+                </p>
                 <div className="mt-4 flex justify-center">
                   <Button className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-2">
                     <UploadCloud className="h-4 w-4" />
@@ -627,8 +707,12 @@ export default function Dashboard() {
           ) : activeTab === "progress" ? (
             <div className="px-6 bg-gradient-to-b from-gray-200 to-white min-h-screen">
               <div className="p-8 bg-white rounded-3xl shadow-sm mt-4">
-                <h2 className="text-2xl font-semibold mb-4">Overall Progress</h2>
-                <p className="text-gray-600">Track your health metrics and overall progress here.</p>
+                <h2 className="text-2xl font-semibold mb-4">
+                  Overall Progress
+                </h2>
+                <p className="text-gray-600">
+                  Track your health metrics and overall progress here.
+                </p>
                 <div className="mt-6">
                   <h3 className="text-lg font-medium mb-3">Health Score</h3>
                   <Progress value={75} className="h-2 w-full" />

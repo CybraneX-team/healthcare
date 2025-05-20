@@ -2,11 +2,16 @@
   "name": "my-v0-project",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "18.x",
+    "npm": "9.x"
+  },
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "NODE_OPTIONS='--max-old-space-size=4096' next dev",
+    "build": "NODE_OPTIONS='--max-old-space-size=4096' next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "prepare": "echo 'Running with legacy-peer-deps' && npm config set legacy-peer-deps=true"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -47,6 +52,7 @@
     "date-fns": "4.1.0",
     "embla-carousel-react": "8.5.1",
     "firebase": "^11.7.1",
+    "firebase-admin": "^13.4.0",
     "framer-motion": "^12.10.5",
     "input-otp": "1.4.1",
     "lucide-react": "^0.454.0",

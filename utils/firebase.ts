@@ -7,39 +7,21 @@ import {
   signInWithPopup,
   OAuthProvider,
   User as FirebaseUser,
-  UserCredential,
-  updateProfile
+  UserCredential
 } from "firebase/auth";
 import { getAnalytics } from "firebase/analytics";
-import { 
-  getFirestore, 
-  doc, 
-  setDoc, 
-  getDoc, 
-  updateDoc,
-  collection,
-  query,
-  where,
-  getDocs,
-  Timestamp
-} from "firebase/firestore";
-import {
-  getStorage,
-  ref,
-  uploadBytes,
-  getDownloadURL,
-  uploadString
-} from "firebase/storage";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, collection } from "firebase/firestore";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyB_TZFGHsU9nFwPMlJR2lCJyynwAFZcRmk",
-  authDomain: "healthcare-17c9a.firebaseapp.com",
-  projectId: "healthcare-17c9a",
-  storageBucket: "healthcare-17c9a.appspot.com",
-  messagingSenderId: "555586732707",
-  appId: "1:555586732707:web:ec71dfdfd7cfe966883516",
-  measurementId: "G-S02Y5D2MVE"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase
@@ -82,123 +64,56 @@ export const getCurrentUser = (): FirebaseUser | null => {
   return auth.currentUser;
 };
 
-// Firestore User Functions
-export interface UserData {
-  email: string;
-  fullName: string;
-  dateOfBirth?: Date;
-  primaryDiagnosis?: string;
-  medications?: string;
-  phone?: string;
-  avatarUrl?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-// Create or update user profile in Firestore
-export const saveUserProfile = async (userId: string, userData: Partial<UserData>): Promise<void> => {
-  try {
-    const userRef = doc(db, "users", userId);
-    const userDoc = await getDoc(userRef);
-    
-    const timestamp = new Date();
-    
-    if (!userDoc.exists()) {
-      // Create new user document
-      await setDoc(userRef, {
-        ...userData,
-        createdAt: timestamp,
-        updatedAt: timestamp
-      });
-    } else {
-      // Update existing user document
-      await updateDoc(userRef, {
-        ...userData,
-        updatedAt: timestamp
-      });
-    }
-  } catch (error) {
-    console.error("Error saving user profile:", error);
-    throw error;
-  }
+// Firestore User Operations
+export const createUserProfile = async (userId: string, userData: any): Promise<void> => {
+  const userRef = doc(db, 'users', userId);
+  await setDoc(userRef, {
+    ...userData,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  });
 };
 
-// Get user profile from Firestore
-export const getUserProfile = async (userId: string): Promise<UserData | null> => {
-  try {
-    const userRef = doc(db, "users", userId);
-    const userDoc = await getDoc(userRef);
-    
-    if (userDoc.exists()) {
-      return userDoc.data() as UserData;
-    }
-    
-    return null;
-  } catch (error) {
-    console.error("Error getting user profile:", error);
-    throw error;
+export const getUserProfile = async (userId: string): Promise<any> => {
+  const userRef = doc(db, 'users', userId);
+  const userSnap = await getDoc(userRef);
+  
+  if (userSnap.exists()) {
+    return userSnap.data();
   }
+  return null;
 };
 
-// Firebase Storage Functions
-// Upload avatar image to Firebase Storage
-export const uploadAvatar = async (userId: string, file: File | string): Promise<string> => {
-  try {
-    const storageRef = ref(storage, `avatars/${userId}`);
-    
-    if (typeof file === 'string' && file.startsWith('data:')) {
-      // Handle base64 data URL
-      await uploadString(storageRef, file, 'data_url');
-    } else if (file instanceof File) {
-      // Handle File object
-      await uploadBytes(storageRef, file);
-    }
-    
-    // Get the download URL
-    const downloadURL = await getDownloadURL(storageRef);
-    
-    // Update user profile with avatar URL
-    if (auth.currentUser) {
-      await updateProfile(auth.currentUser, {
-        photoURL: downloadURL
-      });
-    }
-    
-    return downloadURL;
-  } catch (error) {
-    console.error("Error uploading avatar:", error);
-    throw error;
-  }
+export const updateUserProfile = async (userId: string, userData: any): Promise<void> => {
+  const userRef = doc(db, 'users', userId);
+  await updateDoc(userRef, {
+    ...userData,
+    updatedAt: new Date()
+  });
 };
 
-// Upload PDF document to Firebase Storage
-export const uploadDocument = async (userId: string, file: File, category: string): Promise<string> => {
+// Firebase Storage Operations
+export const uploadFile = async (file: File, path: string): Promise<string> => {
   try {
-    const filename = `${Date.now()}_${file.name}`;
-    const storageRef = ref(storage, `documents/${userId}/${category}/${filename}`);
-    
+    const storageRef = ref(storage, path);
     await uploadBytes(storageRef, file);
-    
-    // Get the download URL
     const downloadURL = await getDownloadURL(storageRef);
-    
-    // Save document reference to Firestore
-    const docRef = doc(collection(db, "users", userId, "documents"));
-    await setDoc(docRef, {
-      filename: file.name,
-      originalName: file.name,
-      fileUrl: downloadURL,
-      category,
-      contentType: file.type,
-      size: file.size,
-      uploadedAt: new Date()
-    });
-    
     return downloadURL;
   } catch (error) {
-    console.error("Error uploading document:", error);
+    console.error('Error uploading file:', error);
     throw error;
   }
 };
 
-export { app, auth, db, storage, analytics }; 
+export const uploadAvatar = async (userId: string, file: File): Promise<string> => {
+  const path = `avatars/${userId}`;
+  return uploadFile(file, path);
+};
+
+export const uploadUserDocument = async (userId: string, file: File, category: string): Promise<string> => {
+  const fileName = `${Date.now()}-${file.name}`;
+  const path = `documents/${userId}/${category}/${fileName}`;
+  return uploadFile(file, path);
+};
+
+export { app, auth, db, storage, analytics };

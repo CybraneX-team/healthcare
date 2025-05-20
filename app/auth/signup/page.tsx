@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Inputbox } from "@/components/ui/inputbox";
 import { FileUpload } from "@/components/ui/file-upload";
 import { LiquidSwitch } from "@/components/ui/liquid-switch";
+import { LoadingAnimation } from "@/components/ui/loading-animation";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { 
   Calendar as CalendarIcon, 
@@ -48,7 +49,7 @@ interface UserProfile {
   primaryDiagnosis: string;
   medications: string;
   phone: string;
-  avatar: string | null;
+  avatar: any;
 }
 
 export default function SignupPage() {
@@ -73,6 +74,9 @@ export default function SignupPage() {
     phone: "",
     avatar: null,
   });
+  
+  // Separate state for avatar preview URL
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   
   // Password validation states
   const [passwordFocused, setPasswordFocused] = useState(false);
@@ -197,6 +201,9 @@ export default function SignupPage() {
     setIsSubmitting(true);
     
     try {
+      // Show success animation before redirecting
+      setShowSuccess(true);
+      
       // Call the Firebase signup function with proper parameters
       const userData = {
         fullName: profile.fullName,
@@ -209,9 +216,6 @@ export default function SignupPage() {
       
       await signup(profile.email, profile.password, userData);
       
-      // Show success animation before redirecting
-      setShowSuccess(true);
-      
       // Wait for the animation to complete before redirecting
       setTimeout(() => {
         // Redirect to file upload
@@ -221,7 +225,6 @@ export default function SignupPage() {
       setIsSubmitting(false);
       setShowSuccess(false);
       setError("An error occurred during signup. Please try again.");
-      console.error("Signup error:", err);
     }
   };
 
@@ -244,9 +247,14 @@ export default function SignupPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Store the actual File object instead of the data URL
+      setProfile({ ...profile, avatar: file });
+      
+      // For preview purposes only, we can still use a data URL
       const reader = new FileReader();
       reader.onloadend = () => {
-        setProfile({ ...profile, avatar: reader.result as string });
+        // Store the preview URL in a separate state if needed for UI display
+        setAvatarPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -292,28 +300,13 @@ export default function SignupPage() {
       transition={{ duration: 0.5 }}
       className="w-full max-w-md"
     >
-      {/* Overlay success animation */}
+      {/* Use the new LoadingAnimation component */}
       {showSuccess && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center"
-        >
-          <motion.div
-            initial={{ scale: 0.5, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", duration: 0.5 }}
-            className="bg-green-100 rounded-full p-10"
-          >
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.2, type: "spring" }}
-            >
-              <Check className="w-16 h-16 text-green-600" />
-            </motion.div>
-          </motion.div>
-        </motion.div>
+        <LoadingAnimation
+          title="Creating your personalized experience"
+          description="Preparing your healthcare dashboard..."
+          variant="blue"
+        />
       )}
       
       <div className="mb-6">
@@ -729,11 +722,14 @@ export default function SignupPage() {
                       className="relative"
                     >
                       <Avatar className="w-32 h-32">
-                        <AvatarImage src={profile.avatar} />
+                        <AvatarImage src={avatarPreview || ''} />
                         <AvatarFallback>{profile.fullName.substring(0, 2).toUpperCase()}</AvatarFallback>
                       </Avatar>
                       <button 
-                        onClick={() => setProfile({ ...profile, avatar: null })}
+                        onClick={() => {
+                          setProfile({ ...profile, avatar: null });
+                          setAvatarPreview(null);
+                        }}
                         className="absolute top-0 right-0 bg-red-100 text-red-600 rounded-full p-1"
                       >
                         <X className="h-4 w-4" />
@@ -751,7 +747,10 @@ export default function SignupPage() {
                     <Button 
                       type="button" 
                       variant="outline"
-                      onClick={() => setProfile({ ...profile, avatar: null })}
+                      onClick={() => {
+                        setProfile({ ...profile, avatar: null });
+                        setAvatarPreview(null);
+                      }}
                       className="flex items-center gap-2"
                     >
                       Remove photo
@@ -776,8 +775,8 @@ export default function SignupPage() {
               <div className="space-y-4">
                 <div className="flex items-center gap-3 mb-2">
                   <Avatar className="w-10 h-10">
-                    {profile.avatar ? (
-                      <AvatarImage src={profile.avatar} />
+                    {avatarPreview ? (
+                      <AvatarImage src={avatarPreview} />
                     ) : null}
                     <AvatarFallback className="bg-blue-100 text-blue-600">{profile.fullName.substring(0, 2).toUpperCase()}</AvatarFallback>
                   </Avatar>
@@ -915,4 +914,4 @@ export default function SignupPage() {
       )}
     </motion.div>
   );
-} 
+}

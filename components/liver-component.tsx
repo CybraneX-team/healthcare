@@ -55,7 +55,7 @@ export const LiverComponent = () => {
       exit="exit"
     >
       {/* Top Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         {/* Liver Care Card */}
         <motion.div variants={itemVariants}>
           <Card className="shadow-sm border-0 bg-white rounded-3xl h-[200px] md:h-[250px]">

@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Inputbox } from "@/components/ui/inputbox";
 import { Label } from "@/components/ui/label";
 import { FileUpload } from "@/components/ui/file-upload";
+import { LoadingAnimation } from "@/components/ui/loading-animation";
 import { 
   Tabs, 
   TabsContent, 
@@ -28,9 +29,7 @@ import { Card, CardContent, CardHeader, CardFooter, CardTitle } from "@/componen
 import { Progress } from "@/components/ui/progress";
 import Image from "next/image";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
-import { useAuth } from "@/hooks/useAuth";
-import { db } from "@/utils/firebase";
-import { doc, updateDoc } from "firebase/firestore";
+import { getCurrentUser, uploadUserDocument, updateUserProfile } from "@/utils/firebase";
 
 type FileCategory = "labs" | "radiology" | "prescriptions";
 
@@ -42,48 +41,18 @@ interface UploadedFile {
   category: FileCategory;
   uploadProgress: number;
   previewUrl?: string;
-  fileUrl?: string;
   dateUploaded: Date;
 }
 
 export default function UploadPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { user, uploadUserDocument, getUserFiles, getUserData, saveUserProfile } = useAuth();
   
   const [activeTab, setActiveTab] = useState<FileCategory>("labs");
   const [uploadingFiles, setUploadingFiles] = useState<UploadedFile[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
-  
-  // Load any existing files from Firebase
-  useEffect(() => {
-    const loadExistingFiles = async () => {
-      try {
-        const files = await getUserFiles(activeTab);
-        if (files && files.length > 0) {
-          const formattedFiles: UploadedFile[] = files.map(file => ({
-            id: file.id,
-            name: file.filename || file.originalName,
-            size: file.size || 0,
-            type: file.contentType || "",
-            category: file.category as FileCategory,
-            uploadProgress: 100,
-            fileUrl: file.fileUrl,
-            dateUploaded: file.uploadedAt ? new Date(file.uploadedAt) : new Date()
-          }));
-          
-          setUploadedFiles(formattedFiles);
-        }
-      } catch (error) {
-        console.error("Error loading files:", error);
-      }
-    };
-    
-    if (user) {
-      loadExistingFiles();
-    }
-  }, [user, activeTab, getUserFiles]);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -114,114 +83,100 @@ export default function UploadPage() {
   };
   
   const handleFiles = (files: FileList) => {
-    const newFiles: UploadedFile[] = Array.from(files).map(file => ({
-      id: Math.random().toString(36).substring(2, 9),
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      category: activeTab,
-      uploadProgress: 0,
-      dateUploaded: new Date()
-    }));
+    // Create a map to store the actual File objects by their generated ID
+    const fileMap = new Map<string, File>();
+    
+    const newFiles: UploadedFile[] = Array.from(files).map(file => {
+      const id = Math.random().toString(36).substring(2, 9);
+      // Store the actual File object in the map
+      fileMap.set(id, file);
+      
+      return {
+        id,
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        category: activeTab,
+        uploadProgress: 0,
+        dateUploaded: new Date()
+      };
+    });
     
     setUploadingFiles(prev => [...prev, ...newFiles]);
     
     // Upload files to Firebase Storage
-    Array.from(files).forEach((file, index) => {
-      uploadFile(file, newFiles[index]);
+    newFiles.forEach(uploadedFile => {
+      const actualFile = fileMap.get(uploadedFile.id);
+      if (actualFile) {
+        simulateFileUpload(uploadedFile, actualFile);
+      }
     });
   };
   
-  const uploadFile = async (file: File, fileInfo: UploadedFile) => {
+  const simulateFileUpload = async (file: UploadedFile, actualFile: File) => {
     try {
-      // Create a progress tracker
-      let progress = 0;
-      const interval = setInterval(() => {
-        progress += Math.random() * 15;
-        if (progress > 95) {
-          clearInterval(interval);
-          return;
-        }
-        
-        setUploadingFiles(prev =>
-          prev.map(f => f.id === fileInfo.id ? { ...f, uploadProgress: progress } : f)
-        );
-      }, 500);
+      // Get current user ID from auth
+      const user = getCurrentUser();
+      if (!user) {
+        throw new Error("User not authenticated");
+      }
       
-      // Upload to Firebase Storage
-      const fileUrl = await uploadUserDocument(file, fileInfo.category);
+      // Update progress to show upload started
+      setUploadingFiles(prev =>
+        prev.map(f => f.id === file.id ? { ...f, uploadProgress: 10 } : f)
+      );
       
-      clearInterval(interval);
+      // Upload file to Firebase Storage
+      const downloadURL = await uploadUserDocument(user.uid, actualFile, file.category);
       
-      // Update the uploading files list
-      setUploadingFiles(prev => prev.filter(f => f.id !== fileInfo.id));
+      // Update progress to 100%
+      setUploadingFiles(prev =>
+        prev.map(f => f.id === file.id ? { ...f, uploadProgress: 100 } : f)
+      );
       
-      // Add to uploaded files list
+      // Move file from uploading to uploaded with the download URL
+      setUploadingFiles(prev => prev.filter(f => f.id !== file.id));
       setUploadedFiles(prev => [
-        { 
-          ...fileInfo, 
-          uploadProgress: 100,
-          fileUrl
-        },
+        { ...file, uploadProgress: 100, previewUrl: downloadURL },
         ...prev
       ]);
+      
+      // Store file reference in Firestore (only metadata, not the actual file)
+      await updateUserProfile(user.uid, {
+        documents: {
+          [file.category]: {
+            [file.id]: {
+              name: file.name,
+              size: file.size,
+              type: file.type,
+              downloadURL,
+              uploadedAt: new Date().toISOString()
+            }
+          }
+        }
+      });
+      
     } catch (error) {
-      console.error("Error uploading file:", error);
+      console.error("File upload failed:", error);
       
-      // Show error state for the file
-      setUploadingFiles(prev => prev.filter(f => f.id !== fileInfo.id));
-      
-      // Could add error handling UI here
+      // Handle error by marking the file as failed
+      setUploadingFiles(prev => prev.filter(f => f.id !== file.id));
+      // You could add error handling UI here
     }
   };
   
   const handleDeleteFile = (fileId: string) => {
-    // In a real app, you would also delete from Firebase Storage
     setUploadedFiles(prev => prev.filter(file => file.id !== fileId));
   };
   
-  const handleFinish = async () => {
-    try {
-      if (user) {
-        // Get the current user profile
-        const userData = await getUserData();
-        
-        if (userData) {
-          // Get reference to user document in Firestore
-          const userRef = doc(db, "users", user.id);
-          
-          // Create a summary of uploaded documents
-          const documentSummary = {};
-          
-          // Group files by category
-          uploadedFiles.forEach(file => {
-            if (!documentSummary[file.category]) {
-              documentSummary[file.category] = [];
-            }
-            
-            documentSummary[file.category].push({
-              name: file.name,
-              fileUrl: file.fileUrl,
-              uploadDate: file.dateUploaded
-            });
-          });
-          
-          // Update the user document with file information
-          await updateDoc(userRef, {
-            documents: documentSummary,
-            documentUploadComplete: true,
-            updatedAt: new Date()
-          });
-        }
-      }
-      
-      // Redirect to login page
-      router.push("/auth/login?setup=complete");
-    } catch (error) {
-      console.error("Error saving document information:", error);
-      // Still redirect to avoid user getting stuck
-      router.push("/auth/login?setup=complete");
-    }
+  const handleFinish = () => {
+    // Show loading animation before redirecting
+    setIsRedirecting(true);
+    
+    // Redirect to dashboard with a slight delay for animation
+    setTimeout(() => {
+      router.push("/dashboard");
+    }, 1500);
   };
   
   const formatFileSize = (bytes: number) => {
@@ -244,6 +199,15 @@ export default function UploadPage() {
       transition={{ duration: 0.5 }}
       className="max-w-3xl mx-auto rounded-2xl p-8"
     >
+      {/* Loading animation for redirection */}
+      {isRedirecting && (
+        <LoadingAnimation
+          title="Entering your dashboard"
+          description="Preparing your personalized experience..."
+          variant="blue"
+        />
+      )}
+      
       <div className="mb-8">
         <motion.h1 
           initial={{ opacity: 0 }}
@@ -415,38 +379,17 @@ export default function UploadPage() {
                       <div>
                         <p className="text-sm font-medium truncate max-w-[240px]">{file.name}</p>
                         <p className="text-xs text-gray-500">
-                          {formatFileSize(file.size)} • {file.dateUploaded.toLocaleDateString()}
+                          {formatFileSize(file.size)} • {new Date().toLocaleDateString()}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      {file.fileUrl && (
-                        <>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 text-gray-500"
-                            onClick={() => window.open(file.fileUrl, '_blank')}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 text-gray-500"
-                            onClick={() => {
-                              const link = document.createElement('a');
-                              link.href = file.fileUrl!;
-                              link.download = file.name;
-                              document.body.appendChild(link);
-                              link.click();
-                              document.body.removeChild(link);
-                            }}
-                          >
-                            <Download className="h-4 w-4" />
-                          </Button>
-                        </>
-                      )}
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500">
+                        <Download className="h-4 w-4" />
+                      </Button>
                       <Button 
                         variant="ghost" 
                         size="icon" 
@@ -465,22 +408,15 @@ export default function UploadPage() {
       )}
       
       <div className="flex justify-between mt-8">
-        {/* <Button 
-          variant="outline" 
-          onClick={() => router.push("/component-dashboard")}
-          className="flex items-center gap-2"
-        >
-          <span>Skip for now</span>
-        </Button> */}
-        
         <Button 
           onClick={handleFinish}
-          className="flex items-center gap-2 ml-20 bg-blue-600 hover:bg-blue-700"
+          className="flex items-center gap-2 ml-16 bg-blue-600 hover:bg-blue-700"
+          disabled={isRedirecting}
         >
-          <span>Complete Setup</span>
+          <span>Enter into Dashboard</span>
           <ArrowRight className="h-4 w-4" />
         </Button>
       </div>
     </motion.div>
   );
-} 
+}

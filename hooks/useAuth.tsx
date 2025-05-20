@@ -8,16 +8,11 @@ import {
   createUserWithEmail, 
   signOut as firebaseSignOut,
   getCurrentUser,
-  auth
-} from "@/utils/firebase";
-import {
-  saveUserProfile,
-  getUserProfile,
+  auth,
+  createUserProfile,
   uploadAvatar,
-  uploadDocument,
-  getUserDocuments,
-  UserData
-} from "@/utils/user-data";
+  updateUserProfile
+} from "@/utils/firebase";
 
 interface User {
   id: string;
@@ -34,11 +29,6 @@ interface AuthContextType {
   signup: (email: string, password: string, userData?: any) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
-  uploadUserAvatar: (file: File | string) => Promise<string>;
-  uploadUserDocument: (file: File, category: string) => Promise<string>;
-  getUserData: () => Promise<UserData | null>;
-  getUserFiles: (category?: string) => Promise<any[]>;
-  saveUserProfile: (userData: Partial<UserData>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -126,29 +116,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error("Invalid email format. Please enter a valid email address.");
       }
       
-      // Create the user account with Firebase Auth
+      // Create user in Firebase Authentication
       const userCredential = await createUserWithEmail(email, password);
-      const userId = userCredential.user.uid;
+      const user = userCredential.user;
       
-      // Store additional user data in Firestore
+      // Store user profile data in Firestore
       if (userData) {
-        // Process avatar if provided
-        let avatarUrl: string | undefined = undefined;
-        if (userData.avatar) {
-          avatarUrl = await uploadAvatar(userId, userData.avatar);
-        }
+        // Create a copy of userData without the avatar to prevent size limit issues
+        const { avatar, ...userDataWithoutAvatar } = userData;
         
-        // Save user profile data to Firestore
-        await saveUserProfile(userId, {
-          email,
-          fullName: userData.fullName,
-          dateOfBirth: userData.dateOfBirth,
-          primaryDiagnosis: userData.primaryDiagnosis,
-          medications: userData.medications,
-          phone: userData.phone,
-          avatarUrl
+        await createUserProfile(user.uid, {
+          email: user.email,
+          displayName: userData.displayName || '',
+          phoneNumber: userData.phoneNumber || '',
+          ...userDataWithoutAvatar
         });
+        
+        // Upload avatar if provided
+        if (avatar && avatar instanceof File) {
+          try {
+            const avatarUrl = await uploadAvatar(user.uid, avatar);
+            await updateUserProfile(user.uid, { avatarUrl });
+          } catch (uploadError) {
+            console.error("Avatar upload failed:", uploadError);
+            // Continue with signup even if avatar upload fails
+          }
+        }
       }
+      
+      // Auth state listener will update the user state
     } catch (error) {
       console.error("Signup failed:", error);
       throw error;
@@ -166,40 +162,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error("Logout failed:", error);
     }
   };
-  
-  // Upload user avatar
-  const uploadUserAvatar = async (file: File | string): Promise<string> => {
-    if (!user) throw new Error("User not authenticated");
-    return uploadAvatar(user.id, file);
-  };
-  
-  // Upload user document (PDF)
-  const uploadUserDocument = async (file: File, category: string): Promise<string> => {
-    if (!user) throw new Error("User not authenticated");
-    return uploadDocument(user.id, file, category);
-  };
-  
-  // Get user data from Firestore
-  const getUserData = async (): Promise<UserData | null> => {
-    if (!user) return null;
-    return getUserProfile(user.id);
-  };
-  
-  // Save user profile data (used for both initial signup and updates)
-  const saveUserProfile = async (userId: string, userData: Partial<UserData>): Promise<void> => {
-    try {
-      await saveUserProfile(userId, userData);
-    } catch (error) {
-      console.error("Error saving user profile:", error);
-      throw error;
-    }
-  };
-  
-  // Get user files from Firestore
-  const getUserFiles = async (category?: string): Promise<any[]> => {
-    if (!user) return [];
-    return getUserDocuments(user.id, category);
-  };
 
   return (
     <AuthContext.Provider
@@ -210,15 +172,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loginWithApple,
         signup,
         logout,
-        isAuthenticated: !!user,
-        uploadUserAvatar,
-        uploadUserDocument,
-        getUserData,
-        getUserFiles,
-        saveUserProfile: (userData: Partial<UserData>) => {
-          if (!user) throw new Error("User not authenticated");
-          return saveUserProfile(user.id, userData);
-        }
+        isAuthenticated: !!user
       }}
     >
       {children}
@@ -234,4 +188,4 @@ export function useAuth() {
   }
   
   return context;
-} 
+}

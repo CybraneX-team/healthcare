@@ -1,0 +1,50 @@
+[
+  {
+    "id": "sp-001",
+    "name": "Quicksilver Scientific, Inc.",
+    "category": "Product",
+    "productService": "Vitamin D3K2",
+    "pricing": "$55",
+    "address": "1960 Cherry Street, Louisville, CO 80027",
+    "phone": "(303) 531-0861",
+    "email": "support@quicksilverscientific.com",
+    "operatingHours": "8:00AM - 5:00PM (Monday to Friday)",
+    "mapLink": "LINK"
+  },
+  {
+    "id": "sp-002",
+    "name": "Structure (Dr. Jason Valdez)",
+    "category": "Service",
+    "productService": "Chiropractic Treatment",
+    "pricing": "N/A",
+    "address": "6860 Embarcadero Lane Carlsbad, CA 92011",
+    "phone": "(832) 689-5022",
+    "email": "hello@structurecarlsbad.com",
+    "operatingHours": "8:00AM - 6:00PM (Monday to Friday); 8:00AM - 11:00AM (Saturday & Sunday)",
+    "mapLink": "LINK"
+  },
+  {
+    "id": "sp-003",
+    "name": "Breathe Degrees",
+    "category": "Service",
+    "productService": "Breathwork, Cold Plunge, Sauna",
+    "pricing": "starts at $69",
+    "address": "6965 El Camino Real #107, Carlsbad, CA 92011",
+    "phone": "(760) 814-2334",
+    "email": "admin@breathedegrees.com",
+    "operatingHours": "5:30AM - 9:00PM (Sunday to Friday); 6:30AM - 7:00PM (Saturday)",
+    "mapLink": "LINK"
+  },
+  {
+    "id": "sp-004",
+    "name": "Mitrua",
+    "category": "Service",
+    "productService": "Radiology Second Opinion",
+    "pricing": "starts at $99",
+    "address": "N/A",
+    "phone": "N/A",
+    "email": "N/A",
+    "operatingHours": "24/7",
+    "mapLink": "LINK"
+  }
+]

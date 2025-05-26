@@ -38,7 +38,7 @@ import { PatientSection } from "./PatientSection";
 import { LabsSection } from "./labSection";
 import { ServicesProductsSection } from "./ServicesSection";
 import { CombinedLabsSection } from "./Lab-Services";
-
+import Link from "next/link";
 // Other organ components will be imported here as they are created
 
 // Define types for weight trend data
@@ -356,7 +356,18 @@ export default function Dashboard() {
                   Upload
                 </Button>
               </div>
-
+              <Link href="/admin">
+                <Button
+                  variant="ghost"
+                  // onClick={() => setActiveTab("admin")}
+                  className={`rounded-xl px-8 py-4 ${
+                    "bg-blue-500 text-white hover:bg-blue-600 absolute left-10"
+                    // :"text-gray-700 hover:bg-transparent hover:text-gray-900"
+                  } font-medium`}
+                >
+                  Admin
+                </Button>
+              </Link>
               {/* Profile dropdown - positioned absolutely to the right */}
               <div className="absolute right-0 top-1/2 transform -translate-y-1/2">
                 <ProfileDropdown />
@@ -688,6 +699,8 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
+          ) : activeTab === "admin" ? (
+            <PatientSection />
           ) : (
             <div className="flex items-center justify-center h-64 bg-gradient-to-b from-gray-200 to-white min-h-screen">
               <p className="text-gray-500">This section is under development</p>

@@ -1,27 +1,13 @@
 {
   "firestore": {
-    "rules": "firestore.rules"
+    "database": "(default)",
+    "rules": "firestore.rules",
+    "indexes": "Y"
   },
   "storage": {
-    "rules": "storage.rules"
+    "rules": "Y"
   },
-  "hosting": {
-    "public": "public",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
-    "headers": [
-      {
-        "source": "**",
-        "headers": [
-          {
-            "key": "Access-Control-Allow-Origin",
-            "value": "*"
-          }
-        ]
-      }
-    ]
+  "database": {
+    "rules": "database.rules.json"
   }
-} 
+}

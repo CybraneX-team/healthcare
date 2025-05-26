@@ -19,7 +19,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-// Diagnostic centers data from the spreadsheet
 const diagnosticCenters = [
   {
     id: "center-001",
@@ -488,15 +487,6 @@ export function LabsSection() {
 
                 {/* Google Maps integration */}
                 <GoogleMap address={center.address} />
-
-                <div className="mt-4 flex justify-end">
-                  <Button
-                    size="sm"
-                    className="bg-blue-500 hover:bg-blue-600 text-white"
-                  >
-                    View Full Details
-                  </Button>
-                </div>
               </div>
             )}
           </CardContent>

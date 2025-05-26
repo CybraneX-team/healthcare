@@ -16,7 +16,7 @@ import {
   ChevronUp,
   X,
   Home,
-  CheckCircle
+  CheckCircle,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -32,7 +32,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { CourseManagement } from "@/components/courseManage";
+import Course from "@/components/courseManage";
+import { LabsSection } from "./labSection";
+import { ServicesProductsSection } from "./ServicesSection";
 import { ProfileDropdown } from "@/components/ui/profile-dropdown";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -65,19 +67,20 @@ const generateWeightTrendData = (): WeightTrendData[] => {
 };
 
 // Custom tooltip component for the weight trend chart
-const CustomTooltip = ({ 
-  active, 
-  payload, 
-  label 
-}: { 
-  active?: boolean; 
-  payload?: any[]; 
-  label?: string 
+const CustomTooltip = ({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: any[];
+  label?: string;
 }) => {
   if (active && payload && payload.length) {
-    const change = payload[0].payload.change > 0
-      ? `+${payload[0].payload.change}`
-      : payload[0].payload.change;
+    const change =
+      payload[0].payload.change > 0
+        ? `+${payload[0].payload.change}`
+        : payload[0].payload.change;
     return (
       <div className="bg-white p-2 rounded-xl shadow-sm border border-gray-100">
         <p className="text-xs font-medium text-blue-500">{`${label}: ${change} kg`}</p>
@@ -89,47 +92,47 @@ const CustomTooltip = ({
 
 // Define animation variants for organ images
 const mainOrganVariants = {
-  hidden: { 
+  hidden: {
     opacity: 0,
-    scale: 0.8 
+    scale: 0.8,
   },
-  visible: { 
-    opacity: 1, 
+  visible: {
+    opacity: 1,
     scale: 1,
-    transition: { 
+    transition: {
       duration: 0.4,
-      ease: "easeOut"
-    }
+      ease: "easeOut",
+    },
   },
-  exit: { 
-    opacity: 0, 
+  exit: {
+    opacity: 0,
     scale: 0.9,
-    transition: { 
+    transition: {
       duration: 0.3,
-      ease: "easeIn" 
-    }
-  }
+      ease: "easeIn",
+    },
+  },
 };
 
 const switcherVariants = {
   hidden: { opacity: 0 },
-  visible: { 
+  visible: {
     opacity: 1,
-    transition: { 
+    transition: {
       duration: 0.3,
       ease: "easeOut",
-      staggerChildren: 0.05
-    }
-  }
+      staggerChildren: 0.05,
+    },
+  },
 };
 
 const switcherItemVariants = {
   hidden: { scale: 0.9, opacity: 0 },
-  visible: { 
-    scale: 1, 
+  visible: {
+    scale: 1,
     opacity: 1,
-    transition: { duration: 0.2 }
-  }
+    transition: { duration: 0.2 },
+  },
 };
 
 export default function DashboardMobile() {
@@ -154,16 +157,24 @@ export default function DashboardMobile() {
   // Bottom navigation icons and handlers
   const bottomNavItems = [
     { id: "overview", icon: <Activity className="h-6 w-6" />, label: "Twin" },
-    { id: "progress", icon: <Activity className="h-6 w-6" />, label: "Progress" },
+    {
+      id: "progress",
+      icon: <Activity className="h-6 w-6" />,
+      label: "Progress",
+    },
     { id: "courses", icon: <FileText className="h-6 w-6" />, label: "Courses" },
-    { id: "upload", icon: <UploadCloud className="h-6 w-6" />, label: "Upload" },
+    {
+      id: "upload",
+      icon: <UploadCloud className="h-6 w-6" />,
+      label: "Upload",
+    },
   ];
 
   return (
     <div className="min-h-screen bg-gray-200">
       {/* Minimal header */}
       <header className="top-0 z-20 w-full px-5 py-4 flex items-center justify-between bg-transparent">
-        <div className="flex items-center"> 
+        <div className="flex items-center">
           <h1 className="font-bold text-lg text-gray-800">Healthcare App</h1>
         </div>
         <div className="flex items-center space-x-3">
@@ -179,8 +190,8 @@ export default function DashboardMobile() {
               {/* Dynamic organ visualization based on selected organ */}
               <div className="flex flex-col items-center">
                 <AnimatePresence mode="wait">
-                  {selectedOrgan === 'heart' && (
-                    <motion.div 
+                  {selectedOrgan === "heart" && (
+                    <motion.div
                       key="heart"
                       className="relative w-full max-w-[250px] mb-2 mt-3"
                       variants={mainOrganVariants}
@@ -193,7 +204,11 @@ export default function DashboardMobile() {
                         <motion.div
                           initial={{ y: 10 }}
                           animate={{ y: [10, 0, 10] }}
-                          transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                          transition={{
+                            repeat: Infinity,
+                            duration: 3,
+                            ease: "easeInOut",
+                          }}
                           className="scale-110"
                         >
                           <Image
@@ -207,8 +222,8 @@ export default function DashboardMobile() {
                       </div>
                     </motion.div>
                   )}
-                  {selectedOrgan === 'lungs' && (
-                    <motion.div 
+                  {selectedOrgan === "lungs" && (
+                    <motion.div
                       key="lungs"
                       className="relative w-full max-w-[250px] mb-2"
                       variants={mainOrganVariants}
@@ -222,8 +237,8 @@ export default function DashboardMobile() {
                       </div>
                     </motion.div>
                   )}
-                  {selectedOrgan === 'liver' && (
-                    <motion.div 
+                  {selectedOrgan === "liver" && (
+                    <motion.div
                       key="liver"
                       className="relative w-full max-w-[250px] mb-2 mt-2"
                       variants={mainOrganVariants}
@@ -236,7 +251,11 @@ export default function DashboardMobile() {
                         <motion.div
                           initial={{ y: 10 }}
                           animate={{ y: [10, 0, 10] }}
-                          transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                          transition={{
+                            repeat: Infinity,
+                            duration: 3,
+                            ease: "easeInOut",
+                          }}
                           className="scale-110"
                         >
                           <Image
@@ -250,8 +269,8 @@ export default function DashboardMobile() {
                       </div>
                     </motion.div>
                   )}
-                  {selectedOrgan === 'brain' && (
-                    <motion.div 
+                  {selectedOrgan === "brain" && (
+                    <motion.div
                       key="brain"
                       className="relative w-full max-w-[250px] mb-2"
                       variants={mainOrganVariants}
@@ -264,7 +283,11 @@ export default function DashboardMobile() {
                         <motion.div
                           initial={{ y: 10 }}
                           animate={{ y: [10, 0, 10] }}
-                          transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                          transition={{
+                            repeat: Infinity,
+                            duration: 3,
+                            ease: "easeInOut",
+                          }}
                           className="scale-110"
                         >
                           <Image
@@ -274,7 +297,8 @@ export default function DashboardMobile() {
                             height={200}
                             className="object-contain z-10"
                             style={{
-                              filter: "drop-shadow(0px 10px 15px rgba(128, 0, 255, 0.5))",
+                              filter:
+                                "drop-shadow(0px 10px 15px rgba(128, 0, 255, 0.5))",
                             }}
                           />
                         </motion.div>
@@ -285,7 +309,7 @@ export default function DashboardMobile() {
               </div>
 
               {/* Horizontal Organ Switcher */}
-              <motion.div 
+              <motion.div
                 className="cursor-pointer w-full px-2 mt-16"
                 variants={switcherVariants}
                 initial="hidden"
@@ -293,19 +317,29 @@ export default function DashboardMobile() {
               >
                 <div className="flex justify-center items-center gap-6 overflow-x-auto py-1 pb-4 scrollbar-none">
                   {[
-                    { id: 'heart', image: '/heart.png', alt: 'Heart' },
-                    { id: 'lungs', image: '/lungs.png', alt: 'Lungs' },
-                    { id: 'liver', image: '/liver.png', alt: 'Liver' },
-                    { id: 'brain', image: '/heart.png', alt: 'Brain' }
+                    { id: "heart", image: "/heart.png", alt: "Heart" },
+                    { id: "lungs", image: "/lungs.png", alt: "Lungs" },
+                    { id: "liver", image: "/liver.png", alt: "Liver" },
+                    { id: "brain", image: "/heart.png", alt: "Brain" },
                   ].map((organ) => (
-                    <motion.div 
+                    <motion.div
                       key={organ.id}
-                      className={`flex flex-col items-center organ-item ${selectedOrgan === organ.id ? 'opacity-100' : 'opacity-70'}`}
+                      className={`flex flex-col items-center organ-item ${
+                        selectedOrgan === organ.id
+                          ? "opacity-100"
+                          : "opacity-70"
+                      }`}
                       onClick={() => setSelectedOrgan(organ.id)}
                       variants={switcherItemVariants}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <div className={`w-16 h-16 rounded-full flex items-center justify-center border-2 ${selectedOrgan === organ.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}>
+                      <div
+                        className={`w-16 h-16 rounded-full flex items-center justify-center border-2 ${
+                          selectedOrgan === organ.id
+                            ? "border-blue-500 bg-blue-50"
+                            : "border-gray-200"
+                        }`}
+                      >
                         <Image
                           src={organ.image}
                           alt={organ.alt}
@@ -314,7 +348,13 @@ export default function DashboardMobile() {
                           className="object-contain"
                         />
                       </div>
-                      <span className={`text-xs font-medium mt-1 ${selectedOrgan === organ.id ? 'text-blue-600' : 'text-gray-500'} ${selectedOrgan === organ.id ? 'tab-active' : ''}`}>
+                      <span
+                        className={`text-xs font-medium mt-1 ${
+                          selectedOrgan === organ.id
+                            ? "text-blue-600"
+                            : "text-gray-500"
+                        } ${selectedOrgan === organ.id ? "tab-active" : ""}`}
+                      >
                         {organ.alt}
                       </span>
                     </motion.div>
@@ -324,26 +364,34 @@ export default function DashboardMobile() {
 
               {/* Organ Content - Scrollable */}
               <div className="mt-1 pb-24 bg-white-50">
-                {selectedOrgan === 'heart' ? (
+                {selectedOrgan === "heart" ? (
                   <div className="px-2">
                     <HeartComponent />
                   </div>
-                ) : selectedOrgan === 'lungs' ? (
+                ) : selectedOrgan === "lungs" ? (
                   <div className="px-2">
                     <div className="text-center p-6 bg-white rounded-2xl shadow-sm mx-2 card-mobile">
-                      <h3 className="text-xl font-semibold mb-3">Lungs Component</h3>
-                      <p className="text-gray-600 mb-6">Lungs data will be displayed here.</p>
+                      <h3 className="text-xl font-semibold mb-3">
+                        Lungs Component
+                      </h3>
+                      <p className="text-gray-600 mb-6">
+                        Lungs data will be displayed here.
+                      </p>
                     </div>
                   </div>
-                ) : selectedOrgan === 'liver' ? (
+                ) : selectedOrgan === "liver" ? (
                   <div className="px-2">
                     <LiverComponent />
                   </div>
-                ) : selectedOrgan === 'brain' ? (
+                ) : selectedOrgan === "brain" ? (
                   <div className="px-2">
                     <div className="text-center p-6 bg-white rounded-2xl shadow-sm mx-2 card-mobile">
-                      <h3 className="text-xl font-semibold mb-3">Brain Component</h3>
-                      <p className="text-gray-600 mb-6">Brain data will be displayed here.</p>
+                      <h3 className="text-xl font-semibold mb-3">
+                        Brain Component
+                      </h3>
+                      <p className="text-gray-600 mb-6">
+                        Brain data will be displayed here.
+                      </p>
                     </div>
                   </div>
                 ) : null}
@@ -352,13 +400,15 @@ export default function DashboardMobile() {
           </div>
         ) : activeTab === "courses" ? (
           <div className="bg-gradient-to-b from-gray-200 to-white min-h-screen">
-            <CourseManagement />
+            <Course />
           </div>
         ) : activeTab === "upload" ? (
           <div className="bg-gradient-to-b from-gray-200 to-white min-h-screen px-2">
             <div className="p-6 bg-white rounded-2xl shadow-sm mt-2 card-mobile">
               <h2 className="text-xl font-semibold mb-4">Upload Documents</h2>
-              <p className="text-gray-600 text-sm mb-4">Upload your medical documents and reports.</p>
+              <p className="text-gray-600 text-sm mb-4">
+                Upload your medical documents and reports.
+              </p>
               <div className="mt-4 flex justify-center">
                 <Button className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-2">
                   <UploadCloud className="h-4 w-4" />
@@ -371,8 +421,10 @@ export default function DashboardMobile() {
           <div className="bg-gradient-to-b from-gray-200 to-white min-h-screen px-2">
             <div className="p-6 bg-white rounded-2xl shadow-sm mt-2 card-mobile">
               <h2 className="text-xl font-semibold mb-4">Overall Progress</h2>
-              <p className="text-gray-600 text-sm mb-4">Track your health metrics and progress.</p>
-              
+              <p className="text-gray-600 text-sm mb-4">
+                Track your health metrics and progress.
+              </p>
+
               <div className="mt-4">
                 <h3 className="text-base font-medium mb-2">Health Score</h3>
                 <Progress value={75} className="h-2 w-full" />
@@ -381,30 +433,50 @@ export default function DashboardMobile() {
                   <span className="text-xs text-gray-500">100</span>
                 </div>
               </div>
-              
+
               <div className="mt-6 grid grid-cols-2 gap-4">
                 <div className="bg-gray-50 p-4 rounded-xl stat-card">
-                  <h4 className="text-sm font-medium text-gray-600">Weight Change</h4>
-                  <div className="mt-1 text-xl font-bold text-green-500">-2.5 kg</div>
-                  <div className="text-xs text-gray-500 mt-0.5">Last 30 days</div>
+                  <h4 className="text-sm font-medium text-gray-600">
+                    Weight Change
+                  </h4>
+                  <div className="mt-1 text-xl font-bold text-green-500">
+                    -2.5 kg
+                  </div>
+                  <div className="text-xs text-gray-500 mt-0.5">
+                    Last 30 days
+                  </div>
                 </div>
-                
+
                 <div className="bg-gray-50 p-4 rounded-xl stat-card">
-                  <h4 className="text-sm font-medium text-gray-600">Activity Level</h4>
+                  <h4 className="text-sm font-medium text-gray-600">
+                    Activity Level
+                  </h4>
                   <div className="mt-1 text-xl font-bold">Medium</div>
-                  <div className="text-xs text-gray-500 mt-0.5">7,580 steps/day</div>
+                  <div className="text-xs text-gray-500 mt-0.5">
+                    7,580 steps/day
+                  </div>
                 </div>
-                
+
                 <div className="bg-gray-50 p-4 rounded-xl stat-card">
-                  <h4 className="text-sm font-medium text-gray-600">Sleep Quality</h4>
+                  <h4 className="text-sm font-medium text-gray-600">
+                    Sleep Quality
+                  </h4>
                   <div className="mt-1 text-xl font-bold">Good</div>
-                  <div className="text-xs text-gray-500 mt-0.5">7.2 hrs/night</div>
+                  <div className="text-xs text-gray-500 mt-0.5">
+                    7.2 hrs/night
+                  </div>
                 </div>
-                
+
                 <div className="bg-gray-50 p-4 rounded-xl stat-card">
-                  <h4 className="text-sm font-medium text-gray-600">Stress Level</h4>
-                  <div className="mt-1 text-xl font-bold text-yellow-500">Moderate</div>
-                  <div className="text-xs text-gray-500 mt-0.5">Based on HRV</div>
+                  <h4 className="text-sm font-medium text-gray-600">
+                    Stress Level
+                  </h4>
+                  <div className="mt-1 text-xl font-bold text-yellow-500">
+                    Moderate
+                  </div>
+                  <div className="text-xs text-gray-500 mt-0.5">
+                    Based on HRV
+                  </div>
                 </div>
               </div>
             </div>
@@ -419,16 +491,22 @@ export default function DashboardMobile() {
             <button
               key={item.id}
               className={`flex flex-col items-center justify-center px-3 ${
-                activeTab === item.id ? 'text-blue-600' : 'text-gray-500'
+                activeTab === item.id ? "text-blue-600" : "text-gray-500"
               }`}
               onClick={() => setActiveTab(item.id)}
             >
-              <div className={`p-1 ${activeTab === item.id ? 'text-blue-600' : 'text-gray-400'}`}>
+              <div
+                className={`p-1 ${
+                  activeTab === item.id ? "text-blue-600" : "text-gray-400"
+                }`}
+              >
                 {item.icon}
               </div>
-              <span className={`text-xs font-medium mt-0.5 ${
-                activeTab === item.id ? 'text-blue-600' : 'text-gray-500'
-              }`}>
+              <span
+                className={`text-xs font-medium mt-0.5 ${
+                  activeTab === item.id ? "text-blue-600" : "text-gray-500"
+                }`}
+              >
                 {item.label}
               </span>
               {activeTab === item.id && (
@@ -436,8 +514,8 @@ export default function DashboardMobile() {
               )}
             </button>
           ))}
-          
-          <button 
+
+          <button
             className="flex flex-col items-center justify-center px-3 text-gray-500"
             onClick={() => setDrawerOpen(true)}
           >
@@ -459,42 +537,60 @@ export default function DashboardMobile() {
             <Drawer.Title className="sr-only">User Profile</Drawer.Title>
             <div className="p-4 bg-white rounded-t-xl safe-area-bottom">
               <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-gray-300 mb-5 drawer-pull" />
-              
+
               <div className="flex items-center px-4">
                 <Avatar className="h-14 w-14 border-2 border-gray-200">
                   <AvatarImage src="/placeholder.svg" alt="User" />
-                  <AvatarFallback className="bg-blue-100 text-blue-600 text-xl">JD</AvatarFallback>
+                  <AvatarFallback className="bg-blue-100 text-blue-600 text-xl">
+                    JD
+                  </AvatarFallback>
                 </Avatar>
                 <div className="ml-3">
                   <h2 className="font-semibold text-xl">John Doe</h2>
                   <p className="text-gray-500 text-sm">john.doe@example.com</p>
                 </div>
-                <Button variant="ghost" className="ml-auto rounded-full p-2" onClick={() => setDrawerOpen(false)}>
+                <Button
+                  variant="ghost"
+                  className="ml-auto rounded-full p-2"
+                  onClick={() => setDrawerOpen(false)}
+                >
                   <X className="h-6 w-6" />
                 </Button>
               </div>
-              
+
               <div className="mt-6 px-4 space-y-4">
-                <Button variant="ghost" className="w-full justify-start text-base font-medium py-3 rounded-xl">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start text-base font-medium py-3 rounded-xl"
+                >
                   <User className="mr-3 h-5 w-5" />
                   Profile
                 </Button>
-                
-                <Button variant="ghost" className="w-full justify-start text-base font-medium py-3 rounded-xl">
-                  <Activity className="mr-3 h-5 w-5" /> 
+
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start text-base font-medium py-3 rounded-xl"
+                >
+                  <Activity className="mr-3 h-5 w-5" />
                   Health Records
                 </Button>
-                
-                <Button variant="ghost" className="w-full justify-start text-base font-medium py-3 rounded-xl">
+
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start text-base font-medium py-3 rounded-xl"
+                >
                   <FileText className="mr-3 h-5 w-5" />
                   Documents
                 </Button>
-                
-                <Button variant="ghost" className="w-full justify-start text-base font-medium py-3 rounded-xl">
+
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start text-base font-medium py-3 rounded-xl"
+                >
                   <MoreHorizontal className="mr-3 h-5 w-5" />
                   Settings
                 </Button>
-                
+
                 <div className="pt-2">
                   <Button variant="destructive" className="w-full mt-4">
                     Logout
@@ -507,4 +603,4 @@ export default function DashboardMobile() {
       </Drawer.Root>
     </div>
   );
-} 
+}

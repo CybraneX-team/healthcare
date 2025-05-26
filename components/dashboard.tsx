@@ -24,7 +24,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { CourseManagement } from "@/components/courseManage";
+import Course from "@/components/courseManage";
 import { ProfileDropdown } from "@/components/ui/profile-dropdown";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -37,6 +37,7 @@ import LungsModel from "@/components/lungs-model";
 import { PatientSection } from "./PatientSection";
 import { LabsSection } from "./labSection";
 import { ServicesProductsSection } from "./ServicesSection";
+import { CombinedLabsSection } from "./Lab-Services";
 
 // Other organ components will be imported here as they are created
 
@@ -199,7 +200,6 @@ export default function Dashboard() {
   const [selectedOrgan, setSelectedOrgan] = useState("heart");
   const weightTrendData = generateWeightTrendData();
 
-  // Initial setup - check URL for tab parameter on component mount
   useEffect(() => {
     const tabParam = searchParams.get("tab");
     if (
@@ -342,18 +342,7 @@ export default function Dashboard() {
                   } text-sm`}
                   onClick={() => setActiveTab("labs")}
                 >
-                  Labs
-                </Button>
-                <Button
-                  variant="ghost"
-                  className={`rounded-full px-6 py-2 ${
-                    activeTab === "services"
-                      ? "bg-blue-500 text-white"
-                      : "text-gray-700"
-                  } text-sm`}
-                  onClick={() => setActiveTab("services")}
-                >
-                  Services
+                  Labs & Services
                 </Button>
                 <Button
                   variant="ghost"
@@ -658,12 +647,11 @@ export default function Dashboard() {
             </div>
           ) : activeTab === "courses" ? (
             <div className="bg-gradient-to-b from-gray-200 to-white min-h-screen">
-              <CourseManagement />
+              <Course />
             </div>
           ) : activeTab === "labs" ? (
-            <LabsSection />
-          ) : activeTab === "services" ? (
-            <ServicesProductsSection />
+            // <LabsSection />
+            <CombinedLabsSection />
           ) : activeTab === "upload" ? (
             <div className="px-6 bg-gradient-to-b from-gray-200 to-white min-h-screen">
               <div className="p-8 bg-white rounded-3xl shadow-sm mt-4">

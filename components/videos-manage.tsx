@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +31,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { rtdb } from "@/utils/firebase";
+import {
+  ref,
+  get,
+  set,
+  onValue,
+  push,
+  remove,
+  update,
+} from "firebase/database";
 
 interface VideosManagerProps {
   programId: string;
@@ -55,6 +65,7 @@ export function VideosManager({
     duration: "00:00",
     order: 1,
   });
+  // const [currentModuleForVideo, setCurrentModuleForVideo] = useState<Module | null>(null);
 
   // Mock program and module data
   const program = {
@@ -77,86 +88,229 @@ export function VideosManager({
     };
     return moduleTitles[moduleId] || "Module";
   }
+  interface Video {
+  id: string;
+  title: string;
+  description : string;
+  // url: string;
+  createdAt: string;
+  youtubeId : string;
+  duration : string;
+  completed : boolean;
+  order : number
+}
 
   // Mock data for videos
-  const [videos, setVideos] = useState([
-    {
-      id: "welcome-video",
-      title: "Welcome to Thrivemed Hub",
-      description: "Introduction to the Thrivemed Hub platform and resources",
-      youtubeId: "dQw4w9WgXcQ",
-      duration: "05:12",
-      completed: true,
-      order: 1,
-    },
-    {
-      id: "office-hours-video",
-      title: "Open Office Hours Schedule",
-      description:
-        "Overview of the office hours schedule and how to participate",
-      youtubeId: "9bZkp7q19f0",
-      duration: "12:30",
-      completed: true,
-      order: 2,
-    },
-    {
-      id: "session-recordings-video",
-      title: "Open Session Recordings",
-      description: "How to access and use the session recordings",
-      youtubeId: "JGwWNGJdvx8",
-      duration: "18:45",
-      completed: false,
-      order: 3,
-    },
+  const [videos, setVideos] = useState<any[]>([
+    // {
+    //   id: "welcome-video",
+    //   title: "Welcome to Thrivemed Hub",
+    //   description: "Introduction to the Thrivemed Hub platform and resources",
+    //   youtubeId: "dQw4w9WgXcQ",
+    //   duration: "05:12",
+    //   completed: true,
+    //   order: 1,
+    // },
+    // {
+    //   id: "office-hours-video",
+    //   title: "Open Office Hours Schedule",
+    //   description:
+    //     "Overview of the office hours schedule and how to participate",
+    //   youtubeId: "9bZkp7q19f0",
+    //   duration: "12:30",
+    //   completed: true,
+    //   order: 2,
+    // },
+    // {
+    //   id: "session-recordings-video",
+    //   title: "Open Session Recordings",
+    //   description: "How to access and use the session recordings",
+    //   youtubeId: "JGwWNGJdvx8",
+    //   duration: "18:45",
+    //   completed: false,
+    //   order: 3,
+    // },
   ]);
+
+useEffect(() => {
+  const fetchModuleVideos = async () => {
+    const videosRef = ref(
+      rtdb,
+      `courses/thrivemed/programs/${programId}/modules/${moduleId}/videos`
+    );
+    const snapshot = await get(videosRef);
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      console.log("fetchModuleVideos", data);
+      // setVideos(data); // optionally map/transform and set to state
+      const loadedPrograms = Object.entries(data).map(([id, value]: any) => ({
+        id,
+        ...value,
+        createdAt: new Date(value.createdAt).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        }),
+      }));
+      setVideos(loadedPrograms)
+    } else {
+      console.log("No videos found.");
+    }
+  };
+
+  if (programId && moduleId) {
+    fetchModuleVideos();
+  }
+}, [programId, moduleId]);
 
   const filteredVideos = videos
     .filter(
-      (video) =>
+      (video : Video) =>
         video.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         video.description.toLowerCase().includes(searchQuery.toLowerCase())
     )
     .sort((a, b) => a.order - b.order);
 
-  const handleAddVideo = () => {
-    const id = newVideo.title.toLowerCase().replace(/\s+/g, "-") + "-video";
-    const newVideoData = {
-      id,
-      ...newVideo,
-      completed: false,
-    };
+  // const handleAddVideo = () => {
+  //   const id = newVideo.title.toLowerCase().replace(/\s+/g, "-") + "-video";
+  //   const newVideoData = {
+  //     id,
+  //     ...newVideo,
+  //     completed: false,
+  //   };
 
-    setVideos([...videos, newVideoData]);
-    setNewVideo({
-      title: "",
-      description: "",
-      youtubeId: "",
-      duration: "00:00",
-      order: videos.length + 1,
-    });
-    setIsAddDialogOpen(false);
+  //   setVideos([...videos, newVideoData]);
+  //   setNewVideo({
+  //     title: "",
+  //     description: "",
+  //     youtubeId: "",
+  //     duration: "00:00",
+  //     order: videos.length + 1,
+  //   });
+  //   setIsAddDialogOpen(false);
+  // };
+
+//   const handleAddVideo = async () => {
+//   if (!currentModuleForVideo) return;
+//   const videoId = newVideo.title.toLowerCase().replace(/\s+/g, "-");
+
+//   const videoData: Video = {
+//     id: videoId,
+//     title: newVideo.title,
+//     url: newVideo.url,
+//     createdAt: new Date().toISOString(),
+//   };
+
+//   try {
+//     const videoRef = ref(
+//       rtdb,
+//       `courses/thrivemed/programs/${programId}/modules/${currentModuleForVideo.id}/videos/${videoId}`
+//     );
+//     await set(videoRef, videoData);
+//     setIsAddVideoDialogOpen(false);
+//     setNewVideo({ title: "", url: "" });
+//     alert("Video added successfully");
+//   } catch (error) {
+//     console.error("Error adding video:", error);
+//   }
+// };
+
+
+const handleAddVideo = async () => {
+  const id = newVideo.title.toLowerCase().replace(/\s+/g, "-");
+
+  const newVideoData = {
+    id,
+    ...newVideo,
+    progress: 0,
+    modules: {},
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   };
 
-  const handleEditVideo = () => {
-    if (!selectedVideo) return;
+  try {
+    const programRef = ref(
+      rtdb,
+      `courses/thrivemed/programs/${programId}/modules/${moduleId}/videos/${id}`
+    );
+    await set(programRef, newVideoData);
+
+    setVideos([
+      ...videos,
+      {
+        ...newVideoData,
+        createdAt: new Date().toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        }),
+      },
+    ]);
+  } catch (error) {
+    console.error("Error saving to Firebase:", error);
+  }
+
+  setNewVideo({
+    title: "",
+    description: "",
+    youtubeId: "",
+    duration: "00:00",
+    order: 1,
+  });
+  setIsAddDialogOpen(false);
+};
+
+
+const handleEditVideo = async () => {
+  if (!selectedVideo) return;
+
+  const updatedVideo = {
+    ...selectedVideo,
+    updatedAt: new Date().toISOString(),
+  };
+
+  try {
+    const videoRef = ref(
+      rtdb,
+      `courses/thrivemed/programs/${programId}/modules/${moduleId}/videos/${selectedVideo.id}`
+    );
+
+    await set(videoRef, updatedVideo);
 
     const updatedVideos = videos.map((video) =>
-      video.id === selectedVideo.id ? { ...video, ...selectedVideo } : video
+      video.id === selectedVideo.id ? updatedVideo : video
     );
 
     setVideos(updatedVideos);
     setIsEditDialogOpen(false);
-  };
+  } catch (error) {
+    console.error("Failed to update video in Firebase:", error);
+  }
+};
 
-  const handleDeleteVideo = () => {
-    if (!selectedVideo) return;
+
+const handleDeleteVideo = async () => {
+  if (!selectedVideo) return;
+
+  try {
+    const videoRef = ref(
+      rtdb,
+      `courses/thrivemed/programs/${programId}/modules/${moduleId}/videos/${selectedVideo.id}`
+    );
+
+    await remove(videoRef);
 
     const updatedVideos = videos.filter(
       (video) => video.id !== selectedVideo.id
     );
+
     setVideos(updatedVideos);
     setIsDeleteDialogOpen(false);
-  };
+  } catch (error) {
+    console.error("Failed to delete video from Firebase:", error);
+  }
+};
+
 
   const openEditDialog = (video: any) => {
     setSelectedVideo({ ...video });

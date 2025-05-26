@@ -12,6 +12,7 @@ import {
 import { getAnalytics } from "firebase/analytics";
 import { getFirestore, doc, setDoc, getDoc, updateDoc, collection } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { getDatabase } from "firebase/database";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -115,5 +116,5 @@ export const uploadUserDocument = async (userId: string, file: File, category: s
   const path = `documents/${userId}/${category}/${fileName}`;
   return uploadFile(file, path);
 };
-
+export const rtdb = getDatabase(app);
 export { app, auth, db, storage, analytics };

@@ -1,10 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+
+import {
+  ref,
+  get,
+  set,
+  onValue,
+  push,
+  remove,
+  update,
+} from "firebase/database";
 import {
   Dialog,
   DialogContent,
@@ -28,6 +38,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { rtdb } from "@/utils/firebase";
+import { DevBundlerService } from "next/dist/server/lib/dev-bundler-service";
 
 interface ProgramsManagerProps {
   onProgramSelect: (programId: string) => void;
@@ -45,84 +57,123 @@ export function ProgramsManager({ onProgramSelect }: ProgramsManagerProps) {
     status: "active",
   });
 
-  // Mock data for programs
-  const [programs, setPrograms] = useState([
-    {
-      id: "thrivemed-hub",
-      name: "Thrivemed Hub",
-      status: "active",
-      description: "Personalized Health Roadmaps",
-      progress: 33,
-      modules: 12,
-      createdAt: "May 15, 2025",
-    },
-    {
-      id: "thrivemed-apollo",
-      name: "Thrivemed Apollo",
-      status: "completed",
-      description: "Advanced Health Optimization",
-      progress: 100,
-      modules: 8,
-      createdAt: "April 10, 2025",
-    },
-    {
-      id: "thrivemed-atlas",
-      name: "Thrivemed Atlas",
-      status: "draft",
-      description: "Comprehensive Body Mapping",
-      progress: 0,
-      modules: 5,
-      createdAt: "May 20, 2025",
-    },
+    const [programs, setPrograms] = useState<any>([
+
   ]);
 
+  // Mock data for programs
+  useEffect(() => {
+  const fetchPrograms = async () => {
+    const programsRef = ref(rtdb, "courses/thrivemed/programs");
+    const snapshot = await get(programsRef);
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      const loadedPrograms = Object.entries(data).map(([id, value]: any) => ({
+        id,
+        ...value,
+        createdAt: new Date(value.createdAt).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        }),
+      }));
+      console.log("loadedPrograms=loadedPrograms", loadedPrograms)
+      setPrograms(loadedPrograms);
+    }
+  };
+
+  fetchPrograms();
+}, []);
+
+
   const filteredPrograms = programs.filter(
-    (program) =>
+    (program : any) =>
       program.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       program.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleAddProgram = () => {
-    const id = newProgram.name.toLowerCase().replace(/\s+/g, "-");
-    const newProgramData = {
-      id,
-      ...newProgram,
-      progress: 0,
-      modules: 0,
-      createdAt: new Date().toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      }),
-    };
 
-    setPrograms([...programs, newProgramData]);
-    setNewProgram({ name: "", description: "", status: "active" });
-    setIsAddDialogOpen(false);
+  const handleAddProgram = async () => {
+  const id = newProgram.name.toLowerCase().replace(/\s+/g, "-");
+
+  const newProgramData = {
+    id,
+    ...newProgram,
+    progress: 0,
+    modules: {},
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   };
 
-  const handleEditProgram = () => {
-    if (!selectedProgram) return;
+  try {
+    const programRef = ref(rtdb, `courses/thrivemed/programs/${id}`);
+    await set(programRef, newProgramData);
 
-    const updatedPrograms = programs.map((program) =>
+    setPrograms([
+      ...programs,
+      {
+        ...newProgramData,
+        createdAt: new Date().toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        }),
+      },
+    ]);
+  } catch (error) {
+    console.error("Error saving to Firebase:", error);
+  }
+
+  setNewProgram({ name: "", description: "", status: "active" });
+  setIsAddDialogOpen(false);
+};
+
+
+const handleEditProgram = async () => {
+  if (!selectedProgram) return;
+
+  const updatedData = {
+    ...selectedProgram,
+    updatedAt: new Date().toISOString(),
+  };
+
+  try {
+    const programRef = ref(rtdb, `courses/thrivemed/programs/${selectedProgram.id}`);
+    await update(programRef, updatedData);
+
+    const updatedPrograms = programs.map((program: any) =>
       program.id === selectedProgram.id
-        ? { ...program, ...selectedProgram }
+        ? {
+            ...updatedData,
+            createdAt: program.createdAt, 
+          }
         : program
     );
 
     setPrograms(updatedPrograms);
     setIsEditDialogOpen(false);
-  };
+  } catch (error) {
+    console.error("Failed to update program in Firebase:", error);
+  }
+};
 
-  const handleDeleteProgram = () => {
-    if (!selectedProgram) return;
+const handleDeleteProgram = async () => {
+  if (!selectedProgram) return;
+
+  try {
+    const programRef = ref(rtdb, `courses/thrivemed/programs/${selectedProgram.id}`);
+    await remove(programRef);
 
     const updatedPrograms = programs.filter(
-      (program) => program.id !== selectedProgram.id
+      (program: any) => program.id !== selectedProgram.id
     );
     setPrograms(updatedPrograms);
     setIsDeleteDialogOpen(false);
-  };
+  } catch (error) {
+    console.error("Error deleting program from Firebase:", error);
+  }
+};
+
 
   const openEditDialog = (program: any) => {
     setSelectedProgram({ ...program });
@@ -241,9 +292,9 @@ export function ProgramsManager({ onProgramSelect }: ProgramsManagerProps) {
 
       {/* Programs list */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredPrograms.map((program) => (
+        {filteredPrograms.map((program : any, index : number) => (
           <Card
-            key={program.id}
+            key={index}
             className="overflow-hidden rounded-xl shadow-sm border-0"
           >
             <div className="p-6">
@@ -324,7 +375,11 @@ export function ProgramsManager({ onProgramSelect }: ProgramsManagerProps) {
                     {program.status === "completed" && "Completed"}
                   </span>
                   <div className="text-xs text-gray-500">
-                    {program.modules} modules
+                    {
+                    program.modules && Object.keys(program.modules)?.length ? 
+                    Object.keys(program.modules).length : 
+                    ""
+                    } modules
                   </div>
                 </div>
               </div>

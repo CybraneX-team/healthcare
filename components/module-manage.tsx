@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { ref, get, set, remove } from "firebase/database";
+import { rtdb } from "@/utils/firebase"; // ensure this exports getDatabase(app)
+
 import {
   Dialog,
   DialogContent,
@@ -41,6 +44,17 @@ export function ModulesManager({
   onModuleSelect,
   onBack,
 }: ModulesManagerProps) {
+
+  interface Module {
+  id: string;
+  title: string;
+  description: string;
+  order: number;
+  progress: number;
+  updatedAt?: string; // optional, sometimes missing
+  videos?: any; // can be replaced with a proper Video type later
+}
+
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -60,93 +74,147 @@ export function ModulesManager({
   };
 
   // Mock data for modules
-  const [modules, setModules] = useState([
-    {
-      id: "mission-control",
-      title: "Mission Control",
-      description: "Introduction to the program and overview of resources",
-      progress: 33,
-      videos: 3,
-      order: 1,
-    },
-    {
-      id: "rapid-success",
-      title: "Rapid Success Path",
-      description: "Quick start guide to achieving initial results",
-      progress: 0,
-      videos: 2,
-      order: 2,
-    },
-    {
-      id: "may-religion",
-      title: "May - Religion, Spirituality, Death and Longevity",
-      description: "Exploring the connections between spirituality and health",
-      progress: 25,
-      videos: 4,
-      order: 3,
-    },
-    {
-      id: "june-meaning",
-      title: "June - Meaning",
-      description: "Finding purpose and meaning in health journey",
-      progress: 0,
-      videos: 3,
-      order: 4,
-    },
-    {
-      id: "june-alignment",
-      title: "June - Alignment",
-      description: "Aligning your actions with your health goals",
-      progress: 0,
-      videos: 0,
-      order: 5,
-    },
+  const [modules, setModules] = useState<Module[]>([
+   
   ]);
+
+  useEffect(() => {
+  const fetchModules = async () => {
+    try {
+      const modulesRef = ref(
+        rtdb,
+        `courses/thrivemed/programs/${programId}/modules`
+      );
+      const snapshot = await get(modulesRef);
+
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+
+        const loadedModules = Object.entries(data).map(([id, mod]: any) => ({
+          id,
+          ...mod,
+        }));
+        console.log("loadedModules", loadedModules)
+        setModules(loadedModules);
+      } else {
+        setModules([]); // No modules yet
+      }
+    } catch (error) {
+      console.error("Error fetching modules:", error);
+    }
+  };
+
+  if (programId) {
+    fetchModules();
+  }
+}, [programId]);
 
   const filteredModules = modules
     .filter(
-      (module) =>
+      (module : Module) =>
         module.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         module.description.toLowerCase().includes(searchQuery.toLowerCase())
     )
-    .sort((a, b) => a.order - b.order);
+    .sort((a : Module, b: Module) => a.order - b.order);
 
-  const handleAddModule = () => {
-    const id = newModule.title.toLowerCase().replace(/\s+/g, "-");
-    const newModuleData = {
-      id,
-      ...newModule,
-      progress: 0,
-      videos: 0,
-    };
+  // const handleAddModule = () => {
+  //   const id = newModule.title.toLowerCase().replace(/\s+/g, "-");
+  //   const newModuleData = {
+  //     id,
+  //     ...newModule,
+  //     progress: 0,
+  //     videos: 0,
 
-    setModules([...modules, newModuleData]);
-    setNewModule({ title: "", description: "", order: modules.length + 1 });
-    setIsAddDialogOpen(false);
+  //   };
+
+  //   setModules([...modules, newModuleData]);
+  //   setNewModule({ title: "", description: "", order: modules.length + 1 });
+  //   setIsAddDialogOpen(false);
+  // };
+  
+  const handleAddModule = async () => {
+  const id = newModule.title.toLowerCase().replace(/\s+/g, "-");
+  const moduleData = {
+    id,
+    ...newModule,
+    progress: 0,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   };
 
-  const handleEditModule = () => {
-    if (!selectedModule) return;
+  try {
+    // Firebase Realtime DB POST
+    const moduleRef = ref(
+      rtdb,
+      `courses/thrivemed/programs/${programId}/modules/${id}`
+    );
 
-    const updatedModules = modules.map((module) =>
-      module.id === selectedModule.id
-        ? { ...module, ...selectedModule }
-        : module
+    await set(moduleRef, moduleData);
+
+    // Update local state
+    setModules([...modules, moduleData]);
+
+    // Reset form & close dialog
+    setNewModule({ title: "", description: "", order: modules.length + 1 });
+    setIsAddDialogOpen(false);
+  } catch (error) {
+    console.error("Failed to add module:", error);
+  }
+};
+
+
+
+const handleEditModule = async () => {
+  if (!selectedModule) return;
+
+  const updatedModule = {
+    ...selectedModule,
+    updatedAt: new Date().toISOString(),
+  };
+
+  try {
+    const moduleRef = ref(
+      rtdb,
+      `courses/thrivemed/programs/${programId}/modules/${selectedModule.id}`
+    );
+
+    await set(moduleRef, updatedModule);
+
+    const updatedModules = modules.map((module: Module) =>
+      module.id === selectedModule.id ? updatedModule : module
     );
 
     setModules(updatedModules);
     setIsEditDialogOpen(false);
-  };
+  } catch (error) {
+    console.error("Error updating module in Firebase:", error);
+  }
+};
 
-  const handleDeleteModule = () => {
-    if (!selectedModule) return;
+
+
+const handleDeleteModule = async () => {
+  if (!selectedModule) return;
+
+  try {
+    const moduleRef = ref(
+      rtdb,
+      `courses/thrivemed/programs/${programId}/modules/${selectedModule.id}`
+    );
+
+    await remove(moduleRef);
 
     const updatedModules = modules.filter(
-      (module) => module.id !== selectedModule.id
+      (module: Module) => module.id !== selectedModule.id
     );
+
     setModules(updatedModules);
     setIsDeleteDialogOpen(false);
-  };
+  } catch (error) {
+    console.error("Error deleting module from Firebase:", error);
+  }
+};
+
 
   const openEditDialog = (module: any) => {
     setSelectedModule({ ...module });
@@ -236,7 +304,7 @@ export function ModulesManager({
               <Button
                 variant="outline"
                 onClick={() => setIsAddDialogOpen(false)}
-                className="text-white"
+                className="text-black"
               >
                 Cancel
               </Button>
@@ -325,7 +393,9 @@ export function ModulesManager({
 
               <div className="flex items-center justify-between">
                 <div className="text-sm text-gray-500">
-                  {module.videos} {module.videos === 1 ? "video" : "videos"}
+                  {module.videos &&  Object.keys(module.videos).length? 
+                  Object.keys(module.videos).length : " "}
+                   { module.videos ? Object.keys(module.videos).length === 1 ? "video" : "videos" : ""}
                 </div>
                 <Button
                   onClick={() => onModuleSelect(module.id)}

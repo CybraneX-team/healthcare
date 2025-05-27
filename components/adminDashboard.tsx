@@ -14,9 +14,13 @@ interface AdminDashboardProps {
   onNavigate: (
     view: "dashboard" | "programs" | "modules" | "videos" | "users" | "settings"
   ) => void;
+  setSidebarOpen: (open: boolean) => void;
 }
 
-export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
+export function AdminDashboard({
+  onNavigate,
+  setSidebarOpen,
+}: AdminDashboardProps) {
   const stats = [
     {
       id: "programs",
@@ -80,32 +84,37 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   ];
 
   return (
-    <div className="p-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 sm:mb-8 gap-4">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+          Admin Dashboard
+        </h1>
         <div className="text-sm text-gray-500">Last updated: May 22, 2025</div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
         {stats.map((stat) => (
-          <Card key={stat.id} className="p-6 shadow-sm border-0 rounded-xl">
+          <Card
+            key={stat.id}
+            className="p-4 sm:p-6 shadow-sm border-0 rounded-xl"
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-500">
                   {stat.label}
                 </p>
-                <p className="text-2xl font-bold mt-1 text-gray-900">
+                <p className="text-xl sm:text-2xl font-bold mt-1 text-gray-900">
                   {stat.value.toLocaleString()}
                 </p>
               </div>
-              <div className={`p-3 rounded-full ${stat.color}`}>
-                <stat.icon className="h-6 w-6" />
+              <div className={`p-2 sm:p-3 rounded-full ${stat.color}`}>
+                <stat.icon className="h-5 w-5 sm:h-6 sm:w-6" />
               </div>
             </div>
             <Button
               variant="ghost"
-              className="mt-4 p-0 h-auto text-blue-600 hover:text-blue-700 hover:bg-transparent"
+              className="mt-3 sm:mt-4 p-0 h-auto text-blue-600 hover:text-blue-700 hover:bg-transparent"
               onClick={() => onNavigate(stat.id as any)}
             >
               <span className="text-sm">View all</span>
@@ -116,34 +125,34 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
       </div>
 
       {/* Quick Actions */}
-      <div className="mb-8">
+      <div className="mb-6 sm:mb-8">
         <h2 className="text-lg font-semibold mb-4 text-gray-900">
           Quick Actions
         </h2>
-        <div className="flex flex-wrap gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-3 sm:gap-4">
           <Button
-            className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg"
+            className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg justify-center lg:justify-start"
             onClick={() => onNavigate("programs")}
           >
             <BookOpen className="mr-2 h-4 w-4" />
             Add New Program
           </Button>
           <Button
-            className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg"
+            className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg justify-center lg:justify-start"
             onClick={() => onNavigate("modules")}
           >
             <FolderKanban className="mr-2 h-4 w-4" />
             Add New Module
           </Button>
           <Button
-            className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg"
+            className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg justify-center lg:justify-start"
             onClick={() => onNavigate("videos")}
           >
             <Video className="mr-2 h-4 w-4" />
             Add New Video
           </Button>
           <Button
-            className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg"
+            className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg justify-center lg:justify-start"
             onClick={() => onNavigate("users")}
           >
             <Users className="mr-2 h-4 w-4" />
@@ -161,14 +170,14 @@ export function AdminDashboard({ onNavigate }: AdminDashboardProps) {
           <div className="divide-y">
             {recentActivity.map((activity) => (
               <div key={activity.id} className="p-4 hover:bg-gray-50">
-                <div className="flex justify-between">
+                <div className="flex flex-col sm:flex-row sm:justify-between gap-2">
                   <div>
                     <p className="font-medium text-gray-900">
                       {activity.action}
                     </p>
                     <p className="text-sm text-gray-500">{activity.target}</p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-left sm:text-right">
                     <p className="text-sm font-medium text-gray-900">
                       {activity.user}
                     </p>

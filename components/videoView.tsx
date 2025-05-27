@@ -35,7 +35,6 @@ export function VideoPlayerView({
   const [currentVideoId, setCurrentVideoId] = useState(videoId);
   const [videoProgress, setVideoProgress] = useState(0);
 
-  // Update current video when videoId prop changes
   useEffect(() => {
     setCurrentVideoId(videoId);
   }, [videoId]);
@@ -56,7 +55,6 @@ export function VideoPlayerView({
     "module-3-video": "VDvr08sCPOc",
   };
 
-  // Mock data for the module
   const moduleData = {
     id: moduleId,
     programId: programId,
@@ -161,27 +159,24 @@ export function VideoPlayerView({
   const handleVideoProgressUpdate = (progress: number) => {
     setVideoProgress(progress);
 
-    // Auto-mark as complete if progress is near the end (e.g., 95%)
     if (progress > 95 && !completedVideos[currentVideoId]) {
       handleVideoComplete();
     }
   };
 
-  // Find the current video
   const currentVideo =
     moduleData.videos.find((v) => v.id === currentVideoId) ||
     moduleData.videos[0];
   const currentYoutubeId =
     youtubeVideoMap[currentVideoId] || youtubeVideoMap[moduleData.videos[0].id];
 
-  // Get the current lesson number
   const currentLessonNumber =
     moduleData.videos.findIndex((v) => v.id === currentVideoId) + 1;
 
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <div className="py-6 px-8 flex items-center">
+      <div className="py-6 md:-ml-6 flex items-center">
         <Button
           variant="ghost"
           className="mr-4 py-5 px-3  rounded-full hover:bg-white "
@@ -197,7 +192,7 @@ export function VideoPlayerView({
             Stage {currentLessonNumber} • {currentVideo.title}
           </div>
         </div>
-        <div className="ml-auto">
+        <div className="ml-auto px-8">
           <Button
             onClick={handleMarkComplete}
             disabled={completedVideos[currentVideoId]}
@@ -270,32 +265,6 @@ export function VideoPlayerView({
               </div>
 
               <div className="p-4 border-t flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="flex items-center gap-1 text-gray-600"
-                  >
-                    <ThumbsUp className="h-4 w-4" />
-                    <span>Like</span>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="flex items-center gap-1 text-gray-600"
-                  >
-                    <MessageSquare className="h-4 w-4" />
-                    <span>Comments</span>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="flex items-center gap-1 text-gray-600"
-                  >
-                    <Download className="h-4 w-4" />
-                    <span>Downloads</span>
-                  </Button>
-                </div>
                 <div className="text-sm text-gray-500">
                   Module Progress: {moduleProgress[moduleId] || 0}%
                 </div>

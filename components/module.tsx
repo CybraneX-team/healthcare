@@ -150,9 +150,9 @@ export function ModuleOverview({
   };
 
   return (
-    <div className="min-h-screen text-black">
+    <div className="min-h-screen -ml-3 text-black">
       {/* Header */}
-      <div className="py-6 px-8 flex items-center">
+      <div className="py-6 px-3 md:px-0 md:-ml-6 flex items-center">
         <Button
           variant="ghost"
           className="mr-4 py-5 px-3 rounded-full hover:bg-white"

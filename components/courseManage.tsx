@@ -125,10 +125,10 @@ export default function Course() {
   };
 
   return (
-    <div className="min-h-screen flex -mt-20">
+    <div className="min-h-screen flex -mt-10">
       <VerticalNav currentView={currentView} />
 
-      <div className="flex-1 ml-16">
+      <div className="flex-1 md:ml-16">
         {currentView === "programs" && (
           <ProgramsList
             onProgramSelect={handleProgramSelect}

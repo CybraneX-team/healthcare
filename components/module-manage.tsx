@@ -37,23 +37,24 @@ interface ModulesManagerProps {
   programId: string;
   onModuleSelect: (moduleId: string) => void;
   onBack: () => void;
+  setSidebarOpen: (open: boolean) => void;
 }
 
 export function ModulesManager({
   programId,
   onModuleSelect,
   onBack,
+  setSidebarOpen,
 }: ModulesManagerProps) {
-
   interface Module {
-  id: string;
-  title: string;
-  description: string;
-  order: number;
-  progress: number;
-  updatedAt?: string; // optional, sometimes missing
-  videos?: any; // can be replaced with a proper Video type later
-}
+    id: string;
+    title: string;
+    description: string;
+    order: number;
+    progress: number;
+    updatedAt?: string; // optional, sometimes missing
+    videos?: any; // can be replaced with a proper Video type later
+  }
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -74,48 +75,46 @@ export function ModulesManager({
   };
 
   // Mock data for modules
-  const [modules, setModules] = useState<Module[]>([
-   
-  ]);
+  const [modules, setModules] = useState<Module[]>([]);
 
   useEffect(() => {
-  const fetchModules = async () => {
-    try {
-      const modulesRef = ref(
-        rtdb,
-        `courses/thrivemed/programs/${programId}/modules`
-      );
-      const snapshot = await get(modulesRef);
+    const fetchModules = async () => {
+      try {
+        const modulesRef = ref(
+          rtdb,
+          `courses/thrivemed/programs/${programId}/modules`
+        );
+        const snapshot = await get(modulesRef);
 
-      if (snapshot.exists()) {
-        const data = snapshot.val();
+        if (snapshot.exists()) {
+          const data = snapshot.val();
 
-        const loadedModules = Object.entries(data).map(([id, mod]: any) => ({
-          id,
-          ...mod,
-        }));
-        console.log("loadedModules", loadedModules)
-        setModules(loadedModules);
-      } else {
-        setModules([]); // No modules yet
+          const loadedModules = Object.entries(data).map(([id, mod]: any) => ({
+            id,
+            ...mod,
+          }));
+          console.log("loadedModules", loadedModules);
+          setModules(loadedModules);
+        } else {
+          setModules([]); // No modules yet
+        }
+      } catch (error) {
+        console.error("Error fetching modules:", error);
       }
-    } catch (error) {
-      console.error("Error fetching modules:", error);
-    }
-  };
+    };
 
-  if (programId) {
-    fetchModules();
-  }
-}, [programId]);
+    if (programId) {
+      fetchModules();
+    }
+  }, [programId]);
 
   const filteredModules = modules
     .filter(
-      (module : Module) =>
+      (module: Module) =>
         module.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         module.description.toLowerCase().includes(searchQuery.toLowerCase())
     )
-    .sort((a : Module, b: Module) => a.order - b.order);
+    .sort((a: Module, b: Module) => a.order - b.order);
 
   // const handleAddModule = () => {
   //   const id = newModule.title.toLowerCase().replace(/\s+/g, "-");
@@ -131,90 +130,85 @@ export function ModulesManager({
   //   setNewModule({ title: "", description: "", order: modules.length + 1 });
   //   setIsAddDialogOpen(false);
   // };
-  
+
   const handleAddModule = async () => {
-  const id = newModule.title.toLowerCase().replace(/\s+/g, "-");
-  const moduleData = {
-    id,
-    ...newModule,
-    progress: 0,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    const id = newModule.title.toLowerCase().replace(/\s+/g, "-");
+    const moduleData = {
+      id,
+      ...newModule,
+      progress: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    try {
+      // Firebase Realtime DB POST
+      const moduleRef = ref(
+        rtdb,
+        `courses/thrivemed/programs/${programId}/modules/${id}`
+      );
+
+      await set(moduleRef, moduleData);
+
+      // Update local state
+      setModules([...modules, moduleData]);
+
+      // Reset form & close dialog
+      setNewModule({ title: "", description: "", order: modules.length + 1 });
+      setIsAddDialogOpen(false);
+    } catch (error) {
+      console.error("Failed to add module:", error);
+    }
   };
 
-  try {
-    // Firebase Realtime DB POST
-    const moduleRef = ref(
-      rtdb,
-      `courses/thrivemed/programs/${programId}/modules/${id}`
-    );
+  const handleEditModule = async () => {
+    if (!selectedModule) return;
 
-    await set(moduleRef, moduleData);
+    const updatedModule = {
+      ...selectedModule,
+      updatedAt: new Date().toISOString(),
+    };
 
-    // Update local state
-    setModules([...modules, moduleData]);
+    try {
+      const moduleRef = ref(
+        rtdb,
+        `courses/thrivemed/programs/${programId}/modules/${selectedModule.id}`
+      );
 
-    // Reset form & close dialog
-    setNewModule({ title: "", description: "", order: modules.length + 1 });
-    setIsAddDialogOpen(false);
-  } catch (error) {
-    console.error("Failed to add module:", error);
-  }
-};
+      await set(moduleRef, updatedModule);
 
+      const updatedModules = modules.map((module: Module) =>
+        module.id === selectedModule.id ? updatedModule : module
+      );
 
-
-const handleEditModule = async () => {
-  if (!selectedModule) return;
-
-  const updatedModule = {
-    ...selectedModule,
-    updatedAt: new Date().toISOString(),
+      setModules(updatedModules);
+      setIsEditDialogOpen(false);
+    } catch (error) {
+      console.error("Error updating module in Firebase:", error);
+    }
   };
 
-  try {
-    const moduleRef = ref(
-      rtdb,
-      `courses/thrivemed/programs/${programId}/modules/${selectedModule.id}`
-    );
+  const handleDeleteModule = async () => {
+    if (!selectedModule) return;
 
-    await set(moduleRef, updatedModule);
+    try {
+      const moduleRef = ref(
+        rtdb,
+        `courses/thrivemed/programs/${programId}/modules/${selectedModule.id}`
+      );
 
-    const updatedModules = modules.map((module: Module) =>
-      module.id === selectedModule.id ? updatedModule : module
-    );
+      await remove(moduleRef);
 
-    setModules(updatedModules);
-    setIsEditDialogOpen(false);
-  } catch (error) {
-    console.error("Error updating module in Firebase:", error);
-  }
-};
+      const updatedModules = modules.filter(
+        (module: Module) => module.id !== selectedModule.id
+      );
 
-
-
-const handleDeleteModule = async () => {
-  if (!selectedModule) return;
-
-  try {
-    const moduleRef = ref(
-      rtdb,
-      `courses/thrivemed/programs/${programId}/modules/${selectedModule.id}`
-    );
-
-    await remove(moduleRef);
-
-    const updatedModules = modules.filter(
-      (module: Module) => module.id !== selectedModule.id
-    );
-
-    setModules(updatedModules);
-    setIsDeleteDialogOpen(false);
-  } catch (error) {
-    console.error("Error deleting module from Firebase:", error);
-  }
-};
-
+      setModules(updatedModules);
+      setIsDeleteDialogOpen(false);
+    } catch (error) {
+      console.error("Error deleting module from Firebase:", error);
+    }
+  };
 
   const openEditDialog = (module: any) => {
     setSelectedModule({ ...module });
@@ -227,30 +221,34 @@ const handleDeleteModule = async () => {
   };
 
   return (
-    <div className="p-8">
-      <div className="flex items-center mb-6">
-        <Button
-          variant="ghost"
-          className="mr-4 p-2 rounded-full"
-          onClick={onBack}
-        >
-          <ArrowLeft className="h-5 w-5 text-gray-600" />
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            {program.name}: Modules
-          </h1>
-          <p className="text-sm text-gray-500">{program.description}</p>
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="flex flex-col sm:flex-row sm:items-center mb-6 gap-4">
+        <div className="flex items-center gap-4 flex-1 min-w-0">
+          <Button
+            variant="ghost"
+            className="p-2 rounded-full flex-shrink-0"
+            onClick={onBack}
+          >
+            <ArrowLeft className="h-5 w-5 text-gray-600" />
+          </Button>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
+              {program.name}: Modules
+            </h1>
+            <p className="text-sm text-gray-500 truncate">
+              {program.description}
+            </p>
+          </div>
         </div>
 
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg ml-auto">
+            <Button className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg w-full sm:w-auto flex-shrink-0">
               <Plus className="mr-2 h-4 w-4" />
               Add New Module
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="sm:max-w-[500px] mx-4">
             <DialogHeader>
               <DialogTitle>Add New Module</DialogTitle>
             </DialogHeader>
@@ -300,16 +298,16 @@ const handleDeleteModule = async () => {
                 />
               </div>
             </div>
-            <div className="flex justify-end gap-3">
+            <div className="flex flex-col sm:flex-row justify-end gap-3">
               <Button
                 variant="outline"
                 onClick={() => setIsAddDialogOpen(false)}
-                className="text-black"
+                className="text-black w-full sm:w-auto"
               >
                 Cancel
               </Button>
               <Button
-                className="bg-blue-500 hover:bg-blue-600 text-white"
+                className="bg-blue-500 hover:bg-blue-600 text-white w-full sm:w-auto"
                 onClick={handleAddModule}
               >
                 Add Module
@@ -339,16 +337,16 @@ const handleDeleteModule = async () => {
             key={module.id}
             className="overflow-hidden rounded-xl shadow-sm border-0"
           >
-            <div className="p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <FolderKanban className="h-5 w-5 text-blue-500" />
-                    <h3 className="text-lg font-semibold text-gray-900">
+            <div className="p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-4 gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-2">
+                    <FolderKanban className="h-5 w-5 text-blue-500 flex-shrink-0" />
+                    <h3 className="text-lg font-semibold text-gray-900 truncate">
                       {module.title}
                     </h3>
                   </div>
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="text-sm text-gray-500 line-clamp-2">
                     {module.description}
                   </p>
                 </div>
@@ -356,7 +354,7 @@ const handleDeleteModule = async () => {
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
-                      className="h-8 w-8 p-0 bg-[#152644]"
+                      className="h-8 w-8 p-0 flex-shrink-0"
                     >
                       <MoreVertical className="h-4 w-4" />
                     </Button>
@@ -391,15 +389,20 @@ const handleDeleteModule = async () => {
                 <Progress value={module.progress} className="h-2" />
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div className="text-sm text-gray-500">
-                  {module.videos &&  Object.keys(module.videos).length? 
-                  Object.keys(module.videos).length : " "}
-                   { module.videos ? Object.keys(module.videos).length === 1 ? "video" : "videos" : ""}
+                  {module.videos && Object.keys(module.videos).length
+                    ? Object.keys(module.videos).length
+                    : " "}
+                  {module.videos
+                    ? Object.keys(module.videos).length === 1
+                      ? "video"
+                      : "videos"
+                    : ""}
                 </div>
                 <Button
                   onClick={() => onModuleSelect(module.id)}
-                  className="rounded-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 text-sm"
+                  className="rounded-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 text-sm w-full sm:w-auto"
                 >
                   Manage Videos
                 </Button>
@@ -411,7 +414,7 @@ const handleDeleteModule = async () => {
 
       {/* Edit Module Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px] mx-4">
           <DialogHeader>
             <DialogTitle>Edit Module</DialogTitle>
           </DialogHeader>
@@ -470,16 +473,16 @@ const handleDeleteModule = async () => {
               </div>
             </div>
           )}
-          <div className="flex justify-end gap-3">
+          <div className="flex flex-col sm:flex-row justify-end gap-3">
             <Button
               variant="outline"
               onClick={() => setIsEditDialogOpen(false)}
-              className="text-white"
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
             <Button
-              className="bg-blue-500 hover:bg-blue-600 text-white"
+              className="bg-blue-500 hover:bg-blue-600 text-white w-full sm:w-auto"
               onClick={handleEditModule}
             >
               Save Changes
@@ -490,7 +493,7 @@ const handleDeleteModule = async () => {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[400px]">
+        <DialogContent className="sm:max-w-[400px] mx-4">
           <DialogHeader>
             <DialogTitle>Delete Module</DialogTitle>
           </DialogHeader>
@@ -500,15 +503,19 @@ const handleDeleteModule = async () => {
               action cannot be undone and will remove all videos in this module.
             </p>
           </div>
-          <div className="flex justify-end gap-3">
+          <div className="flex flex-col sm:flex-row justify-end gap-3">
             <Button
               variant="outline"
               onClick={() => setIsDeleteDialogOpen(false)}
-              className="text-white"
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDeleteModule}>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteModule}
+              className="w-full sm:w-auto"
+            >
               Delete
             </Button>
           </div>

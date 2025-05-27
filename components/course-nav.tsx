@@ -37,16 +37,16 @@ export function VerticalNav({ currentView }: VerticalNavProps) {
   ];
 
   return (
-    <div className="fixed left-0 top-0 bottom-0 w-16 bg-white z-10 flex flex-col items-center py-8">
+    <div className="fixed right-60 top-20 bottom-0 w-16  z-10 flex-col items-center py-8 hidden md:flex">
       {/* Timeline with icons */}
-      <div className="flex flex-col items-center space-y-8 relative">
+      <div className="flex space-y-8 relative">
         {/* Vertical line connecting the circles */}
-        <div className="absolute top-6 bottom-6 w-0.5 bg-gray-200 -z-10"></div>
+        <div className="absolute top-6 bottom-6 w-0.5  -z-10"></div>
 
         {steps.map((step, index) => (
           <div key={step.id} className="relative">
             <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center ${
+              className={`w-10 h-10 rounded-full flex items-center justify-center mx-2 ${
                 step.active
                   ? step.completed
                     ? "bg-blue-500 text-white"

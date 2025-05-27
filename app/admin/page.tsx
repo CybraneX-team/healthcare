@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import { AdminSidebar } from "@/components/adminSidebar";
 import { AdminDashboard } from "@/components/adminDashboard";
@@ -13,11 +14,13 @@ export default function AdminPage() {
   >("dashboard");
   const [selectedProgram, setSelectedProgram] = useState<string | null>(null);
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleViewChange = (
     view: "dashboard" | "programs" | "modules" | "videos" | "users" | "settings"
   ) => {
     setActiveView(view);
+    setSidebarOpen(false);
   };
 
   const handleProgramSelect = (programId: string) => {
@@ -43,15 +46,26 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-white flex">
-      <AdminSidebar activeView={activeView} onViewChange={handleViewChange} />
+      <AdminSidebar
+        activeView={activeView}
+        onViewChange={handleViewChange}
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+      />
 
-      <div className="flex-1 ml-64">
+      <div className="flex-1 lg:ml-64 transition-all duration-300">
         {activeView === "dashboard" && (
-          <AdminDashboard onNavigate={handleViewChange} />
+          <AdminDashboard
+            onNavigate={handleViewChange}
+            setSidebarOpen={setSidebarOpen}
+          />
         )}
 
         {activeView === "programs" && (
-          <ProgramsManager onProgramSelect={handleProgramSelect} />
+          <ProgramsManager
+            onProgramSelect={handleProgramSelect}
+            setSidebarOpen={setSidebarOpen}
+          />
         )}
 
         {activeView === "modules" && selectedProgram && (
@@ -59,6 +73,7 @@ export default function AdminPage() {
             programId={selectedProgram}
             onModuleSelect={handleModuleSelect}
             onBack={handleBackToPrograms}
+            setSidebarOpen={setSidebarOpen}
           />
         )}
 
@@ -67,15 +82,18 @@ export default function AdminPage() {
             programId={selectedProgram}
             moduleId={selectedModule}
             onBack={handleBackToModules}
+            setSidebarOpen={setSidebarOpen}
           />
         )}
 
-        {activeView === "users" && <UsersManager />}
+        {activeView === "users" && (
+          <UsersManager setSidebarOpen={setSidebarOpen} />
+        )}
 
         {activeView === "settings" && (
-          <div className="p-8">
-            <h1 className="text-2xl font-bold mb-6">Settings</h1>
-            <p>Settings page content will go here.</p>
+          <div className="p-4 sm:p-6 lg:p-8">
+            <h1 className="text-xl sm:text-2xl font-bold mb-6">Settings</h1>
+            <p className="text-black">Settings page content will go here.</p>
           </div>
         )}
       </div>

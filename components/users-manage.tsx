@@ -28,7 +28,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export function UsersManager() {
+interface UsersManagerProps {
+  setSidebarOpen: (open: boolean) => void;
+}
+
+export function UsersManager({ setSidebarOpen }: UsersManagerProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -165,18 +169,20 @@ export function UsersManager() {
   };
 
   return (
-    <div className="p-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Users Management</h1>
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+          Users Management
+        </h1>
 
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg">
+            <Button className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg w-full sm:w-auto">
               <Plus className="mr-2 h-4 w-4" />
               Add New User
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="sm:max-w-[500px] mx-4">
             <DialogHeader>
               <DialogTitle>Add New User</DialogTitle>
             </DialogHeader>
@@ -226,15 +232,16 @@ export function UsersManager() {
                 </select>
               </div>
             </div>
-            <div className="flex justify-end gap-3">
+            <div className="flex flex-col sm:flex-row justify-end gap-3">
               <Button
                 variant="outline"
                 onClick={() => setIsAddDialogOpen(false)}
+                className="w-full sm:w-auto"
               >
                 Cancel
               </Button>
               <Button
-                className="bg-blue-500 hover:bg-blue-600"
+                className="bg-blue-500 hover:bg-blue-600 w-full sm:w-auto"
                 onClick={handleAddUser}
               >
                 Add User
@@ -245,7 +252,7 @@ export function UsersManager() {
       </div>
 
       {/* Search and filters */}
-      <div className="mb-6 flex gap-4">
+      <div className="mb-6 flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
           <Input
@@ -255,7 +262,7 @@ export function UsersManager() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <select className="rounded-md border border-gray-300 p-2">
+        <select className="rounded-md border border-gray-300 p-2 w-full sm:w-auto">
           <option value="all">All Roles</option>
           <option value="admin">Admin</option>
           <option value="instructor">Instructor</option>
@@ -269,22 +276,22 @@ export function UsersManager() {
           <table className="w-full">
             <thead>
               <tr className="bg-gray-50 border-b">
-                <th className="text-left py-3 px-4 font-medium text-gray-500">
+                <th className="text-left py-3 px-4 font-medium text-gray-500 min-w-[200px]">
                   User
                 </th>
-                <th className="text-left py-3 px-4 font-medium text-gray-500">
+                <th className="text-left py-3 px-4 font-medium text-gray-500 min-w-[200px]">
                   Email
                 </th>
-                <th className="text-left py-3 px-4 font-medium text-gray-500">
+                <th className="text-left py-3 px-4 font-medium text-gray-500 min-w-[100px]">
                   Role
                 </th>
-                <th className="text-left py-3 px-4 font-medium text-gray-500">
+                <th className="text-left py-3 px-4 font-medium text-gray-500 min-w-[120px]">
                   Joined Date
                 </th>
-                <th className="text-left py-3 px-4 font-medium text-gray-500">
+                <th className="text-left py-3 px-4 font-medium text-gray-500 min-w-[120px]">
                   Last Active
                 </th>
-                <th className="text-right py-3 px-4 font-medium text-gray-500">
+                <th className="text-right py-3 px-4 font-medium text-gray-500 min-w-[80px]">
                   Actions
                 </th>
               </tr>
@@ -295,25 +302,25 @@ export function UsersManager() {
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-3">
                       <div
-                        className={`w-8 h-8 rounded-full ${user.avatarColor} text-white flex items-center justify-center text-sm font-medium`}
+                        className={`w-8 h-8 rounded-full ${user.avatarColor} text-white flex items-center justify-center text-sm font-medium flex-shrink-0`}
                       >
                         {user.avatar}
                       </div>
-                      <span className="font-medium text-gray-900">
+                      <span className="font-medium text-gray-900 truncate">
                         {user.name}
                       </span>
                     </div>
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-1 text-gray-500">
-                      <Mail className="h-4 w-4" />
-                      <span>{user.email}</span>
+                      <Mail className="h-4 w-4 flex-shrink-0" />
+                      <span className="truncate">{user.email}</span>
                     </div>
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-1">
                       <Shield
-                        className={`h-4 w-4 ${
+                        className={`h-4 w-4 flex-shrink-0 ${
                           user.role === "admin"
                             ? "text-red-500"
                             : user.role === "instructor"
@@ -326,11 +333,13 @@ export function UsersManager() {
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-1 text-gray-500">
-                      <Calendar className="h-4 w-4" />
-                      <span>{user.joinedDate}</span>
+                      <Calendar className="h-4 w-4 flex-shrink-0" />
+                      <span className="truncate">{user.joinedDate}</span>
                     </div>
                   </td>
-                  <td className="py-3 px-4 text-gray-500">{user.lastActive}</td>
+                  <td className="py-3 px-4 text-gray-500">
+                    <span className="truncate">{user.lastActive}</span>
+                  </td>
                   <td className="py-3 px-4 text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -362,7 +371,7 @@ export function UsersManager() {
 
       {/* Edit User Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px] mx-4">
           <DialogHeader>
             <DialogTitle>Edit User</DialogTitle>
           </DialogHeader>
@@ -412,15 +421,16 @@ export function UsersManager() {
               </div>
             </div>
           )}
-          <div className="flex justify-end gap-3">
+          <div className="flex flex-col sm:flex-row justify-end gap-3">
             <Button
               variant="outline"
               onClick={() => setIsEditDialogOpen(false)}
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
             <Button
-              className="bg-blue-500 hover:bg-blue-600"
+              className="bg-blue-500 hover:bg-blue-600 w-full sm:w-auto"
               onClick={handleEditUser}
             >
               Save Changes
@@ -431,7 +441,7 @@ export function UsersManager() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[400px]">
+        <DialogContent className="sm:max-w-[400px] mx-4">
           <DialogHeader>
             <DialogTitle>Delete User</DialogTitle>
           </DialogHeader>
@@ -441,14 +451,19 @@ export function UsersManager() {
               action cannot be undone.
             </p>
           </div>
-          <div className="flex justify-end gap-3">
+          <div className="flex flex-col sm:flex-row justify-end gap-3">
             <Button
               variant="outline"
               onClick={() => setIsDeleteDialogOpen(false)}
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDeleteUser}>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteUser}
+              className="w-full sm:w-auto"
+            >
               Delete
             </Button>
           </div>

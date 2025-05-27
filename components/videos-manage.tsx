@@ -46,12 +46,14 @@ interface VideosManagerProps {
   programId: string;
   moduleId: string;
   onBack: () => void;
+  setSidebarOpen: (open: boolean) => void;
 }
 
 export function VideosManager({
   programId,
   moduleId,
   onBack,
+  setSidebarOpen,
 }: VideosManagerProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -330,30 +332,34 @@ const handleDeleteVideo = async () => {
   };
 
   return (
-    <div className="p-8">
-      <div className="flex items-center mb-6">
-        <Button
-          variant="ghost"
-          className="mr-4 p-2 rounded-full"
-          onClick={onBack}
-        >
-          <ArrowLeft className="h-5 w-5 text-gray-600" />
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            {program.name}: {module.title}
-          </h1>
-          <p className="text-sm text-gray-500">Manage videos for this module</p>
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="flex flex-col sm:flex-row sm:items-center mb-6 gap-4">
+        <div className="flex items-center gap-4 flex-1 min-w-0">
+          <Button
+            variant="ghost"
+            className="p-2 rounded-full flex-shrink-0"
+            onClick={onBack}
+          >
+            <ArrowLeft className="h-5 w-5 text-gray-600" />
+          </Button>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
+              {program.name}: {module.title}
+            </h1>
+            <p className="text-sm text-gray-500">
+              Manage videos for this module
+            </p>
+          </div>
         </div>
 
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg ml-auto">
+            <Button className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg w-full sm:w-auto flex-shrink-0">
               <Plus className="mr-2 h-4 w-4" />
               Add New Video
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="sm:max-w-[500px] mx-4">
             <DialogHeader>
               <DialogTitle>Add New Video</DialogTitle>
             </DialogHeader>
@@ -397,11 +403,9 @@ const handleDeleteVideo = async () => {
                       setNewVideo({ ...newVideo, youtubeId: e.target.value })
                     }
                     placeholder="e.g. dQw4w9WgXcQ"
+                    className="flex-1"
                   />
-                  <Button
-                    variant="outline"
-                    className="flex-shrink-0 text-white"
-                  >
+                  <Button variant="outline" className="flex-shrink-0">
                     <Youtube className="h-4 w-4 mr-2" />
                     Test
                   </Button>
@@ -444,16 +448,16 @@ const handleDeleteVideo = async () => {
                 </div>
               </div>
             </div>
-            <div className="flex justify-end gap-3">
+            <div className="flex flex-col sm:flex-row justify-end gap-3">
               <Button
                 variant="outline"
                 onClick={() => setIsAddDialogOpen(false)}
-                className="text-white"
+                className="w-full sm:w-auto"
               >
                 Cancel
               </Button>
               <Button
-                className="bg-blue-500 hover:bg-blue-600 text-white"
+                className="bg-blue-500 hover:bg-blue-600 text-white w-full sm:w-auto"
                 onClick={handleAddVideo}
               >
                 Add Video
@@ -483,9 +487,9 @@ const handleDeleteVideo = async () => {
             key={video.id}
             className="overflow-hidden rounded-xl shadow-sm border-0"
           >
-            <div className="p-6">
-              <div className="flex justify-between items-start">
-                <div className="flex items-start gap-3">
+            <div className="p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+                <div className="flex items-start gap-3 flex-1 min-w-0">
                   <div
                     className="flex-shrink-0 cursor-pointer mt-1"
                     onClick={() => toggleVideoCompletion(video.id)}
@@ -496,22 +500,26 @@ const handleDeleteVideo = async () => {
                       <Circle className="h-5 w-5 text-gray-300" />
                     )}
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <VideoIcon className="h-5 w-5 text-blue-500" />
-                      <h3 className="text-lg font-semibold text-gray-900">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <VideoIcon className="h-5 w-5 text-blue-500 flex-shrink-0" />
+                      <h3 className="text-lg font-semibold text-gray-900 truncate">
                         {video.title}
                       </h3>
                     </div>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-gray-500 line-clamp-2 mb-2">
                       {video.description}
                     </p>
-                    <div className="flex items-center text-xs text-gray-500 mt-2">
-                      <Clock className="h-3 w-3 mr-1" />
-                      <span>{video.duration}</span>
-                      <span className="mx-2">•</span>
-                      <Youtube className="h-3 w-3 mr-1" />
-                      <span className="font-mono">{video.youtubeId}</span>
+                    <div className="flex flex-wrap items-center text-xs text-gray-500 gap-2">
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        <span>{video.duration}</span>
+                      </div>
+                      <span>•</span>
+                      <div className="flex items-center gap-1">
+                        <Youtube className="h-3 w-3" />
+                        <span className="font-mono">{video.youtubeId}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -519,7 +527,7 @@ const handleDeleteVideo = async () => {
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
-                      className="h-8 w-8 p-0 bg-[#0e244a]"
+                      className="h-8 w-8 p-0 flex-shrink-0"
                     >
                       <MoreVertical className="h-4 w-4" />
                     </Button>
@@ -558,7 +566,7 @@ const handleDeleteVideo = async () => {
               <div className="flex items-center justify-end mt-4">
                 <Button
                   variant="outline"
-                  className="rounded-full text-white border-blue-500 bg-blue-500 hover:bg-blue-50 hover:text-black px-4 py-2 text-sm"
+                  className="rounded-full border-blue-500 text-blue-500 hover:bg-blue-50 px-4 py-2 text-sm w-full sm:w-auto"
                   onClick={() =>
                     window.open(
                       `https://youtube.com/watch?v=${video.youtubeId}`,
@@ -596,7 +604,7 @@ const handleDeleteVideo = async () => {
 
       {/* Edit Video Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px] mx-4">
           <DialogHeader>
             <DialogTitle>Edit Video</DialogTitle>
           </DialogHeader>
@@ -650,10 +658,11 @@ const handleDeleteVideo = async () => {
                         youtubeId: e.target.value,
                       })
                     }
+                    className="flex-1"
                   />
                   <Button
                     variant="outline"
-                    className="flex-shrink-0 text-white"
+                    className="flex-shrink-0"
                     onClick={() =>
                       window.open(
                         `https://youtube.com/watch?v=${selectedVideo.youtubeId}`,
@@ -722,16 +731,16 @@ const handleDeleteVideo = async () => {
               </div>
             </div>
           )}
-          <div className="flex justify-end gap-3">
+          <div className="flex flex-col sm:flex-row justify-end gap-3">
             <Button
               variant="outline"
               onClick={() => setIsEditDialogOpen(false)}
-              className="text-white"
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
             <Button
-              className="bg-blue-500 hover:bg-blue-600 text-white"
+              className="bg-blue-500 hover:bg-blue-600 text-white w-full sm:w-auto"
               onClick={handleEditVideo}
             >
               Save Changes
@@ -742,7 +751,7 @@ const handleDeleteVideo = async () => {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[400px]">
+        <DialogContent className="sm:max-w-[400px] mx-4">
           <DialogHeader>
             <DialogTitle>Delete Video</DialogTitle>
           </DialogHeader>
@@ -752,15 +761,19 @@ const handleDeleteVideo = async () => {
               action cannot be undone.
             </p>
           </div>
-          <div className="flex justify-end gap-3">
+          <div className="flex flex-col sm:flex-row justify-end gap-3">
             <Button
               variant="outline"
               onClick={() => setIsDeleteDialogOpen(false)}
-              className="text-white"
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDeleteVideo}>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteVideo}
+              className="w-full sm:w-auto"
+            >
               Delete
             </Button>
           </div>

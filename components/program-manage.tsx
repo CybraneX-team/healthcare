@@ -296,7 +296,7 @@ export function ProgramsManager({
 
       {/* Programs list */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
-        {filteredPrograms.map((program) => (
+        {filteredPrograms.map((program: any, index: any) => (
           <Card
             key={index}
             className="overflow-hidden rounded-xl shadow-sm border-0"

@@ -54,7 +54,7 @@ export const BrainComponent = () => {
             <Card className="shadow-sm border-0 bg-white rounded-3xl hover:shadow-md transition-shadow duration-300  max-h-96 flex justify-between">
               <CardContent className="p-8 flex justify-between">
                 <div className="flex items-center justify-between mb-2">
-                  <div className="flex flex-col justify-between -mt-10">
+                  <div className="flex flex-col justify-between ">
                     {/* Fasting Glucose */}
                     <div className="mb-28">
                       <h3 className="font-semibold text-2xl mb-3">
@@ -69,48 +69,22 @@ export const BrainComponent = () => {
                     {/* Glycated Haemoglobin */}
                     <div className="">
                       <div className="text-xl font-semibold  mb-1">
-                        Glycated Haemoglobin
+                        Glycated <br /> Haemoglobin
                       </div>
                       <div className="text-xl  text-gray-500">5.5%</div>
                     </div>
                   </div>
                 </div>
-                <motion.div
-                  className="flex flex-col justify-center flex-shrink-0 ml-40"
-                  style={{ width: "calc(12.5% - 8px)", minWidth: "60px" }}
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{
-                    height: "auto",
-                    opacity: 1,
-                    transition: {
-                      delay: 2 * 0.05,
-                      duration: 0.4,
-                    },
-                  }}
-                >
-                  <div className="w-full flex justify-center ">
-                    <div className="w-10 sm:w-12 md:w-16 h-64  flex items-end rounded-full bg-gray-100">
-                      <motion.div
-                        className={`w-full bg-blue-600 rounded-full`}
-                        initial={{ height: 0 }}
-                        animate={{
-                          height: `$65%`,
-                          transition: {
-                            delay: 80 * 0.05 + 0.1,
-                            duration: 0.6,
-                            ease: "easeOut",
-                          },
-                        }}
-                      ></motion.div>
-                    </div>
+                <div className="flex flex-col ml-60">
+                  <div className="w-20 h-56 bg-gray-100 rounded-[100px] flex items-end overflow-hidden ">
+                    <div className="w-full h-[65%] bg-[#0066FF] rounded-[100px]" />
                   </div>
-                  <div
-                    className="text-xs mt-2 text-gray-500 text-center w-full "
-                    style={{ minHeight: "2.5rem" }}
-                  >
-                    High metabolic activity
-                  </div>
-                </motion.div>
+                  <p className="text-sm text-[#6B7280] mt-3 text-center leading-tight">
+                    High metabolic
+                    <br />
+                    activity
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </motion.div>

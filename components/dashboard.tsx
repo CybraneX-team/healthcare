@@ -608,19 +608,10 @@ export default function Dashboard() {
                   )}
                   {selectedOrgan === "liver" && <LiverComponent />}
                   {selectedOrgan === "brain" && (
+                    // <></>
                     <BrainComponent />
-                    // <div className="text-center p-8 bg-white rounded-3xl shadow-sm">
-                    //   <h3 className="text-2xl font-semibold mb-4">
-                    //     Brain Component
-                    //   </h3>
-                    //   <p className="text-gray-600 mb-6">
-                    //     Brain data will be displayed here. Create a separate
-                    //     BrainComponent for detailed implementation.
-                    //   </p>
-                    // </div>
                   )}
-                  {selectedOrgan === 'liver' && <LiverComponent />}
-                  {selectedOrgan === 'brain' && <PancreasComponent />}
+                  {selectedOrgan === "liver" && <LiverComponent />}
                   {/* <div className="flex justify-end mb-6">
                     <div className="inline-flex items-center gap-6 bg-white rounded-full py-2 px-4 shadow-sm">
                       <div className="flex items-center gap-2">

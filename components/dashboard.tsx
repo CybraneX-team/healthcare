@@ -34,6 +34,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import HeartComponent from "@/components/heart-component";
 import LiverComponent from "@/components/liver-component";
 import LungsModel from "@/components/lungs-model";
+import PancreasComponent from "@/components/pancreas-component";
 import { PatientSection } from "./PatientSection";
 import { LabsSection } from "./labSection";
 import { ServicesProductsSection } from "./ServicesSection";
@@ -616,6 +617,8 @@ export default function Dashboard() {
                       </p>
                     </div>
                   )}
+                  {selectedOrgan === 'liver' && <LiverComponent />}
+                  {selectedOrgan === 'brain' && <PancreasComponent />}
                   {/* <div className="flex justify-end mb-6">
                     <div className="inline-flex items-center gap-6 bg-white rounded-full py-2 px-4 shadow-sm">
                       <div className="flex items-center gap-2">

@@ -1,20 +1,12 @@
 "use client";
 
-import {
-  Home,
-  BookOpen,
-  Video,
-  User,
-  Settings,
-  MessageSquare,
-  BarChart,
-} from "lucide-react";
+import { Home, BookOpen, Video } from "lucide-react";
 
-interface VerticalNavProps {
+interface HorizontalNavProps {
   currentView: "programs" | "modules" | "video";
 }
 
-export function VerticalNav({ currentView }: VerticalNavProps) {
+export function HorizontalNav({ currentView }: HorizontalNavProps) {
   const steps = [
     {
       id: "programs",
@@ -37,16 +29,16 @@ export function VerticalNav({ currentView }: VerticalNavProps) {
   ];
 
   return (
-    <div className="fixed right-60 top-20 bottom-0 w-16  z-10 flex-col items-center py-8 hidden md:flex">
+    <div className="absolute top-32 left-1/2 transform -translate-x-1/2 w-auto z-10 flex-row items-center px-8 hidden md:flex">
       {/* Timeline with icons */}
-      <div className="flex space-y-8 relative">
-        {/* Vertical line connecting the circles */}
-        <div className="absolute top-6 bottom-6 w-0.5  -z-10"></div>
+      <div className="flex space-x-8 relative">
+        {/* Horizontal line connecting the circles */}
+        <div className="absolute left-6 right-6 top-5 h-0.5 bg-gray-300 -z-10"></div>
 
         {steps.map((step, index) => (
           <div key={step.id} className="relative">
             <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center mx-2 ${
+              className={`w-10 h-10 rounded-full flex items-center justify-center ${
                 step.active
                   ? step.completed
                     ? "bg-blue-500 text-white"

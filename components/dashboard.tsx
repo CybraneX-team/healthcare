@@ -40,6 +40,7 @@ import { LabsSection } from "./labSection";
 import { ServicesProductsSection } from "./ServicesSection";
 import { CombinedLabsSection } from "./Lab-Services";
 import Link from "next/link";
+import BrainComponent from "./metabolism";
 // Other organ components will be imported here as they are created
 
 // Define types for weight trend data
@@ -247,7 +248,7 @@ export default function Dashboard() {
       height: 90px;
       border-radius: 50%;
       position: relative;
-      overflow: hidden;
+      
       display: flex;
       align-items: center;
       border-bottom: 4px solid #E5E7EB;
@@ -291,7 +292,7 @@ export default function Dashboard() {
       <style jsx>{organSwitcherStyle}</style>
       <style jsx global>{`
         body {
-          overflow: ${activeTab === "overview" ? "hidden" : "auto"};
+          overflow: ${activeTab === "overview" ? "auto" : "auto"};
         }
       `}</style>
       <div className="h-full">
@@ -607,15 +608,16 @@ export default function Dashboard() {
                   )}
                   {selectedOrgan === "liver" && <LiverComponent />}
                   {selectedOrgan === "brain" && (
-                    <div className="text-center p-8 bg-white rounded-3xl shadow-sm">
-                      <h3 className="text-2xl font-semibold mb-4">
-                        Brain Component
-                      </h3>
-                      <p className="text-gray-600 mb-6">
-                        Brain data will be displayed here. Create a separate
-                        BrainComponent for detailed implementation.
-                      </p>
-                    </div>
+                    <BrainComponent />
+                    // <div className="text-center p-8 bg-white rounded-3xl shadow-sm">
+                    //   <h3 className="text-2xl font-semibold mb-4">
+                    //     Brain Component
+                    //   </h3>
+                    //   <p className="text-gray-600 mb-6">
+                    //     Brain data will be displayed here. Create a separate
+                    //     BrainComponent for detailed implementation.
+                    //   </p>
+                    // </div>
                   )}
                   {selectedOrgan === 'liver' && <LiverComponent />}
                   {selectedOrgan === 'brain' && <PancreasComponent />}

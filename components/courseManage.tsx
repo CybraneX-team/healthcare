@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ProgramsList } from "@/components/programs";
 import { ModuleOverview } from "@/components/module";
 import { VideoPlayerView } from "@/components/videoView";
-import { VerticalNav } from "@/components/course-nav";
+import { HorizontalNav } from "@/components/course-nav";
 
 export default function Course() {
   const [currentView, setCurrentView] = useState<
@@ -126,8 +126,9 @@ export default function Course() {
 
   return (
     <div className="min-h-screen flex -mt-10">
-      <VerticalNav currentView={currentView} />
-
+      <div className="">
+        <HorizontalNav currentView={currentView} />
+      </div>
       <div className="flex-1 md:ml-16">
         {currentView === "programs" && (
           <ProgramsList

@@ -96,6 +96,16 @@ export function UsersManager({ setSidebarOpen }: UsersManagerProps) {
       avatar: "MW",
       avatarColor: "bg-pink-500",
     },
+    {
+      id: "6",
+      name: "Michael Wilson",
+      email: "michael.wilson@example.com",
+      role: "student",
+      joinedDate: "May 1, 2025",
+      lastActive: "just now",
+      avatar: "MW",
+      avatarColor: "bg-pink-500",
+    }
   ]);
 
   const filteredUsers = users.filter(

@@ -8,11 +8,14 @@ import {
   createUserWithEmail, 
   signOut as firebaseSignOut,
   getCurrentUser,
+  signInWithGoogle ,
   auth,
   createUserProfile,
   uploadAvatar,
   updateUserProfile
 } from "@/utils/firebase";
+import { resetPassword as firebaseResetPassword } from "@/utils/firebase";
+import { sendEmailVerification } from "firebase/auth";
 
 interface User {
   id: string;
@@ -29,6 +32,8 @@ interface AuthContextType {
   signup: (email: string, password: string, userData?: any) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
+  resetPassword: (email: string) => Promise<void>;
+   loginWithGoogle: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -93,6 +98,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const resetPassword = async (email: string) => {
+  try {
+    await firebaseResetPassword(email);
+  } catch (error) {
+    console.error("Password reset failed:", error);
+    throw error;
+  }
+};
+
+const loginWithGoogle = async () => {
+  setLoading(true);
+  try {
+    await signInWithGoogle();
+  } catch (error) {
+    console.error("Google login failed:", error);
+    throw error;
+  } finally {
+    setLoading(false);
+  }
+};
+
   const loginWithApple = async () => {
     setLoading(true);
     
@@ -107,51 +133,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signup = async (email: string, password: string, userData?: any) => {
-    setLoading(true);
-    
-    try {
-      // Check if email is in valid format
-      if (!email || !email.includes('@') || !email.includes('.')) {
-        throw new Error("Invalid email format. Please enter a valid email address.");
-      }
-      
-      // Create user in Firebase Authentication
-      const userCredential = await createUserWithEmail(email, password);
-      const user = userCredential.user;
-      
-      // Store user profile data in Firestore
-      if (userData) {
-        // Create a copy of userData without the avatar to prevent size limit issues
-        const { avatar, ...userDataWithoutAvatar } = userData;
-        
-        await createUserProfile(user.uid, {
-          email: user.email,
-          displayName: userData.displayName || '',
-          phoneNumber: userData.phoneNumber || '',
-          ...userDataWithoutAvatar
-        });
-        
-        // Upload avatar if provided
-        if (avatar && avatar instanceof File) {
-          try {
-            const avatarUrl = await uploadAvatar(user.uid, avatar);
-            await updateUserProfile(user.uid, { avatarUrl });
-          } catch (uploadError) {
-            console.error("Avatar upload failed:", uploadError);
-            // Continue with signup even if avatar upload fails
-          }
+ const signup = async (email: string, password: string, userData?: any) => {
+  setLoading(true);
+
+  try {
+    const userCredential = await createUserWithEmail(email, password);
+    const user = userCredential.user;
+
+    // Send email verification
+    await sendEmailVerification(user);
+
+    // Save profile (excluding avatar initially)
+    if (userData) {
+      const { avatar, ...userDataWithoutAvatar } = userData;
+
+      await createUserProfile(user.uid, {
+        email: user.email,
+        displayName: userData.displayName || '',
+        phoneNumber: userData.phoneNumber || '',
+        ...userDataWithoutAvatar,
+        emailVerified: false, // Initially false
+      });
+
+      if (avatar && avatar instanceof File) {
+        try {
+          const avatarUrl = await uploadAvatar(user.uid, avatar);
+          await updateUserProfile(user.uid, { avatarUrl });
+        } catch (uploadError) {
+          console.error("Avatar upload failed:", uploadError);
         }
       }
-      
-      // Auth state listener will update the user state
-    } catch (error) {
-      console.error("Signup failed:", error);
-      throw error;
-    } finally {
-      setLoading(false);
     }
-  };
+  } catch (error) {
+    console.error("Signup failed:", error);
+    throw error;
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const logout = async () => {
     try {
@@ -172,6 +192,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loginWithApple,
         signup,
         logout,
+        resetPassword,
+         loginWithGoogle,
         isAuthenticated: !!user
       }}
     >

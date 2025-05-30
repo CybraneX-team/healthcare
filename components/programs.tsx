@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Clock, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { rtdb } from "@/utils/firebase";
+import { onValue, ref } from "firebase/database";
 
 interface ProgramsListProps {
   onProgramSelect: (programId: string) => void;
@@ -16,6 +18,8 @@ export function ProgramsList({
   moduleProgress,
 }: ProgramsListProps) {
   const [activeTab, setActiveTab] = useState("all");
+  const [programs, setPrograms] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
   // Calculate overall progress across all modules
   const calculateOverallProgress = () => {
@@ -26,22 +30,41 @@ export function ProgramsList({
     );
   };
 
-  const programs = [
-    {
-      id: "thrivemed-hub",
-      name: "Thrivemed Hub",
-      status: "active",
-      description: "Personalized Health Roadmaps",
-      progress: calculateOverallProgress(),
-    },
-    {
-      id: "thrivemed-apollo",
-      name: "Thrivemed Apollo",
-      status: "completed",
-      description: "Advanced Health Optimization",
-      progress: 100,
-    },
-  ];
+  useEffect(() => {
+  setLoading(true);
+  const coursesRef = ref(rtdb, "courses/thrivemed/programs");
+  const unsubscribe = onValue(coursesRef, (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      const programsArray = Object.keys(data).map((key) => ({
+        id: key,
+        ...data[key],
+      }));
+      setPrograms(programsArray);
+    }
+    setLoading(false);
+  });
+
+  return () => unsubscribe();
+}, []);
+
+
+  // const programs = [
+  //   {
+  //     id: "thrivemed-hub",
+  //     name: "Thrivemed Hub",
+  //     status: "active",
+  //     description: "Personalized Health Roadmaps",
+  //     progress: calculateOverallProgress(),
+  //   },
+  //   {
+  //     id: "thrivemed-apollo",
+  //     name: "Thrivemed Apollo",
+  //     status: "completed",
+  //     description: "Advanced Health Optimization",
+  //     progress: 100,
+  //   },
+  // ];
 
   const filteredPrograms = programs.filter((program) => {
     if (activeTab === "all") return true;

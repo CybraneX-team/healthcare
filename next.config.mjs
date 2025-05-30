@@ -37,6 +37,7 @@ const nextConfig = {
     webpackBuildWorker: true,
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,
+    serverComponentsExternalPackages: ["pdf-parse"],
   },
   // Increase memory limit for builds
   onDemandEntries: {

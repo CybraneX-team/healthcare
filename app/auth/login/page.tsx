@@ -9,13 +9,14 @@ import { ArrowRight, ArrowLeft, CheckCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Inputbox } from "@/components/ui/inputbox";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
+import Link from "next/link";
 
 type Step = "email" | "password" | "2fa" | "error" | "success";
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login, loginWithApple } = useAuth();
+  const { login, loginWithApple, loginWithGoogle } = useAuth();
   const [currentStep, setCurrentStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -111,7 +112,19 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   };
-  
+
+  const handleGoogleSignIn = async () => {
+  setIsLoading(true);
+  try {
+    await loginWithGoogle();
+    router.push("/dashboard");
+  } catch (err) {
+    setError("Google sign-in failed. Please try again.");
+  } finally {
+    setIsLoading(false);
+  }
+};
+
   const handleBack = () => {
     if (currentStep === "password") {
       setCurrentStep("email");
@@ -251,6 +264,15 @@ export default function LoginPage() {
                   />
                 </div>
               </div>
+              <p className="text-sm text-right mt-2">
+              <Link
+                href="/auth/forgot-password" 
+                className="text-blue-600 hover:underline"
+              >
+                Forgot Password?
+              </Link>
+            </p>
+
             </motion.div>
           )}
 
@@ -401,6 +423,28 @@ export default function LoginPage() {
           </svg>
           <span>Sign in with Apple</span>
         </Button>
+
+        <Button 
+  onClick={handleGoogleSignIn}
+  variant="outline" 
+  className="w-full flex items-center justify-center space-x-2"
+  disabled={isLoading}
+>
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width="18" 
+    height="18" 
+    viewBox="0 0 48 48"
+    fill="currentColor"
+  >
+    <path d="M44.5 20H24v8.5h11.7C34.6 33.4 30 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6-6C34.2 5.3 29.4 3 24 3 12.3 3 3 12.3 3 24s9.3 21 21 21c10.5 0 20-7.8 20-21 0-1.3-.2-2.3-.5-4z" fill="#FFC107"/>
+    <path d="M6.3 14.6l6.6 4.8C14.3 16.1 18.8 13 24 13c3.1 0 5.9 1.1 8.1 2.9l6-6C34.2 5.3 29.4 3 24 3 16 3 9.2 7.8 6.3 14.6z" fill="#FF3D00"/>
+    <path d="M24 45c5.3 0 10.1-1.8 13.9-4.9l-6.4-5.2C29.8 36.5 27 37 24 37c-6.1 0-11.2-3.9-13-9.3l-6.6 5C9.2 40.2 16 45 24 45z" fill="#4CAF50"/>
+    <path d="M44.5 20H24v8.5h11.7C34.9 33.6 30 37 24 37c-6.1 0-11.2-3.9-13-9.3l-6.6 5C9.2 40.2 16 45 24 45c10.5 0 20-7.8 20-21 0-1.3-.2-2.3-.5-4z" fill="#1976D2"/>
+  </svg>
+  <span>Sign in with Google</span>
+        </Button>
+
       </div>
     </motion.div>
   );

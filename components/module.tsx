@@ -31,7 +31,7 @@ export function ModuleOverview({
     "july-bioenergetics": false,
     "august-medicine": false,
   });
-
+  // console.log("programIdonModuleSelect onBackcompletedVideosmoduleProgress")
   const toggleSection = (sectionId: string) => {
     setExpandedSections((prev) => ({
       ...prev,

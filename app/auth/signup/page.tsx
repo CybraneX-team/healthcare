@@ -17,7 +17,8 @@ import {
   ArrowLeft,
   Upload,
   Check,
-  X
+  X,
+  LogOut
 } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -54,7 +55,7 @@ interface UserProfile {
 
 export default function SignupPage() {
   const router = useRouter();
-  const { signup, loginWithApple } = useAuth();
+  const { signup, loginWithApple , loginWithGoogle , logout} = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [currentStep, setCurrentStep] = useState<Step>("email");
@@ -197,36 +198,64 @@ export default function SignupPage() {
     setError(null);
   };
   
-  const handleSignup = async () => {
-    setIsSubmitting(true);
+  // const handleSignup = async () => {
+  //   setIsSubmitting(true);
     
-    try {
-      // Show success animation before redirecting
-      setShowSuccess(true);
+  //   try {
+  //     // Show success animation before redirecting
+  //     setShowSuccess(true);
       
-      // Call the Firebase signup function with proper parameters
-      const userData = {
-        fullName: profile.fullName,
-        dateOfBirth: profile.dateOfBirth,
-        primaryDiagnosis: profile.primaryDiagnosis,
-        medications: profile.medications,
-        phone: profile.phone,
-        avatar: profile.avatar
-      };
+  //     // Call the Firebase signup function with proper parameters
+  //     const userData = {
+  //       fullName: profile.fullName,
+  //       dateOfBirth: profile.dateOfBirth,
+  //       primaryDiagnosis: profile.primaryDiagnosis,
+  //       medications: profile.medications,
+  //       phone: profile.phone,
+  //       avatar: profile.avatar
+  //     };
       
-      await signup(profile.email, profile.password, userData);
+  //     await signup(profile.email, profile.password, userData);
       
-      // Wait for the animation to complete before redirecting
-      setTimeout(() => {
-        // Redirect to file upload
-        router.push("/auth/upload");
-      }, 1500);
-    } catch (err) {
-      setIsSubmitting(false);
-      setShowSuccess(false);
-      setError("An error occurred during signup. Please try again.");
-    }
-  };
+  //     // Wait for the animation to complete before redirecting
+  //     setTimeout(() => {
+  //       // Redirect to file upload
+  //       router.push("/auth/upload");
+  //     }, 1500);
+  //   } catch (err) {
+  //     setIsSubmitting(false);
+  //     setShowSuccess(false);
+  //     setError("An error occurred during signup. Please try again.");
+  //   }
+  // };
+
+
+  const handleSignup = async () => {
+  setIsSubmitting(true);
+
+  try {
+    // Call the Firebase signup function
+    const userData = {
+      fullName: profile.fullName,
+      dateOfBirth: profile.dateOfBirth,
+      primaryDiagnosis: profile.primaryDiagnosis,
+      medications: profile.medications,
+      phone: profile.phone,
+      avatar: profile.avatar
+    };
+
+    await signup(profile.email, profile.password, userData);
+
+    // Force sign out after sending verification email
+    await logout();
+
+    router.push("/auth/verify-email"); // Show "Please verify" screen
+  } catch (err) {
+    setIsSubmitting(false);
+    setShowSuccess(false);
+    setError("An error occurred during signup. Please try again.");
+  }
+};
 
   const handleAppleSignIn = async () => {
     setIsSubmitting(true);
@@ -910,6 +939,27 @@ export default function SignupPage() {
             </svg>
             <span>Sign up with Apple</span>
           </Button>
+
+             <Button 
+            onClick={loginWithGoogle}
+            variant="outline" 
+            className="w-full flex items-center justify-center my-2 space-x-2"
+            // disabled={isLoading}
+          >
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              width="18" 
+              height="18" 
+              viewBox="0 0 48 48"
+              fill="currentColor"
+            >
+              <path d="M44.5 20H24v8.5h11.7C34.6 33.4 30 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6-6C34.2 5.3 29.4 3 24 3 12.3 3 3 12.3 3 24s9.3 21 21 21c10.5 0 20-7.8 20-21 0-1.3-.2-2.3-.5-4z" fill="#FFC107"/>
+              <path d="M6.3 14.6l6.6 4.8C14.3 16.1 18.8 13 24 13c3.1 0 5.9 1.1 8.1 2.9l6-6C34.2 5.3 29.4 3 24 3 16 3 9.2 7.8 6.3 14.6z" fill="#FF3D00"/>
+              <path d="M24 45c5.3 0 10.1-1.8 13.9-4.9l-6.4-5.2C29.8 36.5 27 37 24 37c-6.1 0-11.2-3.9-13-9.3l-6.6 5C9.2 40.2 16 45 24 45z" fill="#4CAF50"/>
+              <path d="M44.5 20H24v8.5h11.7C34.9 33.6 30 37 24 37c-6.1 0-11.2-3.9-13-9.3l-6.6 5C9.2 40.2 16 45 24 45c10.5 0 20-7.8 20-21 0-1.3-.2-2.3-.5-4z" fill="#1976D2"/>
+            </svg>
+            <span>Sign in with Google</span>
+                  </Button>
         </div>
       )}
     </motion.div>

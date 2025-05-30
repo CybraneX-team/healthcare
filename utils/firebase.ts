@@ -5,9 +5,12 @@ import {
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword,
   signInWithPopup,
+  sendEmailVerification ,
+  GoogleAuthProvider,
   OAuthProvider,
   User as FirebaseUser,
-  UserCredential
+  UserCredential,
+  sendPasswordResetEmail 
 } from "firebase/auth";
 import { getAnalytics } from "firebase/analytics";
 import { getFirestore, doc, setDoc, getDoc, updateDoc, collection } from "firebase/firestore";
@@ -111,10 +114,25 @@ export const uploadAvatar = async (userId: string, file: File): Promise<string> 
   return uploadFile(file, path);
 };
 
-export const uploadUserDocument = async (userId: string, file: File, category: string): Promise<string> => {
+export async function uploadUserDocument(userId: string, file: File, folder: string) {
+  const storage = getStorage();
   const fileName = `${Date.now()}-${file.name}`;
-  const path = `documents/${userId}/${category}/${fileName}`;
-  return uploadFile(file, path);
+  const storageRef = ref(storage, `documents/${userId}/${folder}/${fileName}`);
+  
+  const snapshot = await uploadBytes(storageRef, file);
+  const downloadURL = await getDownloadURL(snapshot.ref);
+
+  return downloadURL;
+}
+
+export const resetPassword = async (email: string): Promise<void> => {
+  return sendPasswordResetEmail(auth, email);
 };
+
+export const signInWithGoogle = async (): Promise<UserCredential> => {
+  const provider = new GoogleAuthProvider();
+  return signInWithPopup(auth, provider);
+};
+
 export const rtdb = getDatabase(app);
 export { app, auth, db, storage, analytics };

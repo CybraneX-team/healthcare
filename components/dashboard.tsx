@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Search,
   Plus,
@@ -39,6 +39,9 @@ import { PatientSection } from "./PatientSection";
 import { LabsSection } from "./labSection";
 import { ServicesProductsSection } from "./ServicesSection";
 import { CombinedLabsSection } from "./Lab-Services";
+import { uploadUserDocument } from "@/utils/firebase";
+import { useAuth } from "@/hooks/useAuth";
+
 import Link from "next/link";
 import BrainComponent from "./metabolism";
 // Other organ components will be imported here as they are created
@@ -196,11 +199,43 @@ const switcherItemVariants = {
 
 export default function Dashboard() {
   const router = useRouter();
+  const user = useAuth().user;
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState("overview");
   const [animationComplete, setAnimationComplete] = useState(false);
   const [selectedOrgan, setSelectedOrgan] = useState("heart");
   const weightTrendData = generateWeightTrendData();
+  const [files, setFiles] = useState<any[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleUploadClick = () => {
+  fileInputRef.current?.click();
+};
+
+const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch("/api/extract-text", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!res.ok) {
+      console.error("Failed to extract text");
+      return;
+    }
+
+    const data = await res.json();
+    console.log("Extracted Words:", data.extractedWords);
+  } catch (err) {
+    console.error("Error:", err);
+  }
+};
 
   useEffect(() => {
     const tabParam = searchParams.get("tab");
@@ -668,12 +703,25 @@ export default function Dashboard() {
                 <p className="text-gray-600">
                   This section allows you to upload medical documents.
                 </p>
-                <div className="mt-4 flex justify-center">
-                  <Button className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-2">
-                    <UploadCloud className="h-4 w-4" />
-                    <span>Upload Files</span>
-                  </Button>
-                </div>
+               <div className="mt-4 flex justify-center">
+              {/* Hidden file input triggered programmatically */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                multiple
+                accept="application/pdf"
+                onChange={handleFileChange}
+              />
+              <Button
+                onClick={handleUploadClick}
+                className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-2"
+              >
+                <UploadCloud className="h-4 w-4" />
+                <span>Upload Files</span>
+              </Button>
+            </div>
+
               </div>
             </div>
           ) : activeTab === "progress" ? (

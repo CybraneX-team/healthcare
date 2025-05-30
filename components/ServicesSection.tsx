@@ -18,6 +18,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { rtdb } from "@/utils/firebase";
+import { onValue, ref } from "firebase/database";
 
 const servicesProducts = [
   {
@@ -153,6 +155,8 @@ export function ServicesProductsSection() {
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [servicesProducts, setServicesProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const toggleExpand = (id: string) => {
     if (expandedItemId === id) {
@@ -161,6 +165,22 @@ export function ServicesProductsSection() {
       setExpandedItemId(id);
     }
   };
+
+  useEffect(() => {
+  setLoading(true);
+  const servicesRef = ref(rtdb, "services"); // Adjust if your Firebase path is different (like "servicesProducts")
+
+  const unsubscribe = onValue(servicesRef, (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      const servicesArray = Object.values(data);
+      setServicesProducts(servicesArray);
+    }
+    setLoading(false);
+  });
+
+  return () => unsubscribe();
+}, []);
 
   const filteredItems = servicesProducts.filter((item) => {
     // Filter by search query
@@ -188,6 +208,7 @@ export function ServicesProductsSection() {
     const hasValidAddress = item.address !== "N/A";
 
     return (
+      <>
       <div key={item.id} className="mb-6">
         <Card
           className={`overflow-hidden transition-all duration-300 hover:shadow-md ${
@@ -358,10 +379,18 @@ export function ServicesProductsSection() {
           </CardContent>
         </Card>
       </div>
+    </>
     );
   };
 
   return (
+    <>
+      {loading ? (
+      <div className="flex items-center justify-center h-96">
+        <p className="text-gray-600 text-lg animate-pulse">Loading services...</p>
+      </div>
+      )
+    :(
     <div className="px-4 py-6 md:px-6 lg:px-8">
       <div className="mb-8">
         <h1 className="text-2xl md:text-3xl font-bold mb-2 text-black">
@@ -431,5 +460,9 @@ export function ServicesProductsSection() {
         </div>
       )}
     </div>
+    )
+  }
+    </>
+
   );
 }

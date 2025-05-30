@@ -1,91 +1,203 @@
-"use client";
+import React, { useState } from "react";
+import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 
-export default function PancreasComponent() {
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      duration: 0.4,
+      when: "beforeChildren",
+      staggerChildren: 0.1,
+    },
+  },
+  exit: {
+    opacity: 0,
+    transition: {
+      duration: 0.3,
+      when: "afterChildren",
+      staggerChildren: 0.05,
+      staggerDirection: -1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { y: 15, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: { duration: 0.35, ease: "easeOut" },
+  },
+  exit: {
+    y: -15,
+    opacity: 0,
+    transition: { duration: 0.25, ease: "easeIn" },
+  },
+};
+
+export const BrainComponent = () => {
   return (
-    <div className="w-full h-full p-8">
-      <div className="grid grid-cols-[1.2fr,1fr] gap-8">
-        {/* Left Column */}
-        <div className="space-y-8">
-          {/* Metabolism Card */}
-          <Card className="rounded-[32px] bg-white shadow-sm">
-            <CardContent className="p-10">
-              <div className="flex justify-between">
-                <div className="space-y-12">
-                  <div>
-                    <h2 className="text-[40px] font-semibold text-black mb-12">Metabolism</h2>
-                    <div className="space-y-1">
-                      <p className="text-[#6B7280] text-xl font-normal">Fasting Glucose</p>
-                      <p className="text-[28px] font-semibold">99 mg/dl</p>
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+    >
+      {/* Right column - Stats and cards */}
+      <div className="lg:col-span-8">
+        {/* Main Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4">
+          {/* Weight Trend Card */}
+          <motion.div variants={itemVariants} className="md:col-span-7 h-full">
+            <Card className="shadow-sm border-0 bg-white rounded-3xl hover:shadow-md transition-shadow duration-300  max-h-96 flex justify-between">
+              <CardContent className="p-8 flex justify-between">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex flex-col justify-between ">
+                    {/* Fasting Glucose */}
+                    <div className="mb-28">
+                      <h3 className="font-semibold text-2xl mb-3">
+                        Metabolism
+                      </h3>
+                      <p className="text-sm text-gray-500 mb-1">
+                        Fasting Glucose
+                      </p>
+                      <p className="text-xl text-gray-500">99 mg/dl</p>
+                    </div>
+
+                    {/* Glycated Haemoglobin */}
+                    <div className="">
+                      <div className="text-xl font-semibold  mb-1">
+                        Glycated <br /> Haemoglobin
+                      </div>
+                      <div className="text-xl  text-gray-500">5.5%</div>
                     </div>
                   </div>
-                  <div className="space-y-1">
-                    <h3 className="text-[#6B7280] text-xl font-normal">Glycated<br/>Haemoglobin</h3>
-                    <p className="text-[40px] font-semibold">5.5%</p>
-                  </div>
                 </div>
-                <div className="flex flex-col items-center justify-center ml-8">
-                  <div className="w-20 h-56 bg-gray-100 rounded-[100px] flex items-end overflow-hidden">
+                <div className="flex flex-col ml-60">
+                  <div className="w-20 h-56 bg-gray-100 rounded-[100px] flex items-end overflow-hidden ">
                     <div className="w-full h-[65%] bg-[#0066FF] rounded-[100px]" />
                   </div>
-                  <p className="text-sm text-[#6B7280] mt-3 text-center leading-tight">High metabolic<br />activity</p>
+                  <p className="text-sm text-[#6B7280] mt-3 text-center leading-tight">
+                    High metabolic
+                    <br />
+                    activity
+                  </p>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-          {/* Diabetes Risk Score Card */}
-          <Card className="rounded-[32px] bg-white shadow-sm">
-            <CardContent className="p-10">
-              <h3 className="text-[28px] font-semibold text-black mb-4">Diabetes Risk Score</h3>
-              <div className="flex items-center gap-3">
-                <span className="text-[40px] font-semibold">6</span>
-                <span className="text-[#6B7280] text-xl">Low risk</span>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Alternative Card design (hidden) */}
+          <div className="hidden md:col-span-7 h-full">
+            <Card className="shadow-sm border-0 bg-white rounded-3xl hover:shadow-md transition-shadow duration-300 text-black">
+              <CardContent className="p-8">
+                <div className="flex items-center justify-between mb-2"></div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Stats Cards */}
+          <motion.div variants={itemVariants} className="md:col-span-5">
+            <Card className="shadow-sm border-0 bg-white rounded-3xl h-full hover:shadow-md transition-shadow duration-300">
+              <CardContent className="p-4 h-full text-black">
+                <div className="flex flex-col justify-between h-full">
+                  {/* Total Weight */}
+                  <div className="flex justify-between items-start p-2">
+                    <div>
+                      <div className="text-lg text-black font-semibold">
+                        Insulin
+                      </div>
+                      <div className="text-3xl font-bold mt-1">16 μU/mL</div>
+                    </div>
+                    <span className="inline-block px-8 py-3 bg-blue-100 text-blue-500 rounded-full text-sm font-medium">
+                      Normal
+                    </span>
+                  </div>
+
+                  {/* Body Stats */}
+                  <div className="p-4 rounded-3xl">
+                    <div className="mb-2"></div>
+                    <div className="flex justify-end">
+                      <div>
+                        <div className="text-xl text-gray-500">Hemoglobin</div>
+                        <div className="text-lg font-bold mt-1 ml-5">
+                          13 μU/mL
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
 
-        {/* Right Column */}
-        <div className="space-y-8">
-          {/* Insulin Card */}
-          <Card className="rounded-[32px] bg-white shadow-sm">
-            <CardContent className="p-10">
-              <div className="flex justify-between items-start mb-24">
-                <div>
-                  <p className="text-[#6B7280] text-xl mb-1">Insulin</p>
-                  <p className="text-[40px] font-semibold">16 μU/mL</p>
+        {/* Bottom Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+          {/* Health Rating Card */}
+          <motion.div variants={itemVariants} className="md:col-span-5">
+            <Card className="shadow-sm border-0 bg-white rounded-3xl hover:shadow-md transition-shadow duration-300 h-60">
+              <CardContent className="p-8">
+                <h3 className="font-semibold text-2xl mb-2">200mg/dl</h3>
+
+                <div className="mb-2">
+                  <div className="flex justify-between text-lg font-light text-gray-500">
+                    <span>Total Cholesterol</span>
+                  </div>
                 </div>
-                <span className="bg-[#EBF5FF] text-[#0066FF] px-6 py-2 rounded-full text-base font-medium">
-                  Normal
-                </span>
-              </div>
-              <div className="text-right">
-                <p className="text-[#6B7280] text-xl mb-1">Hemoglobin</p>
-                <p className="text-[28px] font-semibold">13 μU/mL</p>
-              </div>
-            </CardContent>
-          </Card>
 
-          {/* Total Cholesterol Card */}
-          <Card className="rounded-[32px] bg-white shadow-sm">
-            <CardContent className="p-10">
-              <p className="text-[40px] font-semibold mb-2">200mg/dl</p>
-              <p className="text-[#6B7280] text-xl">Total Cholesterol</p>
-            </CardContent>
-          </Card>
+                {/* <div className="mt-28">
+                  <button className="w-[70%] bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-4 rounded-full transition-colors duration-300">
+                    Upload Data
+                  </button>
+                </div> */}
+              </CardContent>
+            </Card>
+          </motion.div>
 
-          {/* Action Buttons */}
-          <div className="flex flex-col gap-4 mt-12">
-            <button className="w-full bg-[#F3F4F6] text-[#374151] rounded-[100px] py-5 text-lg font-medium">
-              Upload Sugar Intake
-            </button>
-            <button className="w-full bg-[#0066FF] text-white rounded-[100px] py-5 text-lg font-medium">
-              Bodily Fluids
-            </button>
-          </div>
+          <motion.div variants={itemVariants} className="md:col-span-7">
+            <Card className="shadow-sm border-0 bg-white rounded-3xl p-0 overflow-hidden hover:shadow-md transition-shadow duration-300 h-60">
+              <CardContent className="p-4 h-full text-black">
+                <div className="flex flex-col justify-between h-full">
+                  {/* Total Weight */}
+                  <div className="flex justify-between items-start p-2">
+                    <div>
+                      <div className="text-lg text-black font-semibold">
+                        Diabetes Risk Score
+                      </div>
+                      <div className="text-3xl font-bold mt-1 flex items-center">
+                        6
+                        <span className="text-sm font-light mx-2 text-gray-400">
+                          Low risk
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Body Stats */}
+                  <div className="p-4 rounded-3xl">
+                    <div className="mb-2"></div>
+                    <div className="flex justify-end">
+                      <div className="flex flex-col items-end w-80">
+                        <button className="w-[70%] text-sm bg-gray-200 hover:bg-gray-300 text-black font-light py-3 px-4 rounded-full transition-colors duration-300 mb-1 ">
+                          Upload Sugar Intake
+                        </button>
+                        <button className="w-[70%] text-sm bg-blue-500 hover:bg-blue-600 text-white font-light py-3 px-4 rounded-full transition-colors duration-300">
+                          Body Fluids
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
-}
+};
+
+export default BrainComponent;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import {
   Search,
   Plus,
@@ -39,11 +39,7 @@ import { PatientSection } from "./PatientSection";
 import { LabsSection } from "./labSection";
 import { ServicesProductsSection } from "./ServicesSection";
 import { CombinedLabsSection } from "./Lab-Services";
-import { uploadUserDocument } from "@/utils/firebase";
-import { useAuth } from "@/hooks/useAuth";
-
 import Link from "next/link";
-import BrainComponent from "./metabolism";
 // Other organ components will be imported here as they are created
 
 // Define types for weight trend data
@@ -199,43 +195,11 @@ const switcherItemVariants = {
 
 export default function Dashboard() {
   const router = useRouter();
-  const user = useAuth().user;
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState("overview");
   const [animationComplete, setAnimationComplete] = useState(false);
   const [selectedOrgan, setSelectedOrgan] = useState("heart");
   const weightTrendData = generateWeightTrendData();
-  const [files, setFiles] = useState<any[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleUploadClick = () => {
-  fileInputRef.current?.click();
-};
-
-const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-  const file = event.target.files?.[0];
-  if (!file) return;
-
-  try {
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const res = await fetch("/api/extract-text", {
-      method: "POST",
-      body: formData,
-    });
-
-    if (!res.ok) {
-      console.error("Failed to extract text");
-      return;
-    }
-
-    const data = await res.json();
-    console.log("Extracted Words:", data.extractedWords);
-  } catch (err) {
-    console.error("Error:", err);
-  }
-};
 
   useEffect(() => {
     const tabParam = searchParams.get("tab");
@@ -283,7 +247,7 @@ const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
       height: 90px;
       border-radius: 50%;
       position: relative;
-      
+      overflow: hidden;
       display: flex;
       align-items: center;
       border-bottom: 4px solid #E5E7EB;
@@ -327,7 +291,7 @@ const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
       <style jsx>{organSwitcherStyle}</style>
       <style jsx global>{`
         body {
-          overflow: ${activeTab === "overview" ? "auto" : "auto"};
+          overflow: ${activeTab === "overview" ? "hidden" : "auto"};
         }
       `}</style>
       <div className="h-full">
@@ -642,11 +606,7 @@ const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
                     </div>
                   )}
                   {selectedOrgan === "liver" && <LiverComponent />}
-                  {selectedOrgan === "brain" && (
-                    // <></>
-                    <BrainComponent />
-                  )}
-                  {selectedOrgan === "liver" && <LiverComponent />}
+                  {selectedOrgan === 'brain' && <PancreasComponent />}
                   {/* <div className="flex justify-end mb-6">
                     <div className="inline-flex items-center gap-6 bg-white rounded-full py-2 px-4 shadow-sm">
                       <div className="flex items-center gap-2">
@@ -703,25 +663,12 @@ const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
                 <p className="text-gray-600">
                   This section allows you to upload medical documents.
                 </p>
-               <div className="mt-4 flex justify-center">
-              {/* Hidden file input triggered programmatically */}
-              <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                multiple
-                accept="application/pdf"
-                onChange={handleFileChange}
-              />
-              <Button
-                onClick={handleUploadClick}
-                className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-2"
-              >
-                <UploadCloud className="h-4 w-4" />
-                <span>Upload Files</span>
-              </Button>
-            </div>
-
+                <div className="mt-4 flex justify-center">
+                  <Button className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-2">
+                    <UploadCloud className="h-4 w-4" />
+                    <span>Upload Files</span>
+                  </Button>
+                </div>
               </div>
             </div>
           ) : activeTab === "progress" ? (

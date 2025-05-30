@@ -48,6 +48,7 @@ import "@/styles/dashboard-mobile.css";
 import HeartComponent from "@/components/heart-component";
 import LiverComponent from "@/components/liver-component";
 import LungsModel from "@/components/lungs-model";
+import { CombinedLabsSection } from "./Lab-Services";
 
 // Define types for weight trend data
 interface WeightTrendData {
@@ -163,6 +164,11 @@ export default function DashboardMobile() {
       label: "Progress",
     },
     { id: "courses", icon: <FileText className="h-6 w-6" />, label: "Courses" },
+    {
+      id: "labs",
+      icon: <FileText className="h-6 w-6" />,
+      label: "Directories",
+    },
     {
       id: "upload",
       icon: <UploadCloud className="h-6 w-6" />,
@@ -397,6 +403,10 @@ export default function DashboardMobile() {
                 ) : null}
               </div>
             </div>
+          </div>
+        ) : activeTab === "labs" ? (
+          <div className="bg-gradient-to-b from-gray-200 to-white min-h-screen">
+            <CombinedLabsSection />
           </div>
         ) : activeTab === "courses" ? (
           <div className="bg-gradient-to-b from-gray-200 to-white min-h-screen">

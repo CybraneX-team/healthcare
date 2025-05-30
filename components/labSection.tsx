@@ -307,9 +307,7 @@ const GoogleMap = ({ address }: { address: string }) => {
       loadGoogleMapsScript();
     }
 
-    return () => {
-      // Cleanup if needed
-    };
+    return () => {};
   }, [address]);
 
   return (
@@ -335,7 +333,7 @@ export function LabsSection() {
   };
 
   useEffect(() => {
-    setLoading(true)
+    setLoading(true);
     const centersRef = ref(rtdb, "diagnosticCenters");
     const unsubscribe = onValue(centersRef, (snapshot) => {
       const data = snapshot.val();
@@ -375,16 +373,16 @@ export function LabsSection() {
   const renderCenterCard = (center: any, index: number) => {
     const isExpanded = expandedCenterId === center.id;
 
-
     if (loading) {
-      console.log("got true")
-    return (
-      <div className="flex items-center justify-center h-96">
-        <p className="text-gray-600 text-lg animate-pulse">Loading centers...</p>
-      </div>
-    );
-
-  }
+      console.log("got true");
+      return (
+        <div className="flex items-center justify-center h-96">
+          <p className="text-gray-600 text-lg animate-pulse">
+            Loading centers...
+          </p>
+        </div>
+      );
+    }
     return (
       <div key={index} className="mb-6">
         <Card
@@ -524,114 +522,96 @@ export function LabsSection() {
     );
   };
 
-return (
-  <>
-    {loading ? (
-      <div className="flex items-center justify-center h-96">
-        <p className="text-gray-600 text-lg animate-pulse">Loading centers...</p>
-      </div>
-    ) : (
-      <div className="px-4 py-6 md:px-6 lg:px-8">
-        <div className="mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold mb-2 text-black">
-            Diagnostic Centers
-          </h1>
-          <p className="text-gray-600">
-            View and find diagnostic centers for medical tests
+  return (
+    <>
+      {loading ? (
+        <div className="flex items-center justify-center h-96">
+          <p className="text-gray-600 text-lg animate-pulse">
+            Loading centers...
           </p>
         </div>
-
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-          <div className="relative w-full md:w-72">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search centers or diagnostics"
-              className="pl-10 pr-4 py-2 w-full rounded-full border bg-white text-gray-700 border-gray-400 focus:outline-none bg-transparent"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-
-          <Tabs
-            value={activeFilter}
-            onValueChange={setActiveFilter}
-            className="w-full md:w-auto max-w-xs md:max-w-full hidden sm:flex"
-          >
-            <TabsList className="p-1 rounded-full bg-white border border-blue-100">
-              <TabsTrigger
-                value="all"
-                className="rounded-full px-4 py-1 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:hover:bg-blue-600 data-[state=active]:shadow-sm"
-              >
-                All Centers
-              </TabsTrigger>
-              <TabsTrigger
-                value="imaging"
-                className="rounded-full px-4 py-1 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:hover:bg-blue-600 data-[state=active]:shadow-sm"
-              >
-                Imaging
-              </TabsTrigger>
-              <TabsTrigger
-                value="functional"
-                className="rounded-full px-4 py-1 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:hover:bg-blue-600 data-[state=active]:shadow-sm"
-              >
-                Functional
-              </TabsTrigger>
-              <TabsTrigger
-                value="biological"
-                className="rounded-full px-4 py-1 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:hover:bg-blue-600 data-[state=active]:shadow-sm"
-              >
-                Biological
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-
-        {/* Two column container with absolute positioning for cards */}
-        <div className="relative">
-          {/* First column */}
-          <div className="absolute left-0 top-0 w-full lg:w-1/2 pr-0 lg:pr-4">
-            {filteredCenters
-              .filter((_, index) => index % 2 === 0)
-              .map((center, index) => renderCenterCard(center, index))}
-          </div>
-
-          {/* Second column */}
-          <div className="absolute left-0 lg:left-1/2 top-0 w-full lg:w-1/2 pr-0 lg:pr-4 mt-0 lg:mt-0">
-            {filteredCenters
-              .filter((_, index) => index % 2 === 1)
-              .map((center, index) => renderCenterCard(center, index))}
-          </div>
-
-          {/* This div is just to make sure the parent has enough height */}
-          <div
-            style={{
-              height:
-                Math.max(
-                  filteredCenters.filter((_, i) => i % 2 === 0).length * 250,
-                  filteredCenters.filter((_, i) => i % 2 === 1).length * 250
-                ) + (expandedCenterId ? 500 : 0),
-            }}
-          />
-        </div>
-
-        {filteredCenters.length === 0 && (
-          <div className="text-center py-12">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
-              <Building className="h-8 w-8 text-gray-400" />
-            </div>
-            <h3 className="text-lg font-medium mb-2">
-              No diagnostic centers found
-            </h3>
-            <p className="text-gray-500 max-w-md mx-auto">
-              {searchQuery
-                ? `No centers match your search for "${searchQuery}". Try a different search term.`
-                : "No diagnostic centers found for the selected filter."}
+      ) : (
+        <div className="px-4 py-6 md:px-6 lg:px-8">
+          <div className="mb-8">
+            <h1 className="text-2xl md:text-3xl font-bold mb-2 text-black">
+              Diagnostic Centers
+            </h1>
+            <p className="text-gray-600">
+              View and find diagnostic centers for medical tests
             </p>
           </div>
-        )}
-      </div>
-    )}
-  </>
-);
+
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+            <div className="relative w-full md:w-72">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search centers or diagnostics"
+                className="pl-10 pr-4 py-2 w-full rounded-full border bg-white text-gray-700 border-gray-400 focus:outline-none bg-transparent"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+
+            <Tabs
+              value={activeFilter}
+              onValueChange={setActiveFilter}
+              className="w-full md:w-auto max-w-xs md:max-w-full hidden sm:flex"
+            >
+              <TabsList className="p-1 rounded-full bg-white border border-blue-100">
+                <TabsTrigger
+                  value="all"
+                  className="rounded-full px-4 py-1 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:hover:bg-blue-600 data-[state=active]:shadow-sm"
+                >
+                  All Centers
+                </TabsTrigger>
+                <TabsTrigger
+                  value="imaging"
+                  className="rounded-full px-4 py-1 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:hover:bg-blue-600 data-[state=active]:shadow-sm"
+                >
+                  Imaging
+                </TabsTrigger>
+                <TabsTrigger
+                  value="functional"
+                  className="rounded-full px-4 py-1 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:hover:bg-blue-600 data-[state=active]:shadow-sm"
+                >
+                  Functional
+                </TabsTrigger>
+                <TabsTrigger
+                  value="biological"
+                  className="rounded-full px-4 py-1 data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:hover:bg-blue-600 data-[state=active]:shadow-sm"
+                >
+                  Biological
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+
+          {/* Responsive grid layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* All cards in a single responsive grid */}
+            {filteredCenters.map((center, index) =>
+              renderCenterCard(center, index)
+            )}
+          </div>
+
+          {filteredCenters.length === 0 && (
+            <div className="text-center py-12">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+                <Building className="h-8 w-8 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium mb-2">
+                No diagnostic centers found
+              </h3>
+              <p className="text-gray-500 max-w-md mx-auto">
+                {searchQuery
+                  ? `No centers match your search for "${searchQuery}". Try a different search term.`
+                  : "No diagnostic centers found for the selected filter."}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+    </>
+  );
 }

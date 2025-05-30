@@ -203,13 +203,13 @@ export function ServicesProductsSection() {
   });
 
   // Function to render a single service/product card
-  const renderItemCard = (item: any) => {
+  const renderItemCard = (item: any, index : number) => {
     const isExpanded = expandedItemId === item.id;
     const hasValidAddress = item.address !== "N/A";
 
     return (
-      <>
-      <div key={item.id} className="mb-6">
+      <div key={index}>
+      <div  className="mb-6">
         <Card
           className={`overflow-hidden transition-all duration-300 hover:shadow-md ${
             isExpanded ? "border-blue-200" : ""
@@ -379,7 +379,7 @@ export function ServicesProductsSection() {
           </CardContent>
         </Card>
       </div>
-    </>
+    </div>
     );
   };
 
@@ -443,7 +443,7 @@ export function ServicesProductsSection() {
 
       {/* Grid layout for cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-        {filteredItems.map(renderItemCard)}
+        {filteredItems.map((item : any , index : number)=>{return renderItemCard(item,index)})}
       </div>
 
       {filteredItems.length === 0 && (

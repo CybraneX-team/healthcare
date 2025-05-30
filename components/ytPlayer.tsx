@@ -13,17 +13,16 @@ export function YouTubePlayer({
   onComplete,
   onProgressUpdate,
 }: YouTubePlayerProps) {
-  const [player, setPlayer] = useState<any>(null);
+  const playerRef = useRef<HTMLDivElement>(null);
+  const playerInstanceRef = useRef<any>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [progress, setProgress] = useState(0);
-  const playerRef = useRef<HTMLDivElement>(null);
   const progressInterval = useRef<NodeJS.Timeout | null>(null);
 
   // Load YouTube API
   useEffect(() => {
-    // Only load the API once
     if (window.YT) {
       initializePlayer();
       return;
@@ -44,10 +43,11 @@ export function YouTubePlayer({
     };
   }, []);
 
-  // Re-initialize player when video ID changes
+  // Re-initialize or load new video when videoId changes
   useEffect(() => {
     if (window.YT && window.YT.Player && playerRef.current) {
-      if (player) {
+      const player = playerInstanceRef.current;
+      if (player && typeof player.loadVideoById === "function") {
         player.loadVideoById(videoId);
       } else {
         initializePlayer();
@@ -58,7 +58,7 @@ export function YouTubePlayer({
   const initializePlayer = () => {
     if (!playerRef.current) return;
 
-    const newPlayer = new window.YT.Player(playerRef.current, {
+    playerInstanceRef.current = new window.YT.Player(playerRef.current, {
       height: "100%",
       width: "100%",
       videoId: videoId,
@@ -72,19 +72,18 @@ export function YouTubePlayer({
         onStateChange: onPlayerStateChange,
       },
     });
-
-    setPlayer(newPlayer);
   };
 
   const onPlayerReady = (event: any) => {
     setDuration(event.target.getDuration());
+    playerInstanceRef.current = event.target;
 
-    // Start progress tracking
     if (progressInterval.current) {
       clearInterval(progressInterval.current);
     }
 
     progressInterval.current = setInterval(() => {
+      const player = playerInstanceRef.current;
       if (player && typeof player.getCurrentTime === "function") {
         const currentTime = player.getCurrentTime();
         const duration = player.getDuration();
@@ -101,14 +100,10 @@ export function YouTubePlayer({
   };
 
   const onPlayerStateChange = (event: any) => {
-    // Update playing state
     setIsPlaying(event.data === window.YT.PlayerState.PLAYING);
 
-    // Check if video ended
-    if (event.data === window.YT.PlayerState.ENDED) {
-      if (onComplete) {
-        onComplete();
-      }
+    if (event.data === window.YT.PlayerState.ENDED && onComplete) {
+      onComplete();
     }
   };
 

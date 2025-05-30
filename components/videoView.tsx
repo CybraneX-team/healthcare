@@ -2,21 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Circle,
-  CheckCircle,
-  Clock,
-  Download,
-  MessageSquare,
-  ArrowLeft,
-  ThumbsUp,
-} from "lucide-react";
+import { Circle, CheckCircle, Clock, ArrowLeft, ThumbsUp } from "lucide-react";
 import { YouTubePlayer } from "./ytPlayer";
 
 interface VideoPlayerViewProps {
   programId: string;
   moduleId: string;
   videoId: string;
+  programData: any; // 🟡 Real dynamic data
   onBack: () => void;
   completedVideos: Record<string, boolean>;
   onMarkComplete: (videoId: string, moduleId: string) => void;
@@ -27,6 +20,7 @@ export function VideoPlayerView({
   programId,
   moduleId,
   videoId,
+  programData,
   onBack,
   completedVideos,
   onMarkComplete,
@@ -35,117 +29,22 @@ export function VideoPlayerView({
   const [currentVideoId, setCurrentVideoId] = useState(videoId);
   const [videoProgress, setVideoProgress] = useState(0);
 
+  // Update current video when videoId changes
   useEffect(() => {
     setCurrentVideoId(videoId);
   }, [videoId]);
 
-  // Map of video IDs to YouTube video IDs
-  const youtubeVideoMap: Record<string, string> = {
-    "welcome-video": "dQw4w9WgXcQ",
-    "office-hours-video": "9bZkp7q19f0",
-    "session-recordings-video": "JGwWNGJdvx8",
-    "onboarding-video": "kJQP7kiw5Fk",
-    "april-meaning-video": "hT_nvWreIhg",
-    "religion-health-video": "fJ9rUzIMcZQ",
-    "buthan-video": "YykjpeuMNEk",
-    "grief-video": "60ItHLz5WEA",
-    "body-telling-video": "2Vv-BfVoq4g",
-    "module-1-video": "pRpeEdMmmQ0",
-    "module-2-video": "aJOTlE1K90k",
-    "module-3-video": "VDvr08sCPOc",
-  };
+  // Get module and video data from programData
+  const moduleData = programData.modules[moduleId];
+  const moduleVideos = Object.values(moduleData?.videos || {});
+  const currentVideo : any =
+    moduleVideos.find((v: any) => v.id === currentVideoId) || moduleVideos[0];
+  const currentYoutubeId = currentVideo.youtubeId;
+  const currentLessonNumber =
+    moduleVideos.findIndex((v: any) => v.id === currentVideoId) + 1;
 
-  const moduleData = {
-    id: moduleId,
-    programId: programId,
-    title: getModuleTitle(moduleId),
-    programTitle: "Thrivemed Hub",
-    videos: getModuleVideos(moduleId),
-  };
-
-  function getModuleTitle(moduleId: string): string {
-    const moduleTitles: Record<string, string> = {
-      "mission-control": "Mission Control",
-      "rapid-success": "Rapid Success Path",
-      "may-religion": "May - Religion, Spirituality, Death and Longevity",
-      "june-meaning": "June - Meaning",
-      "june-alignment": "June - Alignment",
-      "july-bioenergetics": "July - Leverage Bioenergetics",
-      "august-medicine": "August - Fast Medicine",
-    };
-    return moduleTitles[moduleId] || "Module";
-  }
-
-  function getModuleVideos(moduleId: string) {
-    // This is a simplified example - in a real app you'd have a more sophisticated data structure
-    const allModules: Record<string, any[]> = {
-      "mission-control": [
-        {
-          id: "welcome-video",
-          title: "Welcome to Thrivemed Hub",
-          duration: "05:12",
-        },
-        {
-          id: "office-hours-video",
-          title: "Open Office Hours Schedule",
-          duration: "12:30",
-        },
-        {
-          id: "session-recordings-video",
-          title: "Open Session Recordings",
-          duration: "18:45",
-        },
-      ],
-      "rapid-success": [
-        {
-          id: "onboarding-video",
-          title: "Onboarding Overview",
-          duration: "10:25",
-        },
-        {
-          id: "april-meaning-video",
-          title: "April Meaning",
-          duration: "15:30",
-        },
-      ],
-      "may-religion": [
-        {
-          id: "religion-health-video",
-          title: "Religion, Health, Morality Patterns",
-          duration: "22:15",
-        },
-        {
-          id: "buthan-video",
-          title: "Buthan, impermanence and Health",
-          duration: "14:20",
-        },
-        { id: "grief-video", title: "Stages of Grief", duration: "19:45" },
-        {
-          id: "body-telling-video",
-          title: "What is your Body Telling you?",
-          duration: "16:30",
-        },
-      ],
-      "june-meaning": [
-        {
-          id: "module-1-video",
-          title: "Module 1: The 6th Stage of Growth",
-          duration: "11:10",
-        },
-        {
-          id: "module-2-video",
-          title: "Module 2 - Viktor Frankle",
-          duration: "13:25",
-        },
-        { id: "module-3-video", title: "Module 3 - Ikigai", duration: "09:50" },
-      ],
-    };
-
-    return allModules[moduleId] || [];
-  }
-
-  const handleVideoSelect = (videoId: string) => {
-    setCurrentVideoId(videoId);
+  const handleVideoSelect = (id: string) => {
+    setCurrentVideoId(id);
   };
 
   const handleVideoComplete = () => {
@@ -164,32 +63,21 @@ export function VideoPlayerView({
     }
   };
 
-  const currentVideo =
-    moduleData.videos.find((v) => v.id === currentVideoId) ||
-    moduleData.videos[0];
-  const currentYoutubeId =
-    youtubeVideoMap[currentVideoId] || youtubeVideoMap[moduleData.videos[0].id];
-
-  const currentLessonNumber =
-    moduleData.videos.findIndex((v) => v.id === currentVideoId) + 1;
-
   return (
     <div className="min-h-screen">
       {/* Header */}
       <div className="py-6 md:-ml-6 flex items-center">
         <Button
           variant="ghost"
-          className="mr-4 py-5 px-3  rounded-full hover:bg-white "
+          className="mr-4 py-5 px-3 rounded-full hover:bg-white"
           onClick={onBack}
         >
           <ArrowLeft className="h-5 w-5 text-gray-600" />
         </Button>
         <div>
-          <h1 className="text-lg font-bold text-gray-900">
-            {moduleData.title}
-          </h1>
+          <h1 className="text-lg font-bold text-gray-900">{moduleData.title}</h1>
           <div className="text-sm text-gray-500">
-            Stage {currentLessonNumber} • {currentVideo.title}
+            Stage {currentLessonNumber} • {currentVideo?.title || ""}
           </div>
         </div>
         <div className="ml-auto px-8">
@@ -221,7 +109,7 @@ export function VideoPlayerView({
               </div>
 
               <div className="divide-y">
-                {moduleData.videos.map((video, index) => (
+                {moduleVideos.map((video: any) => (
                   <div
                     key={video.id}
                     className={`flex items-center p-4 cursor-pointer ${
@@ -283,6 +171,7 @@ export function VideoPlayerView({
               </div>
             </div>
 
+            {/* Comments section */}
             <div className="mt-6 bg-white rounded-xl p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">
@@ -316,32 +205,7 @@ export function VideoPlayerView({
                     </div>
                   </div>
                 </div>
-
-                <div className="flex gap-4 pl-14">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-500">
-                    E
-                  </div>
-                  <div className="flex-grow">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium text-gray-900">Emily</span>
-                      <span className="text-xs text-gray-500">1d ago</span>
-                    </div>
-                    <p className="text-gray-700 text-sm">
-                      Sure thing, Andrew! You can start by implementing just one
-                      aspect at a time. I found that focusing on the morning
-                      routine first worked best for me.
-                    </p>
-                    <div className="flex items-center gap-4 mt-2">
-                      <button className="text-xs text-gray-500 hover:text-gray-700">
-                        Reply
-                      </button>
-                      <div className="flex items-center gap-1 text-xs text-gray-500">
-                        <ThumbsUp className="h-3 w-3" />
-                        <span>3</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                {/* ... more comments */}
               </div>
             </div>
           </div>

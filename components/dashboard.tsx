@@ -343,7 +343,7 @@ export default function Dashboard() {
                   } text-sm`}
                   onClick={() => setActiveTab("labs")}
                 >
-                  Labs & Services
+                  Directories
                 </Button>
                 <Button
                   variant="ghost"

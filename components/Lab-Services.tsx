@@ -16,7 +16,7 @@ export const CombinedLabsSection = () => {
             } text-sm transition-colors duration-300`}
             onClick={() => setShowServices(false)}
           >
-            Labs
+            Diagnostics
           </button>
           <button
             className={`rounded-lg px-6 py-2 ${
@@ -24,7 +24,7 @@ export const CombinedLabsSection = () => {
             } text-sm transition-colors duration-300`}
             onClick={() => setShowServices(true)}
           >
-            Products & Services
+            Interventions
           </button>
         </div>
       </div>

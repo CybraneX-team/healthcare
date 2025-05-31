@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef  } from "react";
 import {
   Search,
   Plus,
@@ -40,6 +40,10 @@ import { LabsSection } from "./labSection";
 import { ServicesProductsSection } from "./ServicesSection";
 import { CombinedLabsSection } from "./Lab-Services";
 import Link from "next/link";
+import { getAuth } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/utils/firebase";
+
 // Other organ components will be imported here as they are created
 
 // Define types for weight trend data
@@ -200,6 +204,44 @@ export default function Dashboard() {
   const [animationComplete, setAnimationComplete] = useState(false);
   const [selectedOrgan, setSelectedOrgan] = useState("heart");
   const weightTrendData = generateWeightTrendData();
+  const [files, setFiles] = useState<any[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // Add loading state
+  const [extractedText, setExtractedText] = useState(''); // Optional: show result
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleUploadClick = () => {
+  fileInputRef.current?.click();
+};
+
+const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  try {
+    setIsLoading(true); // Start loading
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch("/api/extract-text", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!res.ok) {
+      console.error("Failed to extract text");
+      return;
+    }
+
+    const data = await res.json();
+    console.log("Extracted Text:", data.extractedText);
+    setExtractedText(data.extractedText);
+  } catch (err) {
+    console.error("Error:", err);
+  } finally {
+    setIsLoading(false); // End loading
+  }
+};
 
   useEffect(() => {
     const tabParam = searchParams.get("tab");
@@ -219,6 +261,31 @@ export default function Dashboard() {
     }
   }, [searchParams]);
 
+    useEffect(() => {
+    const fetchRole = async () => {
+      const auth = getAuth();
+      const user = auth.currentUser;
+
+      if (!user) {
+        // User not logged in
+        setIsAdmin(false);
+        return;
+      }
+
+      try {
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
+
+        if (userSnap.exists() && userSnap.data().role === "admin") {
+          setIsAdmin(true);
+        }
+      } catch (error) {
+        console.error("Error fetching role:", error);
+      }
+    };
+
+    fetchRole();
+  }, []);
   // Restore selected organ from localStorage on component mount
   useEffect(() => {
     const savedOrgan = localStorage.getItem("selectedOrgan");
@@ -357,18 +424,16 @@ export default function Dashboard() {
                   Upload
                 </Button>
               </div>
-              <Link href="/admin">
-                <Button
-                  variant="ghost"
-                  // onClick={() => setActiveTab("admin")}
-                  className={`rounded-xl px-8 py-4 ${
-                    "bg-blue-500 text-white hover:bg-blue-600 absolute left-10"
-                    // :"text-gray-700 hover:bg-transparent hover:text-gray-900"
-                  } font-medium`}
-                >
-                  Admin
-                </Button>
-              </Link>
+               {isAdmin && (
+            <Link href="/admin">
+              <Button
+                variant="ghost"
+                className={`rounded-xl px-8 py-4 bg-blue-500 text-white hover:bg-blue-600 absolute left-10 font-medium`}
+              >
+                Admin
+              </Button>
+            </Link>
+          )}
               {/* Profile dropdown - positioned absolutely to the right */}
               <div className="absolute right-0 top-1/2 transform -translate-y-1/2">
                 <ProfileDropdown />
@@ -376,7 +441,7 @@ export default function Dashboard() {
             </div>
           </div>
           {activeTab === "overview" ? (
-            <div className="digital-twin px-6 py-0 bg-gradient-to-b from-gray-200 to-white h-screen overflow-hidden">
+            <div className="digital-twin px-6 py-0 bg-gradient-to-b from-gray-200 to-white min-h-screen overflow-hidden">
               {/* Main Content */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
                 {/* Left column - Organ visualization with organ switcher */}
@@ -656,21 +721,54 @@ export default function Dashboard() {
             <CombinedLabsSection />
           ) : activeTab === "upload" ? (
             <div className="px-6 bg-gradient-to-b from-gray-200 to-white min-h-screen">
-              <div className="p-8 bg-white rounded-3xl shadow-sm mt-4">
-                <h2 className="text-2xl font-semibold mb-4">
-                  Upload Documents
-                </h2>
-                <p className="text-gray-600">
-                  This section allows you to upload medical documents.
-                </p>
-                <div className="mt-4 flex justify-center">
-                  <Button className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-2">
-                    <UploadCloud className="h-4 w-4" />
-                    <span>Upload Files</span>
-                  </Button>
-                </div>
-              </div>
+          <div className="p-8 bg-white rounded-3xl shadow-sm mt-4">
+            <h2 className="text-2xl font-semibold mb-4">
+              Upload Documents
+            </h2>
+            <p className="text-gray-600">
+              This section allows you to upload medical documents.
+            </p>
+            <div className="mt-4 flex justify-center">
+              {/* Hidden file input triggered programmatically */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                multiple
+                accept="application/pdf"
+                onChange={handleFileChange}
+              />
+              <Button
+                onClick={handleUploadClick}
+                className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-2"
+              >
+                <UploadCloud className="h-4 w-4" />
+                <span>Upload Files</span>
+              </Button>
             </div>
+
+            {/* Loading animation */}
+            {isLoading && (
+              <div className="flex justify-center items-center mt-4">
+                <p className="animate-pulse text-blue-500 font-semibold">
+                  Uploading & Processing...
+                </p>
+                <p className="animate-pulse text-blue-500 font-semibold">
+                  (may take 8-10 seconds please wait)
+                </p>
+              </div>
+            )}
+
+            {/* Extracted text display */}
+            {!isLoading && extractedText && (
+              <div className="mt-4 p-4 bg-white rounded shadow">
+                <h3 className="font-semibold text-lg mb-2">Extracted Text:</h3>
+                <p className="text-sm text-gray-700">{extractedText}</p>
+              </div>
+            )}
+          </div>
+        </div>
+
           ) : activeTab === "progress" ? (
             <div className="px-6 bg-gradient-to-b from-gray-200 to-white min-h-screen">
               <div className="p-8 bg-white rounded-3xl shadow-sm mt-4">

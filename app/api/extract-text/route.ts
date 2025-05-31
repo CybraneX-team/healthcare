@@ -10,7 +10,7 @@ const s3 = new AWS.S3({
 export async function POST(req: Request) {
   try {
     // Use dynamic import for pdf-parse to avoid webpack bundling issues
-    const { default: pdf } = await import("pdf-parse");
+    const { default: pdf } = await import("pdf-parse/lib/pdf-parse");
 
     // Get the file from formData
     const formData = await req.formData();
@@ -45,9 +45,9 @@ export async function POST(req: Request) {
 
     const pdfBuffer = s3Object.Body as Buffer;
     const data = await pdf(pdfBuffer);
-    const words = data.text ? data.text.split(/\s+/) : [];
+    const text = data.text ? data.text.replace(/\s+/g, ' ') : '';
+    return NextResponse.json({ extractedText: text });
 
-    return NextResponse.json({ extractedWords: words });
   } catch (error: any) {
     console.error("Error extracting text:", error);
     return NextResponse.json(

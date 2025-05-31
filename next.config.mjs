@@ -37,6 +37,7 @@ const nextConfig = {
     webpackBuildWorker: true,
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,
+    serverExternalPackages: ["pdf-parse"],
   },
   // This key has moved out of experimental
   serverExternalPackages: ["pdf-parse"],

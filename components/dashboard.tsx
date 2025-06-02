@@ -35,6 +35,9 @@ import HeartComponent from "@/components/heart-component";
 import LiverComponent from "@/components/liver-component";
 import LungsModel from "@/components/lungs-model";
 import PancreasComponent from "@/components/pancreas-component";
+import Upload from "@/components/upload";
+import EnhancedAnatomy from "@/components/enhanced-anatomy";
+
 import { PatientSection } from "./PatientSection";
 import { LabsSection } from "./labSection";
 import { ServicesProductsSection } from "./ServicesSection";
@@ -444,216 +447,12 @@ const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
             <div className="digital-twin px-6 py-0 bg-gradient-to-b from-gray-200 to-white min-h-screen overflow-hidden">
               {/* Main Content */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-                {/* Left column - Organ visualization with organ switcher */}
+                {/* Left column - Enhanced anatomy with organ switcher */}
                 <div className="lg:col-span-4 flex flex-col justify-center items-center mt-8">
-                  {/* Dynamic organ visualization based on selected organ */}
-                  <AnimatePresence mode="wait">
-                    {selectedOrgan === "heart" && (
-                      <motion.div
-                        key="heart"
-                        className="relative w-full max-w-lg mb-6 mt-14"
-                        variants={mainOrganVariants}
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                      >
-                        <div className="relative h-[400px] w-full flex items-center justify-center">
-                          {/* BrainStorm  */}
-                          <div className="absolute  h-96 w-96 rounded-[50%]  bg-gradient-to-b from-pink-400 to-transparent opacity-30 z-0"></div>
-                          <div className="absolute w-96 h-96 rounded-[50%] border-4 border-white/30 shadow-[0_0_15px_rgba(255,255,255,0.7)] animate-pulse z-1"></div>
-                          <motion.div
-                            initial={{ y: 10 }}
-                            animate={{ y: [10, 0, 10] }}
-                            transition={{
-                              repeat: Infinity,
-                              duration: 3,
-                              ease: "easeInOut",
-                            }}
-                          >
-                            <Image
-                              src="/heart.png"
-                              alt="Heart 3D Model"
-                              width={350}
-                              height={350}
-                              className="object-contain z-10"
-                            />
-                          </motion.div>
-                        </div>
-                      </motion.div>
-                    )}
-                    {selectedOrgan === "lungs" && (
-                      <motion.div
-                        key="lungs"
-                        className="relative w-full max-w-lg mb-6"
-                        variants={mainOrganVariants}
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                      >
-                        <div className="relative h-[400px] w-full flex items-center justify-center">
-                          <div className="absolute w-full h-full rounded-full bg-gradient-to-b from-blue-50 to-transparent opacity-30 z-0"></div>
-                          <LungsModel />
-                        </div>
-                      </motion.div>
-                    )}
-                    {selectedOrgan === "liver" && (
-                      <motion.div
-                        key="liver"
-                        className="relative w-full max-w-lg mb-6 mt-[3.5rem]"
-                        variants={mainOrganVariants}
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                      >
-                        <div className="relative h-[400px] w-full flex items-center justify-center">
-                          <div className="absolute w-full h-full rounded-full bg-gradient-to-b from-yellow-50 to-transparent opacity-30 z-0"></div>
-                          <motion.div
-                            initial={{ y: 10 }}
-                            animate={{ y: [10, 0, 10] }}
-                            transition={{
-                              repeat: Infinity,
-                              duration: 3,
-                              ease: "easeInOut",
-                            }}
-                          >
-                            <Image
-                              src="/liver.png"
-                              alt="Liver 3D Model"
-                              width={350}
-                              height={350}
-                              className="object-contain z-10"
-                            />
-                          </motion.div>
-                        </div>
-                      </motion.div>
-                    )}
-                    {selectedOrgan === "brain" && (
-                      <motion.div
-                        key="brain"
-                        className="relative w-full max-w-lg mb-6"
-                        variants={mainOrganVariants}
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                      >
-                        <div className="relative h-[400px] w-full flex items-center justify-center">
-                          <div className="absolute w-full h-full rounded-full bg-gradient-to-b from-purple-50 to-transparent opacity-30 z-0"></div>
-                          <motion.div
-                            initial={{ y: 10 }}
-                            animate={{ y: [10, 0, 10] }}
-                            transition={{
-                              repeat: Infinity,
-                              duration: 3,
-                              ease: "easeInOut",
-                            }}
-                          >
-                            <Image
-                              src="/heart.png"
-                              alt="Brain 3D Model"
-                              width={350}
-                              height={350}
-                              className="object-contain z-10"
-                              style={{
-                                filter:
-                                  "drop-shadow(0px 10px 15px rgba(128, 0, 255, 0.5))",
-                              }}
-                            />
-                          </motion.div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
-                  {/* Organ Switcher Circles */}
-                  <motion.div
-                    className="cursor-pointer w-full mt-20"
-                    variants={switcherVariants}
-                    initial="hidden"
-                    animate="visible"
-                  >
-                    <div className="flex justify-center items-center gap-8 w-full">
-                      <motion.div
-                        className={`organ-switcher-circle ${
-                          selectedOrgan === "heart" ? "active" : ""
-                        }`}
-                        onClick={() => setSelectedOrgan("heart")}
-                        variants={switcherItemVariants}
-                        whileHover={{
-                          scale: 1.05,
-                          transition: { duration: 0.2 },
-                        }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <Image
-                          src="/heart.png"
-                          alt="Heart"
-                          width={50}
-                          height={50}
-                          className="object-contain"
-                        />
-                      </motion.div>
-                      <motion.div
-                        className={`organ-switcher-circle ${
-                          selectedOrgan === "lungs" ? "active" : ""
-                        }`}
-                        onClick={() => setSelectedOrgan("lungs")}
-                        variants={switcherItemVariants}
-                        whileHover={{
-                          scale: 1.05,
-                          transition: { duration: 0.2 },
-                        }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <Image
-                          src="/lungs.png"
-                          alt="Lungs"
-                          width={50}
-                          height={50}
-                          className="object-contain"
-                        />
-                      </motion.div>
-                      <motion.div
-                        className={`organ-switcher-circle ${
-                          selectedOrgan === "liver" ? "active" : ""
-                        }`}
-                        onClick={() => setSelectedOrgan("liver")}
-                        variants={switcherItemVariants}
-                        whileHover={{
-                          scale: 1.05,
-                          transition: { duration: 0.2 },
-                        }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <Image
-                          src="/liver.png"
-                          alt="Liver"
-                          width={50}
-                          height={50}
-                          className="object-contain"
-                        />
-                      </motion.div>
-                      <motion.div
-                        className={`organ-switcher-circle ${
-                          selectedOrgan === "brain" ? "active" : ""
-                        }`}
-                        onClick={() => setSelectedOrgan("brain")}
-                        variants={switcherItemVariants}
-                        whileHover={{
-                          scale: 1.05,
-                          transition: { duration: 0.2 },
-                        }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <Image
-                          src="/heart.png"
-                          alt="Brain"
-                          width={50}
-                          height={50}
-                          className="object-contain"
-                        />
-                      </motion.div>
-                    </div>
-                  </motion.div>
+                  <EnhancedAnatomy 
+                    selectedOrgan={selectedOrgan}
+                    onOrganSelect={setSelectedOrgan}
+                  />
                 </div>
 
                 {/* Right column - Dynamic content based on selected organ */}
@@ -720,54 +519,7 @@ const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
             // <LabsSection />
             <CombinedLabsSection />
           ) : activeTab === "upload" ? (
-            <div className="px-6 bg-gradient-to-b from-gray-200 to-white min-h-screen">
-          <div className="p-8 bg-white rounded-3xl shadow-sm mt-4">
-            <h2 className="text-2xl font-semibold mb-4">
-              Upload Documents
-            </h2>
-            <p className="text-gray-600">
-              This section allows you to upload medical documents.
-            </p>
-            <div className="mt-4 flex justify-center">
-              {/* Hidden file input triggered programmatically */}
-              <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                multiple
-                accept="application/pdf"
-                onChange={handleFileChange}
-              />
-              <Button
-                onClick={handleUploadClick}
-                className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-2"
-              >
-                <UploadCloud className="h-4 w-4" />
-                <span>Upload Files</span>
-              </Button>
-            </div>
-
-            {/* Loading animation */}
-            {isLoading && (
-              <div className="flex justify-center items-center mt-4">
-                <p className="animate-pulse text-blue-500 font-semibold">
-                  Uploading & Processing...
-                </p>
-                <p className="animate-pulse text-blue-500 font-semibold">
-                  (may take 8-10 seconds please wait)
-                </p>
-              </div>
-            )}
-
-            {/* Extracted text display */}
-            {!isLoading && extractedText && (
-              <div className="mt-4 p-4 bg-white rounded shadow">
-                <h3 className="font-semibold text-lg mb-2">Extracted Text:</h3>
-                <p className="text-sm text-gray-700">{extractedText}</p>
-              </div>
-            )}
-          </div>
-        </div>
+            <Upload />
 
           ) : activeTab === "progress" ? (
             <div className="px-6 bg-gradient-to-b from-gray-200 to-white min-h-screen">

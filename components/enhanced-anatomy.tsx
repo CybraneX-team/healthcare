@@ -128,32 +128,32 @@ export default function EnhancedAnatomy({ selectedOrgan, onOrganSelect }: Enhanc
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={currentImagePath}
-            initial={{ 
-              opacity: 0,
-              scale: 1,
-              filter: "blur(4px)"
-            }}
-            animate={{ 
-              opacity: 1,
-              scale: 1,
-              filter: "blur(0px)"
-            }}
-            exit={{ 
-              opacity: 0,
-              scale: 1.02,
-              filter: "blur(2px)"
-            }}
-            transition={{
-              duration: 0.4,
-              ease: [0.25, 0.46, 0.45, 0.94],
-              opacity: { duration: 0.3 },
-              scale: { 
-                type: "spring",
-                stiffness: 300,
-                damping: 30
-              },
-              filter: { duration: 0.2 }
-            }}
+            // initial={{ 
+            //   opacity: 0,
+            //   scale: 1,
+            //   filter: "blur(4px)"
+            // }}
+            // animate={{ 
+            //   opacity: 1,
+            //   scale: 1,
+            //   filter: "blur(0px)"
+            // }}
+            // exit={{ 
+            //   opacity: 0,
+            //   scale: 1.02,
+            //   filter: "blur(2px)"
+            // }}
+            // transition={{
+            //   duration: 0.4,
+            //   ease: [0.25, 0.46, 0.45, 0.94],
+            //   opacity: { duration: 0.3 },
+            //   scale: { 
+            //     type: "spring",
+            //     stiffness: 300,
+            //     damping: 30
+            //   },
+            //   filter: { duration: 0.2 }
+            // }}
           >
             <Image
               src={currentImagePath}
@@ -162,6 +162,7 @@ export default function EnhancedAnatomy({ selectedOrgan, onOrganSelect }: Enhanc
               height={500}
               className="w-full h-auto object-contain"
               onLoad={() => setIsLoaded(true)}
+              priority
             />
           </motion.div>
         </AnimatePresence>

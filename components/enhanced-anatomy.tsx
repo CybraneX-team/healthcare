@@ -9,6 +9,7 @@ interface OrganInfo {
   name: string;
   position: { x: number; y: number };
   dotPosition: { x: number; y: number };
+  imagePath: string;
 }
 
 interface EnhancedAnatomyProps {
@@ -22,24 +23,28 @@ const organData: OrganInfo[] = [
     name: "Liver",
     position: { x: 85, y: 45 }, // Label position as percentage - moved to right side
     dotPosition: { x: 45, y: 43 }, // Dot position on the liver area
+    imagePath: "/liver_light.png",
   },
   {
     id: "heart",
     name: "Heart",
     position: { x: 20, y: 25 }, // Label position - left side
     dotPosition: { x: 45, y: 30 }, // Dot position on the heart area
+    imagePath: "/heart_light.png",
   },
   {
     id: "lungs",
     name: "Lungs",
     position: { x: 75, y: 25 }, // Label position - right side
     dotPosition: { x: 40, y: 25 }, // Dot position on the lungs area
+    imagePath: "/lungs.png", // Fallback to available lungs image
   },
   {
     id: "brain",
     name: "Brain",
     position: { x: 20, y: 8 }, // Label position - top left
     dotPosition: { x: 50, y: 12 }, // Dot position on the brain area
+    imagePath: "/liver_light_copy.png", // Fallback - could be replaced when brain_light.png is available
   },
 ];
 
@@ -70,13 +75,29 @@ const labelVariants = {
 };
 
 export default function EnhancedAnatomy({ selectedOrgan, onOrganSelect }: EnhancedAnatomyProps) {
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(true); // Start as loaded
+  const [currentImagePath, setCurrentImagePath] = useState("/liver_light.png");
 
   useEffect(() => {
-    // Simulate image loading
-    const timer = setTimeout(() => setIsLoaded(true), 300);
-    return () => clearTimeout(timer);
-  }, []);
+    // Update image path when selected organ changes
+    const selectedOrganData = organData.find(organ => organ.id === selectedOrgan);
+    if (selectedOrganData) {
+      setCurrentImagePath(selectedOrganData.imagePath);
+    }
+  }, [selectedOrgan]);
+
+  useEffect(() => {
+    // Preload all organ images for instant switching
+    const preloadImages = () => {
+      organData.forEach(organ => {
+        const img = document.createElement('img');
+        img.src = organ.imagePath;
+      });
+    };
+    
+    preloadImages();
+    setIsLoaded(true);
+  }, []); // Only run once on mount
 
   const getOrganOpacity = (organId: string) => {
     return selectedOrgan === organId ? 1 : 0.3;
@@ -92,50 +113,58 @@ export default function EnhancedAnatomy({ selectedOrgan, onOrganSelect }: Enhanc
     return colors[organId as keyof typeof colors] || "#6b7280";
   };
 
-  // Calculate the arrow endpoint on the edge of the label box
+  // Calculate the arrow endpoint at the center of the label box
   const calculateArrowEndpoint = (organ: OrganInfo) => {
-    const { dotPosition, position } = organ;
+    const { position } = organ;
     
-    // Approximate label box dimensions (in percentage units)
-    const labelWidth = 8; // approximate width of label box
-    const labelHeight = 3; // approximate height of label box
-    
-    // Calculate the direction from dot to label center
-    const dx = position.x - dotPosition.x;
-    const dy = position.y - dotPosition.y;
-    
-    // Calculate which edge the line should connect to
-    const absRatioX = Math.abs(dx) / (labelWidth / 2);
-    const absRatioY = Math.abs(dy) / (labelHeight / 2);
-    
-    let endX = position.x;
-    let endY = position.y;
-    
-    if (absRatioX > absRatioY) {
-      // Line hits left or right edge
-      endX = position.x - Math.sign(dx) * (labelWidth / 2);
-      endY = position.y;
-    } else {
-      // Line hits top or bottom edge
-      endX = position.x;
-      endY = position.y - Math.sign(dy) * (labelHeight / 2);
-    }
-    
-    return { x: endX, y: endY };
+    // Return the exact center position of the label
+    return { x: position.x, y: position.y };
   };
 
   return (
     <div className="relative w-full max-w-lg mx-auto">
       {/* Background anatomy image */}
       <div className="relative">
-        <Image
-          src="/liver_light.png"
-          alt="Human Anatomy"
-          width={400}
-          height={500}
-          className="w-full h-auto object-contain"
-          onLoad={() => setIsLoaded(true)}
-        />
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={currentImagePath}
+            initial={{ 
+              opacity: 0,
+              scale: 1,
+              filter: "blur(4px)"
+            }}
+            animate={{ 
+              opacity: 1,
+              scale: 1,
+              filter: "blur(0px)"
+            }}
+            exit={{ 
+              opacity: 0,
+              scale: 1.02,
+              filter: "blur(2px)"
+            }}
+            transition={{
+              duration: 0.4,
+              ease: [0.25, 0.46, 0.45, 0.94],
+              opacity: { duration: 0.3 },
+              scale: { 
+                type: "spring",
+                stiffness: 300,
+                damping: 30
+              },
+              filter: { duration: 0.2 }
+            }}
+          >
+            <Image
+              src={currentImagePath}
+              alt="Human Anatomy"
+              width={400}
+              height={500}
+              className="w-full h-auto object-contain"
+              onLoad={() => setIsLoaded(true)}
+            />
+          </motion.div>
+        </AnimatePresence>
         
         {/* Overlay SVG for lines and dots */}
         {isLoaded && (
@@ -149,15 +178,15 @@ export default function EnhancedAnatomy({ selectedOrgan, onOrganSelect }: Enhanc
                 <marker
                   key={`arrow-${organ.id}`}
                   id={`arrow-${organ.id}`}
-                  viewBox="0 0 10 10"
-                  refX="9"
-                  refY="3"
-                  markerWidth="6"
-                  markerHeight="6"
+                  viewBox="0 0 12 12"
+                  refX="11"
+                  refY="6"
+                  markerWidth="10"
+                  markerHeight="10"
                   orient="auto"
                 >
                   <path
-                    d="M0,0 L0,6 L9,3 z"
+                    d="M2,2 L2,10 L10,6 z"
                     fill={getLineColor(organ.id)}
                     opacity={getOrganOpacity(organ.id)}
                   />
@@ -167,19 +196,34 @@ export default function EnhancedAnatomy({ selectedOrgan, onOrganSelect }: Enhanc
             
             {organData.map((organ) => {
               const arrowEndpoint = calculateArrowEndpoint(organ);
+              
+              // Calculate direction for custom arrow positioning
+              const dx = arrowEndpoint.x - organ.dotPosition.x;
+              const dy = arrowEndpoint.y - organ.dotPosition.y;
+              const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+              
               return (
                 <g key={organ.id} opacity={getOrganOpacity(organ.id)}>
                   {/* Connection line */}
                   <motion.path
                     d={`M ${organ.dotPosition.x} ${organ.dotPosition.y} L ${arrowEndpoint.x} ${arrowEndpoint.y}`}
                     stroke={getLineColor(organ.id)}
-                    strokeWidth="0.4"
+                    strokeWidth="0.5"
                     fill="none"
-                    markerEnd={`url(#arrow-${organ.id})`}
                     variants={lineVariants}
                     initial="hidden"
                     animate="visible"
                     strokeDasharray="none"
+                  />
+                  
+                  {/* Custom arrow at the end point */}
+                  <motion.polygon
+                    points={`${arrowEndpoint.x - 1.5},${arrowEndpoint.y - 0.8} ${arrowEndpoint.x - 1.5},${arrowEndpoint.y + 0.8} ${arrowEndpoint.x},${arrowEndpoint.y}`}
+                    fill={getLineColor(organ.id)}
+                    transform={`rotate(${angle} ${arrowEndpoint.x} ${arrowEndpoint.y})`}
+                    variants={lineVariants}
+                    initial="hidden"
+                    animate="visible"
                   />
                   
                   {/* Organ dot */}

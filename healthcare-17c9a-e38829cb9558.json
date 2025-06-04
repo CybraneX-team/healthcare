@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "healthcare-17c9a",
+  "private_key_id": "e38829cb9558755ec4aefb630c31a70123ef70e5",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCys1K1U33q3mYN\n22afLErXBJnSHYLdZUbb/n0A0ov7tLcyOEtLvZaK+RLO5f06zYvfN1b563mf8H5d\nifXMW7J+cyGoi/J5lozwI2C1k58lwsjyWs0KQzgidYv1cx00i6lRlcl41IP52ln/\n0TnL1UR0Vf7DqPIcBKVnSMTzkMaO+658DYx73qRNy5wZper7w0wKWD8zYurCkT4U\nGsN5h/+mp+FMd2dv/7LgOtZc4o/q//lSLPXLigkOFIdOlTIhiWFjanZ6wBjMVBnW\nvppiOFxFe+JDZ9v9HJ2qDlfCdipWnN7e5Hr5LO7acUApZXMubez5Etfvk4/RROSt\nMKM7v23dAgMBAAECggEAHf/QsLQVfWpcg5MDhVEwNyyEjit6HqSz4pa0cYDnExhh\ncMLWkR6AuU/bAnTFsCt1gcGOjmIjhuAetqFEbEwwiN3XFq53xEWr31xxDcp8eyBa\nD6WCqmhichZ9qnTqwDl58UJOEkTK6xTm6vU62Kcy2LzfCgXAr0dwZQhoV+NEEhiS\ndW0JmaaYLPCRPp1whUQjRe9SY75vlW0qAY9XEdPG6DRoOrusm1OQnSdrKVcBsA+b\nC4tAYerL64cLhpdxI8LjCxxQkhIyLR3jyH40WW4e5bUCI8WF7m69ErzvAyJU5bGg\nBx81xG238ZEIRuhN8R472WiMS2OpWvf0dWnukXGyGQKBgQDOwklF5vGihPi9Wyju\ntigtBwPfC7uNPNKrRTgkSe86HfI4aKKXTjiEceeZUNLA3VGSXU/tn7QkqT5J8mee\n9cvs/mUkul86RqB+JC919wpNES9vpwNuUhx33VH5yRLzG2Pp8zWud/v4/gYpGlkP\nPQh9NU1p2urv403PC2qWmvG28wKBgQDdQl1P34Uj9BX43tDFqubTBDMv6vNIZdlk\nWO3efuBIKe4BhDM0lP/pToolEBtHjzXMkQjfGTF7ErkhKseeW7gVjWIfHDl+QNNH\naPwE6+/U8ajrlsToD7DoGpeP6CM6BeECHqiWt19NddP88/NJhfwZ0bkax+uS+kRZ\nZ4v4uY4b7wKBgEo6JeQajRUzd7lDSOaqLrI7moAwzhxegaNLLmSYxnGu3o6xwe1f\n/5pM6kB4a7Ehw28wYMmGVD31JI+XnuvKgnOKwPT2k8lwIZ4nj4JiNiiEyuriorCw\nedfudMegEFWGt8/9qIACQ0uYps2Kz/5QgwOwZyJhnYaRrBVwm8uFxNFRAoGAClL4\na6uwWLcg91XeQ/rvflUp1kiORYiLFkWYA9PDv1pFgsiaYw+4yTgi9gvEWhhymDME\nSPSx/F4pSUTnv5nkAw1v0KfOfvejZCef6tLfg/4qtaN5WKKyzIHBJLPeQOzZTPIF\nR9MSnVisJZd0eK/JzaKdkoRVl6wZ2Foei+KMoP0CgYBtvrNiWmilxm+LAE8blJry\nzO9xVLkifqv0p+ZcY65l13qz8flOLgGjDZYEoaGz9WPXXPb/JetxAo9xic6aKgn/\nFr5mEJoWnjP2gz4m9m5RdxVsqDRTeTRu3xN3HnoHQKRc4xD1iU57Jb4AEWFjnSmO\nCZOhXwxHYSeW3sMLY+xR7Q==\n-----END PRIVATE KEY-----\n",
+  "client_email": "healthcare-17c9a@appspot.gserviceaccount.com",
+  "client_id": "106853249000311630185",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/healthcare-17c9a%40appspot.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

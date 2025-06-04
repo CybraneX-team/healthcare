@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,146 +27,242 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { collection, getDocs , doc, updateDoc, deleteDoc, addDoc  } from "firebase/firestore";
+import { db } from "@/utils/firebase";
+import { useRouter } from "next/navigation";
 
 interface UsersManagerProps {
   setSidebarOpen: (open: boolean) => void;
 }
 
+function getRandomColor() {
+  const hue = Math.floor(Math.random() * 360); // full color wheel
+  const saturation = 70 + Math.floor(Math.random() * 20); // 70-90% saturation for vivid colors
+  const lightness = 50 + Math.floor(Math.random() * 10); // 50-60% lightness for richer colors
+
+  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+}
+
+
+
 export function UsersManager({ setSidebarOpen }: UsersManagerProps) {
+  const [users, setUsers] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedUserForDetails, setSelectedUserForDetails] = useState<any | null>(null);
+  const [selectedRole, setSelectedRole] = useState("all");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [newUser, setNewUser] = useState({
     name: "",
     email: "",
     role: "student",
   });
 
-  // Mock data for users
-  const [users, setUsers] = useState([
-    {
-      id: "1",
-      name: "John Doe",
-      email: "john.doe@example.com",
-      role: "admin",
-      joinedDate: "Jan 15, 2025",
-      lastActive: "2 hours ago",
-      avatar: "JD",
-      avatarColor: "bg-blue-500",
-    },
-    {
-      id: "2",
-      name: "Jane Smith",
-      email: "jane.smith@example.com",
-      role: "instructor",
-      joinedDate: "Feb 20, 2025",
-      lastActive: "1 day ago",
-      avatar: "JS",
-      avatarColor: "bg-purple-500",
-    },
-    {
-      id: "3",
-      name: "Robert Johnson",
-      email: "robert.johnson@example.com",
-      role: "student",
-      joinedDate: "Mar 5, 2025",
-      lastActive: "3 days ago",
-      avatar: "RJ",
-      avatarColor: "bg-green-500",
-    },
-    {
-      id: "4",
-      name: "Emily Davis",
-      email: "emily.davis@example.com",
-      role: "student",
-      joinedDate: "Apr 12, 2025",
-      lastActive: "1 week ago",
-      avatar: "ED",
-      avatarColor: "bg-orange-500",
-    },
-    {
-      id: "5",
-      name: "Michael Wilson",
-      email: "michael.wilson@example.com",
-      role: "student",
-      joinedDate: "May 1, 2025",
-      lastActive: "just now",
-      avatar: "MW",
-      avatarColor: "bg-pink-500",
-    },
-    {
-      id: "6",
-      name: "Michael Wilson",
-      email: "michael.wilson@example.com",
-      role: "student",
-      joinedDate: "May 1, 2025",
-      lastActive: "just now",
-      avatar: "MW",
-      avatarColor: "bg-pink-500",
-    }
-  ]);
+  const router = useRouter();
+    useEffect(() => {
+      const fetchUsers = async () => {
+        try {
+          setIsLoading(true);
+          const usersCollection = collection(db, "users");
+          const snapshot = await getDocs(usersCollection);
 
-  const filteredUsers = users.filter(
-    (user) =>
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.role.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+          const usersData: any[] = snapshot.docs.map((doc) => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              name: data.fullName || "Unknown",
+              email: data.email || "N/A",
+              role: data.role || "student",
+              joinedDate: new Date(data.createdAt?.seconds * 1000).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              }),
+              phoneNumber: data.phone,
+              avatar: data.displayName
+                ? data.displayName.split(" ").map((n: string) => n[0]).join("").toUpperCase()
+                : "U",
+              // ✅ Generate and store a fixed color for this user
+              avatarColor: getRandomColor(),
+              documents: data.documents || {},
+            };
+          });
 
-  const handleAddUser = () => {
-    const id = (users.length + 1).toString();
-    const avatar = newUser.name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase();
-    const colors = [
-      "bg-blue-500",
-      "bg-purple-500",
-      "bg-green-500",
-      "bg-orange-500",
-      "bg-pink-500",
-    ];
-    const avatarColor = colors[Math.floor(Math.random() * colors.length)];
+          setUsers(usersData);
+        } catch (error) {
+          console.error("Error fetching users:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
 
+      fetchUsers();
+    }, []);
+
+
+
+const filteredUsers = users.filter((user) => {
+  const matchesSearch =
+    user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.role.toLowerCase().includes(searchQuery.toLowerCase());
+
+  const matchesRole =
+    selectedRole === "all" || user.role.toLowerCase() === selectedRole;
+
+  return matchesSearch && matchesRole;
+});
+
+
+  // const handleAddUser = () => {
+  //   const id = (users.length + 1).toString();
+  //   const avatar = newUser.name
+  //     .split(" ")
+  //     .map((n) => n[0])
+  //     .join("")
+  //     .toUpperCase();
+  //   const colors = [
+  //     "bg-blue-500",
+  //     "bg-purple-500",
+  //     "bg-green-500",
+  //     "bg-orange-500",
+  //     "bg-pink-500",
+  //   ];
+  //   const avatarColor = colors[Math.floor(Math.random() * colors.length)];
+
+  //   const newUserData = {
+  //     id,
+  //     ...newUser,
+  //     joinedDate: new Date().toLocaleDateString("en-US", {
+  //       month: "short",
+  //       day: "numeric",
+  //       year: "numeric",
+  //     }),
+  //     lastActive: "just now",
+  //     avatar,
+  //     avatarColor,
+  //   };
+
+  //   setUsers([...users, newUserData]);
+  //   setNewUser({ name: "", email: "", role: "student" });
+  //   setIsAddDialogOpen(false);
+  // };
+
+  // const handleEditUser = () => {
+  //   if (!selectedUser) return;
+
+  //   const updatedUsers = users.map((user) =>
+  //     user.id === selectedUser.id ? { ...user, ...selectedUser } : user
+  //   );
+
+  //   setUsers(updatedUsers);
+  //   setIsEditDialogOpen(false);
+  // };
+
+  const handleAddUser = async () => {
+  if (!newUser.name || !newUser.email) return;
+
+  try {
+    const usersCollection = collection(db, "users");
+
+    // Create the new user document
+    const docRef = await addDoc(usersCollection, {
+      fullName: newUser.name,
+      email: newUser.email,
+      role: newUser.role,
+      createdAt: new Date(),
+      phone: "", // You can collect this if needed in the future
+      displayName: newUser.name, // For consistency with avatar
+    });
+
+    // Add the new user to local state
     const newUserData = {
-      id,
-      ...newUser,
+      id: docRef.id,
+      name: newUser.name,
+      email: newUser.email,
+      role: newUser.role,
       joinedDate: new Date().toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
         year: "numeric",
       }),
-      lastActive: "just now",
-      avatar,
-      avatarColor,
+      phoneNumber: "",
+      avatar: newUser.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase(),
+      avatarColor: getRandomColor(),
+      documents: {},
     };
 
-    setUsers([...users, newUserData]);
+    setUsers((prev) => [...prev, newUserData]);
     setNewUser({ name: "", email: "", role: "student" });
     setIsAddDialogOpen(false);
-  };
+  } catch (error) {
+    console.error("Error adding user:", error);
+  }
+};
 
-  const handleEditUser = () => {
-    if (!selectedUser) return;
+  const handleEditUser = async () => {
+  if (!selectedUser) return;
 
+  try {
+    // Reference to the specific document
+    const userRef = doc(db, "users", selectedUser.id);
+
+    // Update the document
+   await updateDoc(userRef, {
+  fullName: selectedUser.name,
+  email: selectedUser.email,
+  role: selectedUser.role,
+  phone: selectedUser.phoneNumber,
+});
+
+
+    // Update local state
     const updatedUsers = users.map((user) =>
       user.id === selectedUser.id ? { ...user, ...selectedUser } : user
     );
 
     setUsers(updatedUsers);
     setIsEditDialogOpen(false);
-  };
+  } catch (error) {
+    console.error("Error updating user:", error);
+  }
+};
 
-  const handleDeleteUser = () => {
-    if (!selectedUser) return;
 
+  // const handleDeleteUser = () => {
+  //   if (!selectedUser) return;
+
+  //   const updatedUsers = users.filter((user) => user.id !== selectedUser.id);
+  //   setUsers(updatedUsers);
+  //   setIsDeleteDialogOpen(false);
+  // };
+
+  const handleDeleteUser = async () => {
+  if (!selectedUser) return;
+
+  try {
+    // Reference to the document to delete
+    const userRef = doc(db, "users", selectedUser.id);
+
+    // Delete from Firestore
+    await deleteDoc(userRef);
+
+    // Update local state
     const updatedUsers = users.filter((user) => user.id !== selectedUser.id);
     setUsers(updatedUsers);
     setIsDeleteDialogOpen(false);
-  };
+  } catch (error) {
+    console.error("Error deleting user:", error);
+  }
+};
+
 
   const openEditDialog = (user: any) => {
     setSelectedUser({ ...user });
@@ -272,15 +368,25 @@ export function UsersManager({ setSidebarOpen }: UsersManagerProps) {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <select className="rounded-md border border-gray-300 p-2 w-full sm:w-auto">
-          <option value="all">All Roles</option>
-          <option value="admin">Admin</option>
-          <option value="instructor">Instructor</option>
-          <option value="student">Student</option>
-        </select>
+        <select
+        className="rounded-md border border-gray-300 p-2 w-full sm:w-auto"
+        value={selectedRole}
+        onChange={(e) => setSelectedRole(e.target.value)}
+      >
+        <option value="all">All Roles</option>
+        <option value="admin">Admin</option>
+        <option value="instructor">Instructor</option>
+        <option value="student">Student</option>
+      </select>
+
       </div>
 
       {/* Users list */}
+      {isLoading ? (
+        <div className="flex justify-center items-center py-10">
+          <span className="text-gray-500">Loading users...</span>
+        </div>
+      ) : (
       <Card className="shadow-sm border-0 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -299,7 +405,7 @@ export function UsersManager({ setSidebarOpen }: UsersManagerProps) {
                   Joined Date
                 </th>
                 <th className="text-left py-3 px-4 font-medium text-gray-500 min-w-[120px]">
-                  Last Active
+                  Phone Number
                 </th>
                 <th className="text-right py-3 px-4 font-medium text-gray-500 min-w-[80px]">
                   Actions
@@ -312,11 +418,14 @@ export function UsersManager({ setSidebarOpen }: UsersManagerProps) {
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-3">
                       <div
-                        className={`w-8 h-8 rounded-full ${user.avatarColor} text-white flex items-center justify-center text-sm font-medium flex-shrink-0`}
+                    style={{ backgroundColor: user.avatarColor }}   
+                    className={`w-8 h-8 rounded-full capitalize text-white flex items-center justify-center text-sm font-medium flex-shrink-0`}
                       >
-                        {user.avatar}
+                        {user.name ? user.name.substring(0,1) || "U" :  "U"}
                       </div>
-                      <span className="font-medium text-gray-900 truncate">
+                      <span 
+                    onClick={() => router.push(`/admin/${user.id}`)}
+                      className="font-medium text-gray-900 truncate hover:underline hover:cursor-pointer">
                         {user.name}
                       </span>
                     </div>
@@ -348,7 +457,7 @@ export function UsersManager({ setSidebarOpen }: UsersManagerProps) {
                     </div>
                   </td>
                   <td className="py-3 px-4 text-gray-500">
-                    <span className="truncate">{user.lastActive}</span>
+                    <span className="truncate">{user.phoneNumber}</span>
                   </td>
                   <td className="py-3 px-4 text-right">
                     <DropdownMenu>
@@ -377,7 +486,8 @@ export function UsersManager({ setSidebarOpen }: UsersManagerProps) {
             </tbody>
           </table>
         </div>
-      </Card>
+      </Card> )
+      }
 
       {/* Edit User Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -429,6 +539,19 @@ export function UsersManager({ setSidebarOpen }: UsersManagerProps) {
                   <option value="student">Student</option>
                 </select>
               </div>
+              <div className="space-y-2">
+              <label htmlFor="edit-phone" className="text-sm font-medium">
+                Phone Number
+              </label>
+              <Input
+                id="edit-phone"
+                type="text"
+                value={selectedUser.phoneNumber || ""}
+                onChange={(e) =>
+                  setSelectedUser({ ...selectedUser, phoneNumber: e.target.value })
+                }
+              />
+            </div>
             </div>
           )}
           <div className="flex flex-col sm:flex-row justify-end gap-3">
@@ -448,7 +571,7 @@ export function UsersManager({ setSidebarOpen }: UsersManagerProps) {
           </div>
         </DialogContent>
       </Dialog>
-
+        
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[400px] mx-4">
@@ -479,6 +602,67 @@ export function UsersManager({ setSidebarOpen }: UsersManagerProps) {
           </div>
         </DialogContent>
       </Dialog>
+
+      {selectedUserForDetails && (
+  <Dialog open={true} onOpenChange={() => setSelectedUserForDetails(null)}>
+    <DialogContent className="sm:max-w-[600px] mx-4">
+      <DialogHeader>
+        <DialogTitle>User Details</DialogTitle>
+      </DialogHeader>
+
+      <div className="space-y-4">
+        <div>
+          <strong>Full Name:</strong> {selectedUserForDetails.name}
+        </div>
+        <div>
+          <strong>Email:</strong> {selectedUserForDetails.email}
+        </div>
+        <div>
+          <strong>Role:</strong> {selectedUserForDetails.role}
+        </div>
+        <div>
+          <strong>Phone:</strong> {selectedUserForDetails.phoneNumber}
+        </div>
+        <div>
+          <strong>Joined Date:</strong> {selectedUserForDetails.joinedDate}
+        </div>
+
+        <div>
+          <strong>Documents:</strong>
+          {selectedUserForDetails.documents && Object.keys(selectedUserForDetails.documents).length > 0 ? (
+            <ul className="space-y-2 mt-2">
+              {Object.entries(selectedUserForDetails.documents).map(([docName, docData]: any) => (
+                <li key={docName}>
+                  <div className="flex items-center justify-between">
+                    <span>{docName}</span>
+                    <Button
+                      variant="outline"
+                      onClick={() => window.open(docData.downloadURL, "_blank")}
+                    >
+                      View PDF
+                    </Button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="text-gray-500">No documents uploaded.</div>
+          )}
+        </div>
+      </div>
+
+      <div className="flex justify-end">
+        <Button
+          variant="outline"
+          onClick={() => setSelectedUserForDetails(null)}
+        >
+          Close
+        </Button>
+      </div>
+    </DialogContent>
+  </Dialog>
+)}
+
     </div>
   );
 }

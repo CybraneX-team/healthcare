@@ -5,8 +5,10 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Clock, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { rtdb } from "@/utils/firebase";
+import { db, rtdb } from "@/utils/firebase";
 import { onValue, ref } from "firebase/database";
+import { getAuth, onAuthStateChanged  } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
 
 interface ProgramsListProps {
   onProgramSelect: (programId: string) => void;
@@ -31,22 +33,62 @@ export function ProgramsList({
   };
 
   useEffect(() => {
-  setLoading(true);
-  const coursesRef = ref(rtdb, "courses/thrivemed/programs");
-  const unsubscribe = onValue(coursesRef, (snapshot) => {
-    const data = snapshot.val();
-    if (data) {
-      const programsArray = Object.keys(data).map((key) => ({
-        id: key,
-        ...data[key],
-      }));
-      setPrograms(programsArray);
-    }
-    setLoading(false);
-  });
+    const fetchData = async () => {
+      setLoading(true);
 
-  return () => unsubscribe();
-}, []);
+      // 1️⃣ Fetch all programs from RTDB
+      const coursesRef = ref(rtdb, "courses/thrivemed/programs");
+      onValue(coursesRef, async (snapshot) => {
+        const data = snapshot.val();
+        if (!data) {
+          setPrograms([]);
+          setLoading(false);
+          return;
+        }
+
+        const programsArray = Object.keys(data).map((key) => ({
+          id: key,
+          ...data[key],
+        }));
+
+        // 2️⃣ Fetch current user's assigned programs from Firestore
+        const auth = getAuth();
+        const user = auth.currentUser;
+        console.log("userrr", user)
+        if (!user) {
+          setPrograms([]);
+          setLoading(false);
+          return;
+        }
+
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
+        const userAssignedPrograms = userSnap.exists()
+          ? userSnap.data().assignedPrograms || {}
+          : {};
+
+        // 3️⃣ Merge default and user-assigned programs
+        const defaultPrograms = ["thrivemed-apollo", "thrivemed-atlas", "thrivemed-hub"];
+        const assignedProgramIds = new Set([
+          ...defaultPrograms,
+          ...Object.entries(userAssignedPrograms)
+            .filter(([_, assigned]) => assigned)
+            .map(([program]) => program),
+        ]);
+
+        // 4️⃣ Filter programs to only assigned ones
+        const assignedPrograms = programsArray.filter((p) =>
+          assignedProgramIds.has(p.id)
+        );
+
+        setPrograms(assignedPrograms);
+        setLoading(false);
+      });
+    };
+
+    fetchData();
+  }, []);
+
 
 
   // const programs = [

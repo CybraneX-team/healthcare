@@ -230,11 +230,10 @@ export default function SignupPage() {
   // };
 
 
-  const handleSignup = async () => {
+const handleSignup = async () => {
   setIsSubmitting(true);
 
   try {
-    // Call the Firebase signup function
     const userData = {
       fullName: profile.fullName,
       dateOfBirth: profile.dateOfBirth,
@@ -246,16 +245,22 @@ export default function SignupPage() {
 
     await signup(profile.email, profile.password, userData);
 
-    // Force sign out after sending verification email
-    await logout();
+    // Inform the user that the verification email has been sent
+    setShowSuccess(true);
 
-    router.push("/auth/verify-email"); // Show "Please verify" screen
+    // Show success animation for a short while
+    setTimeout(() => {
+      setShowSuccess(false);
+      // Redirect to a page that asks the user to verify their email
+      router.push("/auth/verify-email");
+    }, 3000);
   } catch (err) {
     setIsSubmitting(false);
     setShowSuccess(false);
     setError("An error occurred during signup. Please try again.");
   }
 };
+
 
   const handleAppleSignIn = async () => {
     setIsSubmitting(true);

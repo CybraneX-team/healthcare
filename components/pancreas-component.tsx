@@ -37,7 +37,7 @@ const itemVariants = {
   },
 };
 
-export const BrainComponent = () => {
+export const PancreasComponent = () => {
   return (
     <motion.div
       variants={containerVariants}
@@ -75,8 +75,8 @@ export const BrainComponent = () => {
                     </div>
                   </div>
                 </div>
-                <div className="flex flex-col ml-60">
-                  <div className="w-20 h-56 bg-gray-100 rounded-[100px] flex items-end overflow-hidden ">
+                <div className="flex flex-col ml-20 items-center md:ml-24 lg:ml-60">
+                  <div className="w-16 h-56 bg-gray-100  rounded-[100px] flex items-end overflow-hidden ">
                     <div className="w-full h-[65%] bg-[#0066FF] rounded-[100px]" />
                   </div>
                   <p className="text-sm text-[#6B7280] mt-3 text-center leading-tight">
@@ -200,4 +200,4 @@ export const BrainComponent = () => {
   );
 };
 
-export default BrainComponent;
+export default PancreasComponent;

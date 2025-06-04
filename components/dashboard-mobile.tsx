@@ -40,6 +40,7 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { Drawer } from "vaul";
+import Neurology from "@/components/neurology";
 
 // Import mobile-specific styles directly
 import "@/styles/dashboard-mobile.css";
@@ -49,6 +50,9 @@ import HeartComponent from "@/components/heart-component";
 import LiverComponent from "@/components/liver-component";
 import LungsModel from "@/components/lungs-model";
 import { CombinedLabsSection } from "./Lab-Services";
+import PancreasComponent from "./pancreas-component";
+import Cardiology from "./cardiology";
+import Kidney from "./kidney";
 
 // Define types for weight trend data
 interface WeightTrendData {
@@ -375,31 +379,27 @@ export default function DashboardMobile() {
                     <HeartComponent />
                   </div>
                 ) : selectedOrgan === "lungs" ? (
-                  <div className="px-2">
-                    <div className="text-center p-6 bg-white rounded-2xl shadow-sm mx-2 card-mobile">
-                      <h3 className="text-xl font-semibold mb-3">
-                        Lungs Component
-                      </h3>
-                      <p className="text-gray-600 mb-6">
-                        Lungs data will be displayed here.
-                      </p>
-                    </div>
+                  <div className="px-3">
+                    {/* <PancreasComponent /> */}
+                    <Cardiology />
                   </div>
                 ) : selectedOrgan === "liver" ? (
                   <div className="px-2">
-                    <LiverComponent />
+                    {/* <LiverComponent /> */}
+                    <Kidney />
                   </div>
                 ) : selectedOrgan === "brain" ? (
-                  <div className="px-2">
-                    <div className="text-center p-6 bg-white rounded-2xl shadow-sm mx-2 card-mobile">
-                      <h3 className="text-xl font-semibold mb-3">
-                        Brain Component
-                      </h3>
-                      <p className="text-gray-600 mb-6">
-                        Brain data will be displayed here.
-                      </p>
-                    </div>
-                  </div>
+                  // <div className="px-2">
+                  //   <div className="text-center p-6 bg-white rounded-2xl shadow-sm mx-2 card-mobile">
+                  //     <h3 className="text-xl font-semibold mb-3">
+                  //       Brain Component
+                  //     </h3>
+                  //     <p className="text-gray-600 mb-6">
+                  //       Brain data will be displayed here.
+                  //     </p>
+                  //   </div>
+                  // </div>
+                  <Neurology />
                 ) : null}
               </div>
             </div>

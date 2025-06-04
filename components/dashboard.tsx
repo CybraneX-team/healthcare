@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef  } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Search,
   Plus,
@@ -39,13 +39,14 @@ import Upload from "@/components/upload";
 import EnhancedAnatomy from "@/components/enhanced-anatomy";
 
 import { PatientSection } from "./PatientSection";
-import { LabsSection } from "./labSection";
-import { ServicesProductsSection } from "./ServicesSection";
+import Neurology from "@/components/neurology";
 import { CombinedLabsSection } from "./Lab-Services";
 import Link from "next/link";
 import { getAuth } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/utils/firebase";
+import Cardiology from "./cardiology";
+import Kidney from "./kidney";
 
 // Other organ components will be imported here as they are created
 
@@ -210,41 +211,43 @@ export default function Dashboard() {
   const [files, setFiles] = useState<any[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(false); // Add loading state
-  const [extractedText, setExtractedText] = useState(''); // Optional: show result
+  const [extractedText, setExtractedText] = useState(""); // Optional: show result
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleUploadClick = () => {
-  fileInputRef.current?.click();
-};
+    fileInputRef.current?.click();
+  };
 
-const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-  const file = event.target.files?.[0];
-  if (!file) return;
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-  try {
-    setIsLoading(true); // Start loading
-    const formData = new FormData();
-    formData.append("file", file);
+    try {
+      setIsLoading(true); // Start loading
+      const formData = new FormData();
+      formData.append("file", file);
 
-    const res = await fetch("/api/extract-text", {
-      method: "POST",
-      body: formData,
-    });
+      const res = await fetch("/api/extract-text", {
+        method: "POST",
+        body: formData,
+      });
 
-    if (!res.ok) {
-      console.error("Failed to extract text");
-      return;
+      if (!res.ok) {
+        console.error("Failed to extract text");
+        return;
+      }
+
+      const data = await res.json();
+      console.log("Extracted Text:", data.extractedText);
+      setExtractedText(data.extractedText);
+    } catch (err) {
+      console.error("Error:", err);
+    } finally {
+      setIsLoading(false); // End loading
     }
-
-    const data = await res.json();
-    console.log("Extracted Text:", data.extractedText);
-    setExtractedText(data.extractedText);
-  } catch (err) {
-    console.error("Error:", err);
-  } finally {
-    setIsLoading(false); // End loading
-  }
-};
+  };
 
   useEffect(() => {
     const tabParam = searchParams.get("tab");
@@ -264,7 +267,7 @@ const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     }
   }, [searchParams]);
 
-    useEffect(() => {
+  useEffect(() => {
     const fetchRole = async () => {
       const auth = getAuth();
       const user = auth.currentUser;
@@ -361,7 +364,7 @@ const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
       <style jsx>{organSwitcherStyle}</style>
       <style jsx global>{`
         body {
-          overflow: ${activeTab === "overview" ? "hidden" : "auto"};
+          overflow: ${activeTab === "overview" ? "auto" : "auto"};
         }
       `}</style>
       <div className="h-full">
@@ -427,16 +430,16 @@ const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
                   Upload
                 </Button>
               </div>
-               {isAdmin && (
-            <Link href="/admin">
-              <Button
-                variant="ghost"
-                className={`rounded-xl px-8 py-4 bg-blue-500 text-white hover:bg-blue-600 absolute left-10 font-medium`}
-              >
-                Admin
-              </Button>
-            </Link>
-          )}
+              {isAdmin && (
+                <Link href="/admin">
+                  <Button
+                    variant="ghost"
+                    className={`rounded-xl px-8 py-4 bg-blue-500 text-white hover:bg-blue-600 absolute left-10 font-medium`}
+                  >
+                    Admin
+                  </Button>
+                </Link>
+              )}
               {/* Profile dropdown - positioned absolutely to the right */}
               <div className="absolute right-0 top-1/2 transform -translate-y-1/2">
                 <ProfileDropdown />
@@ -449,7 +452,7 @@ const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
                 {/* Left column - Enhanced anatomy with organ switcher */}
                 <div className="lg:col-span-4 flex flex-col justify-center items-center mt-8">
-                  <EnhancedAnatomy 
+                  <EnhancedAnatomy
                     selectedOrgan={selectedOrgan}
                     onOrganSelect={setSelectedOrgan}
                   />
@@ -459,18 +462,23 @@ const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
                 <div className="lg:col-span-8">
                   {selectedOrgan === "heart" && <HeartComponent />}
                   {selectedOrgan === "lungs" && (
-                    <div className="text-center p-8 bg-white rounded-3xl shadow-sm">
-                      <h3 className="text-2xl font-semibold mb-4">
-                        Lungs Component
-                      </h3>
-                      <p className="text-gray-600 mb-6">
-                        Lungs data will be displayed here. Create a separate
-                        LiverComponent for detailed implementation.
-                      </p>
-                    </div>
+                    // <div className="text-center p-8 bg-white rounded-3xl shadow-sm">
+                    //   <h3 className="text-2xl font-semibold mb-4">
+                    //     Lungs Component
+                    //   </h3>
+                    //   <p className="text-gray-600 mb-6">
+                    //     Lungs data will be displayed here. Create a separate
+                    //     LiverComponent for detailed implementation.
+                    //   </p>
+                    // </div>
+                    // <PancreasComponent />
+                    <Cardiology />
                   )}
-                  {selectedOrgan === "liver" && <LiverComponent />}
-                  {selectedOrgan === 'brain' && <PancreasComponent />}
+                  {selectedOrgan === "liver" && (
+                    //  <LiverComponent />
+                    <Kidney />
+                  )}
+                  {selectedOrgan === "brain" && <Neurology />}
                   {/* <div className="flex justify-end mb-6">
                     <div className="inline-flex items-center gap-6 bg-white rounded-full py-2 px-4 shadow-sm">
                       <div className="flex items-center gap-2">
@@ -520,7 +528,6 @@ const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
             <CombinedLabsSection />
           ) : activeTab === "upload" ? (
             <Upload />
-
           ) : activeTab === "progress" ? (
             <div className="px-6 bg-gradient-to-b from-gray-200 to-white min-h-screen">
               <div className="p-8 bg-white rounded-3xl shadow-sm mt-4">

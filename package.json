@@ -7,8 +7,8 @@
     "npm": "9.x"
   },
   "scripts": {
-    "dev": "cross-env NODE_OPTIONS=--max-old-space-size=4096 next dev",
-    "build": "cross-env NODE_OPTIONS=--max-old-space-size=4096 next build",
+   "dev": "NODE_OPTIONS='--max-old-space-size=4096' next dev",
+    "build": "NODE_OPTIONS='--max-old-space-size=4096' next build",
     "start": "next start",
     "lint": "next lint",
     "prepare": "echo 'Running with legacy-peer-deps' && npm config set legacy-peer-deps=true"

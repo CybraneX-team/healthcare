@@ -1,38 +1,32 @@
-import { adminAuth, adminDb } from "@/lib/firebase-admin";
+// app/api/promote-to-admin/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "@/utils/firebase";
 
-export const POST = async (req: Request) => {
+export const POST = async (req: NextRequest) => {
   try {
-    const { email, superuserPass } = await req.json();
-    const idToken = req.headers.get("authorization")?.split("Bearer ")[1];
+    const { superuserPass, uid } = await req.json();
     const SUPERUSER_PASS = process.env.SUPERUSER_PASS;
 
-    // Validate
-    if (!idToken || superuserPass !== SUPERUSER_PASS) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized or invalid superuser password" }),
+    if (superuserPass !== SUPERUSER_PASS || !uid) {
+      return NextResponse.json(
+        { error: "Unauthorized or missing UID" },
         { status: 403 }
       );
     }
 
-    // Verify token
-    const decodedToken = await adminAuth.verifyIdToken(idToken);
-    const uid = decodedToken.uid;
-
-    // Promote to admin
-    const userRef = adminDb.collection("users").doc(uid);
-    await userRef.update({
+    // Directly update the user's Firestore doc
+    const userRef = doc(db, "users", uid);
+    await updateDoc(userRef, {
       role: "admin",
-      updatedAt: new Date()
+      updatedAt: new Date(),
     });
 
-    return new Response(
-      JSON.stringify({ message: "User promoted to admin!" }),
-      { status: 200 }
-    );
+    return NextResponse.json({ message: "User promoted to admin!" }, { status: 200 });
   } catch (err) {
     console.error(err);
-    return new Response(
-      JSON.stringify({ error: "Something went wrong" }),
+    return NextResponse.json(
+      { error: "Something went wrong" },
       { status: 500 }
     );
   }

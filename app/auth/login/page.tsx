@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useLayoutEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { Inputbox } from "@/components/ui/inputbox";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import Link from "next/link";
+import {  toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "@/utils/firebase";
 
 type Step = "email" | "password" | "2fa" | "error" | "success";
 
@@ -37,6 +41,20 @@ export default function LoginPage() {
     }
   }, [searchParams]);
   
+  
+  //  useLayoutEffect(() => {
+  //  const unsubscribe = onAuthStateChanged(auth, (user) => {
+  //    if (user) {
+  //      toast.info("You are already logged in!");
+  //      router.replace("/dashboard");
+  //    }
+  //  });
+
+  //  return () => unsubscribe();
+  // }, [router, auth]);
+
+
+
   const handleNext = () => {
     if (currentStep === "email") {
       if (!email.trim()) {

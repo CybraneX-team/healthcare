@@ -1,25 +1,22 @@
-import * as admin from "firebase-admin";
+// lib/firebase.ts
+import { initializeApp, getApps, cert } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
+import { getAuth } from "firebase-admin/auth";
+import { AppOptions } from "firebase-admin";
 
-// 1️⃣ Read the base64-encoded service account from environment
 const base64 = process.env.GOOGLE_SERVICE_ACCOUNT_B64 ?? "";
 if (!base64) {
   throw new Error("Missing GOOGLE_SERVICE_ACCOUNT_B64 in environment!");
 }
-
-// 2️⃣ Decode the base64 string and parse JSON
 const serviceAccountJson = Buffer.from(base64, "base64").toString("utf-8");
 const serviceAccount = JSON.parse(serviceAccountJson);
 
-// 3️⃣ Initialize Firebase admin SDK
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  });
-}
+const adminConfig: AppOptions = {
+  credential: cert(serviceAccount),
+};
 
-const adminApp = admin.app();
-const adminAuth = admin.auth();
-const adminDb = admin.firestore();
+const app = !getApps().length ? initializeApp(adminConfig) : getApps()[0];
+const db = getFirestore(app);
+const auth = getAuth(app);
 
-export { adminApp, adminAuth, adminDb };
+export { db, auth };

@@ -44,40 +44,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   // Check if user is logged in when the app loads and listen for auth state changes
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((firebaseUser) => {
-      if (firebaseUser) {
-        // User is signed in
-        const userData: User = {
-          id: firebaseUser.uid,
-          email: firebaseUser.email,
-          fullName: firebaseUser.displayName,
-          avatar: firebaseUser.photoURL
-        };
-        setUser(userData);
-      } else {
-        // User is signed out
-        
-        // For development purposes only - remove in production
-        // This sets a fake user when not authenticated, to test the UI
-        if (process.env.NODE_ENV === 'development') {
-          const devUser: User = {
-            id: 'dev-user-123',
-            email: 'test@example.com',
-            fullName: 'Test User',
-            avatar: null
-          };
-          setUser(devUser);
-        } else {
-          setUser(null);
-        }
+useEffect(() => {
+  const unsubscribe = auth.onAuthStateChanged((firebaseUser) => {
+    if (firebaseUser) {
+      const userData: User = {
+        id: firebaseUser.uid,
+        email: firebaseUser.email,
+        fullName: firebaseUser.displayName,
+        avatar: firebaseUser.photoURL
+      };
+      setUser(userData);
+
+      // 🚀 Only if on /auth/login or /auth/signup, show toast and redirect
+      const isAuthPage = window.location.pathname.startsWith("/auth/login") ||
+                         window.location.pathname.startsWith("/auth/signup");
+
+      if (isAuthPage) {
+        import("react-toastify").then(({ toast }) => {
+          toast.info("You are already logged in!");
+        });
+
+        router.replace("/dashboard");
       }
-      setLoading(false);
-    });
-    
-    // Cleanup subscription on unmount
-    return () => unsubscribe();
-  }, []);
+    } else {
+      // User is signed out
+      if (process.env.NODE_ENV === 'development') {
+        setUser({
+          id: 'dev-user-123',
+          email: 'test@example.com',
+          fullName: 'Test User',
+          avatar: null
+        });
+      } else {
+        setUser(null);
+      }
+    }
+
+    setLoading(false);
+  });
+
+  return () => unsubscribe();
+}, [router]);
+
 
   const login = async (email: string, password: string) => {
     setLoading(true);

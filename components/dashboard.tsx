@@ -283,6 +283,7 @@ export default function Dashboard() {
         const userSnap = await getDoc(userRef);
 
         if (userSnap.exists() && userSnap.data().role === "admin") {
+          console.log("userSnap.data()" , userSnap.data())
           setIsAdmin(true);
         }
       } catch (error) {

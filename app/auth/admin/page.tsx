@@ -4,9 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { auth } from "@/utils/firebase";
+import { getAuth } from "firebase/auth";
 
-// Updated Inputbox component to use a subtle focus color
 const Inputbox = ({
   id,
   type,
@@ -44,7 +43,7 @@ export default function PromoteToAdminPage() {
   const [loading, setLoading] = useState(false);
 
   const router = useRouter();
-
+  
   const handlePromote = async () => {
     if (!email.trim() || !superuserPass.trim()) {
       setError("Please fill in all fields");
@@ -55,31 +54,34 @@ export default function PromoteToAdminPage() {
     setError(null);
 
     try {
-      const idToken = await auth.currentUser?.getIdToken();
-      if (!idToken) {
-        setError("You must be logged in to promote.");
+      // ✅ Get current user's UID (logged-in user)
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        setError("You must be logged in to promote yourself.");
         setLoading(false);
         return;
       }
 
+      const uid = currentUser.uid;
+
+      // ✅ Call API route
       const res = await fetch("/api/promote-to-admin", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${idToken}`
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: email,
-          superuserPass: superuserPass
-        })
+          superuserPass,
+          email, // pass the email (API will find the UID using email, if needed)
+          uid    // pass UID of current user (who is self-promoting)
+        }),
       });
 
+      const data = await res.json();
       if (res.ok) {
         alert("You are now an admin!");
         router.push("/dashboard");
       } else {
-        const { error } = await res.json();
-        setError(error || "An unexpected error occurred.");
+        setError(data.error || "An unexpected error occurred.");
       }
     } catch (err) {
       console.error(err);
@@ -95,7 +97,7 @@ export default function PromoteToAdminPage() {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.5 }}
-      className="max-w-md mx-auto mt-20 p-8 min-h-[500px]" // taller height
+      className="max-w-md mx-auto mt-20 p-8 min-h-[500px]"
     >
       <div className="flex items-center mb-8">
         <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">

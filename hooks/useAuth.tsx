@@ -50,7 +50,6 @@ useEffect(() => {
     const currentPath = window.location.pathname;
 
     if (firebaseUser) {
-      // User is logged in
       const userData: User = {
         id: firebaseUser.uid,
         email: firebaseUser.email,
@@ -63,29 +62,23 @@ useEffect(() => {
                          currentPath.startsWith("/auth/signup");
 
       if (isAuthPage) {
-        // If a logged-in user visits login/signup page
-        toast.info("You are already logged in!");
+        // toast.info("You are already logged in!");
         router.replace("/dashboard");
       } else if (currentPath.startsWith("/dashboard")) {
-        // If a user lands on dashboard after login (could be direct login redirect)
-        toast.success("Logged in successfully");
+        // Check if this is a reload (not a fresh login)
+        const navEntry = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming;
+        if (navEntry.type !== "reload") {
+          // toast.success("Logged in successfully");
+        }
       }
     } else {
-      // User is not logged in
       setUser(null);
 
-
       if (currentPath.startsWith("/dashboard")) {
-        // A non-logged-in user trying to visit dashboard
-        // toast.error("You are not logged in");
         router.replace("/auth/login");
       } else if (currentPath.startsWith("/auth/logout")) {
-        // If the user just logged out
-        // toast.success("You have been logged out");
         router.replace("/auth/login");
       } else {
-        // Any other page that needs to ensure logged-in status
-        // toast.error("You are not logged in");
         router.replace("/auth/login");
       }
     }

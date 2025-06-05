@@ -77,15 +77,15 @@ useEffect(() => {
 
       if (currentPath.startsWith("/dashboard")) {
         // A non-logged-in user trying to visit dashboard
-        toast.error("You are not logged in");
+        // toast.error("You are not logged in");
         router.replace("/auth/login");
       } else if (currentPath.startsWith("/auth/logout")) {
         // If the user just logged out
-        toast.success("You have been logged out");
+        // toast.success("You have been logged out");
         router.replace("/auth/login");
       } else {
         // Any other page that needs to ensure logged-in status
-        toast.error("You are not logged in");
+        // toast.error("You are not logged in");
         router.replace("/auth/login");
       }
     }

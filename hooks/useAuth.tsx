@@ -16,6 +16,7 @@ import {
 } from "@/utils/firebase";
 import { resetPassword as firebaseResetPassword } from "@/utils/firebase";
 import { sendEmailVerification } from "firebase/auth";
+import { toast } from "react-toastify";
 
 interface User {
   id: string;
@@ -45,8 +46,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Check if user is logged in when the app loads and listen for auth state changes
 useEffect(() => {
-  const unsubscribe = auth.onAuthStateChanged((firebaseUser) => {
+  const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
+    const currentPath = window.location.pathname;
+
     if (firebaseUser) {
+      // User is logged in
       const userData: User = {
         id: firebaseUser.uid,
         email: firebaseUser.email,
@@ -55,28 +59,34 @@ useEffect(() => {
       };
       setUser(userData);
 
-      // 🚀 Only if on /auth/login or /auth/signup, show toast and redirect
-      const isAuthPage = window.location.pathname.startsWith("/auth/login") ||
-                         window.location.pathname.startsWith("/auth/signup");
+      const isAuthPage = currentPath.startsWith("/auth/login") ||
+                         currentPath.startsWith("/auth/signup");
 
       if (isAuthPage) {
-        import("react-toastify").then(({ toast }) => {
-          toast.info("You are already logged in!");
-        });
-
+        // If a logged-in user visits login/signup page
+        toast.info("You are already logged in!");
         router.replace("/dashboard");
+      } else if (currentPath.startsWith("/dashboard")) {
+        // If a user lands on dashboard after login (could be direct login redirect)
+        toast.success("Logged in successfully");
       }
     } else {
-      // User is signed out
-      if (process.env.NODE_ENV === 'development') {
-        setUser({
-          id: 'dev-user-123',
-          email: 'test@example.com',
-          fullName: 'Test User',
-          avatar: null
-        });
+      // User is not logged in
+      setUser(null);
+
+
+      if (currentPath.startsWith("/dashboard")) {
+        // A non-logged-in user trying to visit dashboard
+        toast.error("You are not logged in");
+        router.replace("/auth/login");
+      } else if (currentPath.startsWith("/auth/logout")) {
+        // If the user just logged out
+        toast.success("You have been logged out");
+        router.replace("/auth/login");
       } else {
-        setUser(null);
+        // Any other page that needs to ensure logged-in status
+        toast.error("You are not logged in");
+        router.replace("/auth/login");
       }
     }
 
@@ -85,7 +95,6 @@ useEffect(() => {
 
   return () => unsubscribe();
 }, [router]);
-
 
   const login = async (email: string, password: string) => {
     setLoading(true);

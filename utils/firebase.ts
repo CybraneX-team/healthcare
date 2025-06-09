@@ -134,5 +134,19 @@ export const signInWithGoogle = async (): Promise<UserCredential> => {
   return signInWithPopup(auth, provider);
 };
 
+export const saveUserProgress = async (userId: string, programId: string, progressData: any) => {
+  const progressRef = doc(db, `users/${userId}/progress/${programId}`);
+  await setDoc(progressRef, progressData, { merge: true });
+};
+
+export const getUserProgress = async (userId: string, programId: string) => {
+  const progressRef = doc(db, `users/${userId}/progress/${programId}`);
+  const snapshot = await getDoc(progressRef);
+  if (snapshot.exists()) {
+    return snapshot.data();
+  }
+  return null;
+};
+
 export const rtdb = getDatabase(app);
 export { app, auth, db, storage, analytics };

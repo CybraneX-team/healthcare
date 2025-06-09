@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -10,27 +11,50 @@ import { onValue, ref } from "firebase/database";
 import { getAuth, onAuthStateChanged  } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 
+
 interface ProgramsListProps {
   onProgramSelect: (programId: string) => void;
   moduleProgress: Record<string, number>;
+  programProgress : any
 }
 
 export function ProgramsList({
   onProgramSelect,
   moduleProgress,
+  programProgress
 }: ProgramsListProps) {
   const [activeTab, setActiveTab] = useState("all");
   const [programs, setPrograms] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [userProgramProgress, setUserProgramProgress] = useState<any>({});
 
-  // Calculate overall progress across all modules
-  const calculateOverallProgress = () => {
-    const values = Object.values(moduleProgress);
-    if (values.length === 0) return 0;
-    return Math.round(
-      values.reduce((sum, val) => sum + val, 0) / values.length
-    );
-  };
+  useEffect(() => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const userRef = doc(db, "users", user.uid);
+    getDoc(userRef).then((snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        setUserProgramProgress(data.programProgress || {});
+      }
+    });
+  }, []);
+
+
+
+const calculateModuleProgress = (module: any, completedVideos: Record<string, boolean> = {}) => {
+  const videoIds = Object.keys(module?.videos ?? {});
+  const totalVideos = videoIds.length;
+  const completedCount = videoIds.filter(videoId => completedVideos?.[videoId] ?? false).length;
+
+  return totalVideos === 0 ? 0 : Math.round((completedCount / totalVideos) * 100);
+};
+
+
+
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -157,7 +181,11 @@ export function ProgramsList({
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {programs
                         .filter((p) => p.status === "active")
-                        .map((program) => (
+                        .map((program) => 
+                        {
+                          const progress = userProgramProgress[program.id] || 0;
+
+                          return (
                           <Card
                             key={program.id}
                             className="overflow-hidden rounded-xl shadow-sm border-0 hover:shadow-md transition-shadow text-gray-900"
@@ -194,7 +222,7 @@ export function ProgramsList({
                                         strokeWidth="10"
                                         fill="none"
                                         strokeDasharray={`${
-                                          program.progress * 2.51
+                                          progress * 2.51
                                         } 251`}
                                         strokeDashoffset="0"
                                         transform="rotate(-90 50 50)"
@@ -202,7 +230,7 @@ export function ProgramsList({
                                     </svg>
                                   </div>
                                   <span className="text-xs font-medium">
-                                    {program.progress}%
+                                    {progress}%
                                   </span>
                                 </div>
                               </div>
@@ -220,7 +248,9 @@ export function ProgramsList({
                               </div>
                             </div>
                           </Card>
-                        ))}
+                        )})
+
+                        }
                     </div>
 
                     <h2 className="text-xl font-semibold mt-8 text-gray-900">
@@ -229,7 +259,10 @@ export function ProgramsList({
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {programs
                         .filter((p) => p.status === "completed")
-                        .map((program) => (
+                        .map((program) => {
+                        const progress = userProgramProgress[program.id] || 0;
+
+                          return (
                           <Card
                             key={program.id}
                             className="overflow-hidden rounded-xl shadow-sm border-0 hover:shadow-md transition-shadow text-gray-900"
@@ -288,7 +321,8 @@ export function ProgramsList({
                               </div>
                             </div>
                           </Card>
-                        ))}
+                        
+                        )})}
                     </div>
                   </>
                 )}
@@ -306,7 +340,10 @@ export function ProgramsList({
             </h2>
             {filteredPrograms.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredPrograms.map((program) => (
+                {filteredPrograms.map((program) => {
+               const progress = userProgramProgress[program.id] || 0;
+
+                return (
                   <Card
                     key={program.id}
                     className="overflow-hidden rounded-xl shadow-sm border-0 hover:shadow-md transition-shadow text-gray-900"
@@ -343,7 +380,7 @@ export function ProgramsList({
                                 strokeWidth="10"
                                 fill="none"
                                 strokeDasharray={`${
-                                  program.progress * 2.51
+                                  progress * 2.51
                                 } 251`}
                                 strokeDashoffset="0"
                                 transform="rotate(-90 50 50)"
@@ -351,7 +388,7 @@ export function ProgramsList({
                             </svg>
                           </div>
                           <span className="text-xs font-medium">
-                            {program.progress}%
+                            {progress}%
                           </span>
                         </div>
                       </div>
@@ -369,7 +406,7 @@ export function ProgramsList({
                       </div>
                     </div>
                   </Card>
-                ))}
+                )})}
               </div>
             ) : (
               <div className="text-center py-12">

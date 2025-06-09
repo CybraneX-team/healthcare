@@ -63,6 +63,13 @@ const nextConfig = {
     config.resolve.symlinks = false;
 
     // Webpack optimizations
+    if (isServer) {
+      // Prevent webpack from bundling canvas (native module) on the server
+      config.externals.push({
+        canvas: "commonjs canvas",
+      });
+    }
+    
     if (!dev) {
       config.optimization = {
         ...config.optimization,

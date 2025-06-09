@@ -1,16 +1,18 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { ChevronDown, CheckCircle, Circle, ArrowLeft } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { get, ref } from "firebase/database";
-import { rtdb } from "@/utils/firebase";
+import { db, rtdb } from "@/utils/firebase";
+import { doc, getDoc } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 
 interface ModuleOverviewProps {
   programId: string;
   onModuleSelect: (moduleId: string, videoId: string) => void;
   onBack: () => void;
-  completedVideos: Record<string, boolean>;
+  completedVideos: Record<string, Record<string, string[]>>;
   moduleProgress: Record<string, number>;
 }
 
@@ -21,6 +23,7 @@ export function ModuleOverview({
   completedVideos,
   moduleProgress,
 }: ModuleOverviewProps) {
+  console.log("moduleee progress",moduleProgress )
   const [expandedSections, setExpandedSections] = useState<
     Record<string, boolean>
   >({
@@ -32,6 +35,7 @@ export function ModuleOverview({
     "july-bioenergetics": false,
     "august-medicine": false,
   });
+  const [userCompletedVideos, setUserCompletedVideos] = useState<Record<string, Record<string, string[]>>>({});
   const [programData, setprogramData] = useState<any>({})
   // console.log("programIdonModuleSelect onBackcompletedVideosmoduleProgress")
   const toggleSection = (sectionId: string) => {
@@ -54,6 +58,25 @@ useEffect(() => {
 
   fetchPrograms();
 }, []);
+
+
+useEffect(() => {
+  const fetchUserCompletion = async () => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+      const data = userSnap.data();
+      setUserCompletedVideos(data.completedVideos || {});
+    }
+  };
+
+  fetchUserCompletion();
+}, []);
+
 
   
   return (
@@ -83,7 +106,17 @@ useEffect(() => {
     {/* Left sidebar - Module navigation */}
     <div className="col-span-12 lg:col-span-4">
       <div className="space-y-4">
-        {Object.values(programData.modules ?? {}).map((module: any) => (
+        {Object.values(programData.modules ?? {}).map((module: any) => {
+          const videoIds = Object.keys(module.videos ?? {});
+  
+  // 🟢 Check userCompletedVideos
+  const completedVideoIds = userCompletedVideos[programId]?.[module.id] || [];
+  
+  const completedCount = completedVideoIds.length;
+  const totalCount = videoIds.length;
+  
+  const progress = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
+          return (
           <div
             key={module.id}
             className="bg-white rounded-xl overflow-hidden shadow-sm"
@@ -111,13 +144,13 @@ useEffect(() => {
                         stroke={module.progress === 100 ? "#10b981" : "#3b82f6"}
                         strokeWidth="10"
                         fill="none"
-                        strokeDasharray={`${module.progress * 2.51} 251`}
+                        strokeDasharray={`${progress  * 2.51} 251`}
                         strokeDashoffset="0"
                         transform="rotate(-90 50 50)"
                       />
                     </svg>
                   </div>
-                  <span className="text-xs font-medium">{module.progress}%</span>
+                  <span className="text-xs font-medium">{progress }%</span>
                 </div>
                 <div>
                   <h3 className="font-medium text-gray-900">{module.title}</h3>
@@ -135,11 +168,11 @@ useEffect(() => {
                     onClick={() => onModuleSelect(module.id, video.id)}
                   >
                     <div className="flex items-center gap-3">
-                      {video.completed ? (
-                        <CheckCircle className="h-5 w-5 text-green-500" />
-                      ) : (
-                        <Circle className="h-5 w-5 text-gray-300" />
-                      )}
+                      {completedVideoIds.includes(video.id) ? (
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                        ) : (
+                          <Circle className="h-5 w-5 text-gray-300" />
+                        )}
                       <span className="text-sm text-gray-900">
                         {video.title}
                       </span>
@@ -149,7 +182,7 @@ useEffect(() => {
               </div>
             )}
           </div>
-        ))}
+        )})}
       </div>
     </div>
 
@@ -227,7 +260,18 @@ useEffect(() => {
         </div>
 
         <div className="space-y-4">
-          {Object.values(programData.modules ?? {}).map((module: any) => (
+          {Object.values(programData.modules ?? {}).map((module: any) => {
+             const videoIds = Object.keys(module.videos ?? {});
+  
+  // 🟢 Check userCompletedVideos
+  const completedVideoIds = userCompletedVideos[programId]?.[module.id] || [];
+  
+  const completedCount = completedVideoIds.length;
+  const totalCount = videoIds.length;
+  
+  const progress = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
+
+          return (
             <div
               key={module.id}
               className="rounded-xl overflow-hidden shadow-sm"
@@ -236,14 +280,14 @@ useEffect(() => {
                 <h3 className="font-medium text-gray-900">{module.title}</h3>
                 <div className="text-sm text-gray-500">
                   {module.videos ? Object.keys(module.videos).length : 0} lessons
-                  • {module.progress}% complete
+                  •{module.videos ? Object.keys(module.videos).length : 0} lessons • {progress|| 0}% complete
                 </div>
               </div>
               <div className="p-2">
-                <Progress value={module.progress} className="h-1" />
+                <Progress value={progress}  className="h-1" />
               </div>
             </div>
-          ))}
+          )})}
         </div>
       </div>
     </div>

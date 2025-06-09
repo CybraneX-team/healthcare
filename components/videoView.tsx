@@ -11,7 +11,7 @@ interface VideoPlayerViewProps {
   videoId: string;
   programData: any; // 🟡 Real dynamic data
   onBack: () => void;
-  completedVideos: Record<string, boolean>;
+  completedVideos: any
   onMarkComplete: (videoId: string, moduleId: string) => void;
   moduleProgress: Record<string, number>;
 }
@@ -28,14 +28,18 @@ export function VideoPlayerView({
 }: VideoPlayerViewProps) {
   const [currentVideoId, setCurrentVideoId] = useState(videoId);
   const [videoProgress, setVideoProgress] = useState(0);
+  const [comments, setComments] = useState<any[]>([]);
+
+
 
   // Update current video when videoId changes
   useEffect(() => {
     setCurrentVideoId(videoId);
   }, [videoId]);
-
+  
   // Get module and video data from programData
   const moduleData = programData.modules[moduleId];
+  
   const moduleVideos = Object.values(moduleData?.videos || {});
   const currentVideo : any =
     moduleVideos.find((v: any) => v.id === currentVideoId) || moduleVideos[0];
@@ -62,7 +66,9 @@ export function VideoPlayerView({
       handleVideoComplete();
     }
   };
-
+  console.log("comple", completedVideos)
+  console.log("moduleVideos", moduleVideos)
+  // console.log("comple", video.id)
   return (
     <div className="min-h-screen">
       {/* Header */}
@@ -83,14 +89,14 @@ export function VideoPlayerView({
         <div className="ml-auto px-8">
           <Button
             onClick={handleMarkComplete}
-            disabled={completedVideos[currentVideoId]}
+            disabled={completedVideos[programId][moduleId]?.includes(videoId) || false}
             className={`rounded-full px-4 py-2 text-sm ${
-              completedVideos[currentVideoId]
+              completedVideos[programId][moduleId]?.includes(videoId)
                 ? "bg-green-500 hover:bg-green-600 text-white"
                 : "bg-blue-500 hover:bg-blue-600 text-white"
             }`}
           >
-            {completedVideos[currentVideoId] ? "Completed" : "Mark Complete"}
+            {completedVideos[programId][moduleId]?.includes(videoId) ? "Completed" : "Mark Complete"}
           </Button>
         </div>
       </div>
@@ -120,7 +126,7 @@ export function VideoPlayerView({
                     onClick={() => handleVideoSelect(video.id)}
                   >
                     <div className="flex items-center gap-3">
-                      {completedVideos[video.id] ? (
+                      {completedVideos[programId][moduleId]?.includes(video.id)? (
                         <CheckCircle className="h-5 w-5 text-green-500" />
                       ) : (
                         <Circle className="h-5 w-5 text-gray-300" />
@@ -172,7 +178,7 @@ export function VideoPlayerView({
             </div>
 
             {/* Comments section */}
-            <div className="mt-6 bg-white rounded-xl p-6 shadow-sm">
+            {/* <div className="mt-6 bg-white rounded-xl p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900">
                   Comments
@@ -206,7 +212,23 @@ export function VideoPlayerView({
                   </div>
                 </div>
                 {/* ... more comments */}
-              </div>
+              {/* </div> */}
+            {/* </div> */} 
+
+            <div>
+              <h2> ToDo's </h2>
+              {moduleVideos.map((video: any, index: number) => (
+            <div key={index}>
+              {video?.todo?.length > 0 ? (
+                video.todo.map((item: any, idx: number) => (
+                  <div key={idx}>{item}</div>
+                ))
+              ) : (
+                <div>no todo available</div>
+              )}
+            </div>
+          ))}
+
             </div>
           </div>
         </div>

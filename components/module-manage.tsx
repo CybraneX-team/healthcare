@@ -32,6 +32,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { updateDoc } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
+import {  onValue } from "firebase/database";
+import { db } from "@/utils/firebase";
+import { getAuth } from "firebase/auth";
 
 interface ModulesManagerProps {
   programId: string;
@@ -130,6 +135,63 @@ export function ModulesManager({
   //   setNewModule({ title: "", description: "", order: modules.length + 1 });
   //   setIsAddDialogOpen(false);
   // };
+async function recalculateAllProgramProgressForUser(programId: string) {
+  const auth = getAuth();
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const userRef = doc(db, "users", user.uid);
+  const userSnap = await getDoc(userRef);
+  const userData = userSnap.data();
+  if (!userData) return;
+
+  const prevCompletedVideos = userData.completedVideos || {};
+
+  // 1️⃣ Fetch the latest modules from RTDB
+  type ModuleData = { videos?: Record<string, any> };
+  const programRef = ref(rtdb, `courses/thrivemed/programs/${programId}`);
+  const programSnap = await new Promise<any>((resolve) => {
+    onValue(programRef, (snapshot) => resolve(snapshot.val()), { onlyOnce: true });
+  });
+  const modules = (programSnap.modules || {}) as Record<string, ModuleData>;
+
+  // 2️⃣ Recalculate progress using only existing modules
+  const newModuleProgress: Record<string, number> = {};
+  let totalVideosCount = 0;
+  let totalCompletedCount = 0;
+
+  for (const [modId, modData] of Object.entries(modules)) {
+    const totalVideos = Object.keys(modData.videos || {}).length;
+    const completedCount =
+      (prevCompletedVideos[programId]?.[modId] || []).length;
+    const progress =
+      totalVideos === 0 ? 0 : Math.round((completedCount / totalVideos) * 100);
+
+    newModuleProgress[modId] = progress;
+    totalVideosCount += totalVideos;
+    totalCompletedCount += completedCount;
+  }
+
+  // 3️⃣ Recalculate program progress
+  const programProgressPercent =
+    totalVideosCount === 0
+      ? 0
+      : Math.round((totalCompletedCount / totalVideosCount) * 100);
+
+  console.log(
+    "Recalculated Progress:",
+    `totalVideos=${totalVideosCount}`,
+    `totalCompleted=${totalCompletedCount}`,
+    `programProgress=${programProgressPercent}`
+  );
+
+  // 4️⃣ Save recalculated data to Firestore
+  await updateDoc(userRef, {
+    [`programProgress.${programId}`]: programProgressPercent,
+    [`moduleProgress.${programId}`]: newModuleProgress,
+  });
+}
+
 
   const handleAddModule = async () => {
     const id = newModule.title.toLowerCase().replace(/\s+/g, "-");
@@ -149,7 +211,7 @@ export function ModulesManager({
       );
 
       await set(moduleRef, moduleData);
-
+      await recalculateAllProgramProgressForUser(programId);
       // Update local state
       setModules([...modules, moduleData]);
 
@@ -160,6 +222,10 @@ export function ModulesManager({
       console.error("Failed to add module:", error);
     }
   };
+
+
+
+
 
   const handleEditModule = async () => {
     if (!selectedModule) return;
@@ -177,12 +243,16 @@ export function ModulesManager({
 
       await set(moduleRef, updatedModule);
 
-      const updatedModules = modules.map((module: Module) =>
-        module.id === selectedModule.id ? updatedModule : module
-      );
+// 🔥 Initialize module progress for this program (to include new module)
+      // await initializeModuleProgressForNewModules(programId);
 
-      setModules(updatedModules);
-      setIsEditDialogOpen(false);
+      // 🔥 Recalculate program progress
+
+      // Update local state
+      // await recalculateAllProgramProgressForUser()
+      setModules([...modules, updatedModule]);
+      setNewModule({ title: "", description: "", order: modules.length + 1 });
+      setIsAddDialogOpen(false);
     } catch (error) {
       console.error("Error updating module in Firebase:", error);
     }
@@ -202,6 +272,7 @@ export function ModulesManager({
       const updatedModules = modules.filter(
         (module: Module) => module.id !== selectedModule.id
       );
+       await recalculateAllProgramProgressForUser(programId)
 
       setModules(updatedModules);
       setIsDeleteDialogOpen(false);

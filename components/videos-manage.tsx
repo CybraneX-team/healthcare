@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,7 +31,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { rtdb } from "@/utils/firebase";
+import { db, rtdb } from "@/utils/firebase";
 import {
   ref,
   get,
@@ -41,6 +41,8 @@ import {
   remove,
   update,
 } from "firebase/database";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 
 interface VideosManagerProps {
   programId: string;
@@ -66,7 +68,9 @@ export function VideosManager({
     youtubeId: "",
     duration: "00:00",
     order: 1,
+    todo: [""],
   });
+
   // const [currentModuleForVideo, setCurrentModuleForVideo] = useState<Module | null>(null);
 
   // Mock program and module data
@@ -79,6 +83,53 @@ export function VideosManager({
     id: moduleId,
     title: getModuleTitle(moduleId),
   };
+  function extractYouTubeId(urlOrId: string): string {
+  const regex =
+    /(?:youtube\.com\/.*v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+  const match = urlOrId.match(regex);
+  return match ? match[1] : urlOrId;
+}
+
+async function fetchVideoDuration(youtubeId: string, calledFor: string) {
+  try {
+    const response = await fetch(`/api/youtube-duration?videoId=${youtubeId}`);
+    const data = await response.json();
+
+    let formattedDuration = "00:00";
+
+    if (data.durationSeconds) {
+      const minutes = Math.floor(data.durationSeconds / 60);
+      const seconds = data.durationSeconds % 60;
+      formattedDuration = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    } else {
+      console.error("Could not fetch duration:", data.error);
+    }
+
+    if (calledFor === "newVideo") {
+      setNewVideo((prev) => ({ ...prev, duration: formattedDuration }));
+    } else {
+      setSelectedVideo((prev  : any) => ({ ...prev, duration: formattedDuration }));
+    }
+  } catch (error) {
+    console.error("Error fetching video duration:", error);
+    const fallbackDuration = "00:00";
+    if (calledFor === "newVideo") {
+      setNewVideo((prev) => ({ ...prev, duration: fallbackDuration }));
+    } else {
+      setSelectedVideo((prev : any) => ({ ...prev, duration: fallbackDuration }));
+    }
+  }
+}
+
+
+function convertISO8601ToMinutes(durationISO: string): string {
+  const regex = /PT(?:(\d+)M)?(?:(\d+)S)?/;
+  const matches = durationISO.match(regex);
+  const minutes = parseInt(matches?.[1] || "0", 10);
+  const seconds = parseInt(matches?.[2] || "0", 10);
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
 
   function getModuleTitle(moduleId: string): string {
     const moduleTitles: Record<string, string> = {
@@ -220,14 +271,26 @@ useEffect(() => {
 
 const handleAddVideo = async () => {
   const id = newVideo.title.toLowerCase().replace(/\s+/g, "-");
+  const auth = getAuth();
+  const user = auth.currentUser;
+  if (!user) return;
 
+  const userRef = doc(db, "users", user.uid);
+
+  const nowISOString = new Date().toISOString();
+  const nowFormattedDate = new Date().toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+  console.log("newVideonewVideo", newVideo)
   const newVideoData = {
     id,
     ...newVideo,
     progress: 0,
     modules: {},
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: nowISOString,
+    updatedAt: nowISOString,
   };
 
   try {
@@ -237,17 +300,73 @@ const handleAddVideo = async () => {
     );
     await set(programRef, newVideoData);
 
-    setVideos([
-      ...videos,
+    setVideos((prev) => [
+      ...prev,
       {
         ...newVideoData,
-        createdAt: new Date().toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        }),
+        createdAt: nowFormattedDate,
       },
     ]);
+
+    // Update user's completed videos
+    const userSnap = await getDoc(userRef);
+    const prevCompletedVideos = userSnap.data()?.completedVideos || {};
+    const programVideos = prevCompletedVideos[programId] || {};
+    const moduleVideosSet = new Set(programVideos[moduleId] || []);
+    // moduleVideosSet.add(id);
+
+    const updatedCompletedVideos = {
+      ...prevCompletedVideos,
+      [programId]: {
+        ...programVideos,
+        [moduleId]: Array.from(moduleVideosSet),
+      },
+    };
+
+    // Fetch program modules once, and cast to proper type
+    type ModuleData = { videos?: Record<string, any> };
+    type ProgramModulesData = { modules?: Record<string, ModuleData> };
+
+    const programModulesSnap = await new Promise<ProgramModulesData>((resolve) => {
+      onValue(
+        ref(rtdb, `courses/thrivemed/programs/${programId}`),
+        (snapshot) => resolve(snapshot.val() as ProgramModulesData),
+        { onlyOnce: true }
+      );
+    });
+
+    const modules = programModulesSnap.modules || {};
+    const newModuleProgress: Record<string, number> = {};
+    let totalVideosCount = 0;
+    let totalCompletedCount = 0;
+
+    Object.entries(modules).forEach(([modId, modData]) => {
+      // Cast modData to ModuleData
+      const moduleData = modData as ModuleData;
+      const totalVideos = Object.keys(moduleData.videos || {}).length;
+      const completedCount =
+        updatedCompletedVideos[programId]?.[modId]?.length || 0;
+      const progress =
+        totalVideos === 0 ? 0 : Math.round((completedCount / totalVideos) * 100);
+
+      newModuleProgress[modId] = progress;
+      totalVideosCount += totalVideos;
+      totalCompletedCount += completedCount;
+    });
+
+    const programProgressPercent =
+      totalVideosCount === 0
+        ? 0
+        : Math.round((totalCompletedCount / totalVideosCount) * 100);
+
+    // Update user doc in one call
+    await updateDoc(userRef, {
+      [`programProgress.${programId}`]: programProgressPercent,
+    });
+     if (programProgressPercent === 100) {
+      const programStatusRef = ref(rtdb, `courses/thrivemed/programs/${programId}/status`);
+      await set(programStatusRef, "completed");
+    }
   } catch (error) {
     console.error("Error saving to Firebase:", error);
   }
@@ -258,9 +377,12 @@ const handleAddVideo = async () => {
     youtubeId: "",
     duration: "00:00",
     order: 1,
+    todo: [""],
   });
   setIsAddDialogOpen(false);
 };
+
+
 
 
 const handleEditVideo = async () => {
@@ -294,24 +416,86 @@ const handleEditVideo = async () => {
 const handleDeleteVideo = async () => {
   if (!selectedVideo) return;
 
+  const auth = getAuth();
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const userRef = doc(db, "users", user.uid);
+
   try {
+    // 1️⃣ Remove video from RTDB
     const videoRef = ref(
       rtdb,
       `courses/thrivemed/programs/${programId}/modules/${moduleId}/videos/${selectedVideo.id}`
     );
-
     await remove(videoRef);
 
-    const updatedVideos = videos.filter(
-      (video) => video.id !== selectedVideo.id
-    );
-
-    setVideos(updatedVideos);
+    // 2️⃣ Update videos state
+    setVideos((prev) => prev.filter((video) => video.id !== selectedVideo.id));
     setIsDeleteDialogOpen(false);
+
+    // 3️⃣ Fetch user's completed videos
+    const userSnap = await getDoc(userRef);
+    const prevCompletedVideos = userSnap.data()?.completedVideos || {};
+
+    const programVideos = prevCompletedVideos[programId] || {};
+    const moduleVideosSet = new Set(programVideos[moduleId] || []);
+    // Remove the deleted video ID from user's completed videos
+    moduleVideosSet.delete(selectedVideo.id);
+
+    const updatedCompletedVideos = {
+      ...prevCompletedVideos,
+      [programId]: {
+        ...programVideos,
+        [moduleId]: Array.from(moduleVideosSet),
+      },
+    };
+
+    // 4️⃣ Fetch all program modules to recalculate progress
+    type ModuleData = { videos?: Record<string, any> };
+    type ProgramModulesData = { modules?: Record<string, ModuleData> };
+
+    const programModulesSnap = await new Promise<ProgramModulesData>((resolve) => {
+      onValue(
+        ref(rtdb, `courses/thrivemed/programs/${programId}`),
+        (snapshot) => resolve(snapshot.val() as ProgramModulesData),
+        { onlyOnce: true }
+      );
+    });
+
+    const modules = programModulesSnap.modules || {};
+    const newModuleProgress: Record<string, number> = {};
+    let totalVideosCount = 0;
+    let totalCompletedCount = 0;
+
+    Object.entries(modules).forEach(([modId, modData]) => {
+      const moduleData = modData as ModuleData;
+      const totalVideos = Object.keys(moduleData.videos || {}).length;
+      const completedCount =
+        updatedCompletedVideos[programId]?.[modId]?.length || 0;
+      const progress =
+        totalVideos === 0 ? 0 : Math.round((completedCount / totalVideos) * 100);
+
+      newModuleProgress[modId] = progress;
+      totalVideosCount += totalVideos;
+      totalCompletedCount += completedCount;
+    });
+
+    const programProgressPercent =
+      totalVideosCount === 0
+        ? 0
+        : Math.round((totalCompletedCount / totalVideosCount) * 100);
+
+    // 5️⃣ Update user's progress in Firestore
+    await updateDoc(userRef, {
+      completedVideos: updatedCompletedVideos,
+      [`programProgress.${programId}`]: programProgressPercent,
+    });
   } catch (error) {
     console.error("Failed to delete video from Firebase:", error);
   }
 };
+;
 
 
   const openEditDialog = (video: any) => {
@@ -359,7 +543,7 @@ const handleDeleteVideo = async () => {
               Add New Video
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px] mx-4">
+          <DialogContent className="sm:max-w-[500px] mx-4 my-5 max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Add New Video</DialogTitle>
             </DialogHeader>
@@ -396,15 +580,21 @@ const handleDeleteVideo = async () => {
                   YouTube Video ID
                 </label>
                 <div className="flex gap-2">
-                  <Input
-                    id="youtubeId"
-                    value={newVideo.youtubeId}
-                    onChange={(e) =>
-                      setNewVideo({ ...newVideo, youtubeId: e.target.value })
-                    }
-                    placeholder="e.g. dQw4w9WgXcQ"
-                    className="flex-1"
-                  />
+                 <Input
+                id="youtubeId"
+                value={newVideo.youtubeId}
+                onChange={(e) => {
+                  const extractedId = extractYouTubeId(e.target.value);
+                  setNewVideo({
+                    ...newVideo,
+                    youtubeId: extractedId,
+                  });
+                  fetchVideoDuration(extractedId, "newVideo"); // 🪄 auto-fetch (no iframe)
+                }}
+                placeholder="e.g. dQw4w9WgXcQ or full YouTube URL"
+              />
+
+
                   <Button variant="outline" className="flex-shrink-0">
                     <Youtube className="h-4 w-4 mr-2" />
                     Test
@@ -447,11 +637,61 @@ const handleDeleteVideo = async () => {
                   />
                 </div>
               </div>
+<div className="space-y-2 w-full">
+  <label className="text-sm font-medium">To-Do List (optional)</label>
+  {newVideo.todo.map((item, index) => (
+    <div key={index} className="flex gap-2">
+      <Input
+        className="flex-1"
+        value={item}
+        onChange={(e) => {
+          const updatedTodos = [...newVideo.todo];
+          updatedTodos[index] = e.target.value;
+          setNewVideo({ ...newVideo, todo: updatedTodos });
+        }}
+        placeholder={`To-do item #${index + 1}`}
+      />
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={() => {
+          const updatedTodos = newVideo.todo.filter((_, i) => i !== index);
+          setNewVideo({ ...newVideo, todo: updatedTodos });
+        }}
+      >
+        ✕
+      </Button>
+    </div>
+  ))}
+  <Button
+    type="button"
+    variant="outline"
+    size="sm"
+    onClick={() =>
+      setNewVideo({
+        ...newVideo,
+        todo: [...newVideo.todo, ""],
+      })
+    }
+  >
+    + Add Another Item
+  </Button>
+</div>
             </div>
             <div className="flex flex-col sm:flex-row justify-end gap-3">
               <Button
                 variant="outline"
-                onClick={() => setIsAddDialogOpen(false)}
+                onClick={() => {
+                  setIsAddDialogOpen(false)
+                  setNewVideo({
+                  title: "",
+                  description: "",
+                  youtubeId: "",
+                  duration: "00:00",
+                  order: 1,
+                  todo: [""],
+                });
+                }}
                 className="w-full sm:w-auto"
               >
                 Cancel
@@ -463,10 +703,10 @@ const handleDeleteVideo = async () => {
                 Add Video
               </Button>
             </div>
+            
           </DialogContent>
         </Dialog>
       </div>
-
       {/* Search */}
       <div className="mb-6 flex gap-4">
         <div className="relative flex-1">
@@ -604,7 +844,7 @@ const handleDeleteVideo = async () => {
 
       {/* Edit Video Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[500px] mx-4">
+        <DialogContent className="sm:max-w-[500px] mx-4 my-5 max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Video</DialogTitle>
           </DialogHeader>
@@ -649,17 +889,19 @@ const handleDeleteVideo = async () => {
                   YouTube Video ID
                 </label>
                 <div className="flex gap-2">
-                  <Input
-                    id="edit-youtubeId"
-                    value={selectedVideo.youtubeId}
-                    onChange={(e) =>
-                      setSelectedVideo({
-                        ...selectedVideo,
-                        youtubeId: e.target.value,
-                      })
-                    }
-                    className="flex-1"
-                  />
+                <Input
+                  id="edit-youtubeId"
+                  value={selectedVideo.youtubeId}
+                  onChange={(e) => {
+                    const extractedId = extractYouTubeId(e.target.value);
+                    fetchVideoDuration(extractedId, "selectedVideo"); // 🪄 auto-fetch
+                    setSelectedVideo({
+                      ...selectedVideo,
+                      youtubeId: extractedId,
+                    });
+                  }}
+                  placeholder="e.g. dQw4w9WgXcQ or full YouTube URL"
+                />
                   <Button
                     variant="outline"
                     className="flex-shrink-0"
@@ -711,7 +953,49 @@ const handleDeleteVideo = async () => {
                     }
                   />
                 </div>
+              
               </div>
+              <div className="space-y-2 w-full">
+  <label className="text-sm font-medium">To-Do List (optional)</label>
+  {selectedVideo.todo?.map((item : any, index : any) => (
+    <div key={index} className="flex gap-2">
+      <Input
+        className="flex-1"
+        value={item}
+        onChange={(e) => {
+          const updatedTodos = [...selectedVideo.todo];
+          updatedTodos[index] = e.target.value;
+          setSelectedVideo({ ...selectedVideo, todo: updatedTodos });
+        }}
+        placeholder={`To-do item #${index + 1}`}
+      />
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={() => {
+          const updatedTodos = selectedVideo.todo.filter((_ : any, i : any) => i !== index);
+          setSelectedVideo({ ...selectedVideo, todo: updatedTodos });
+        }}
+      >
+        ✕
+      </Button>
+    </div>
+  ))}
+  <Button
+    type="button"
+    variant="outline"
+    size="sm"
+    onClick={() =>
+      setSelectedVideo({
+        ...selectedVideo,
+        todo: [...(selectedVideo.todo || []), ""],
+      })
+    }
+  >
+    + Add Another Item
+  </Button>
+</div>
+
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"

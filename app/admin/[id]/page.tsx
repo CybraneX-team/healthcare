@@ -6,11 +6,19 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, rtdb } from "@/utils/firebase";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { FileUpload } from "@/components/ui/file-upload";
+import {
+  ArrowLeft,
+  FileText,
+  Upload,
+  UserIcon,
+  X,
+  CheckCircle,
+  Calendar,
+} from "lucide-react";
 import dynamic from "next/dynamic";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ref as dbRef, onValue } from "firebase/database";
-import { X } from "lucide-react";
 import "@react-pdf-viewer/core/lib/styles/index.css";
 
 const Viewer = dynamic(
@@ -32,9 +40,14 @@ export default function UserDetailsPage() {
   const [availablePrograms, setAvailablePrograms] = useState<string[]>([]);
   const viewerRef = useRef<HTMLDivElement>(null);
   const [selectedPrograms, setSelectedPrograms] = useState<string[]>([]);
-const [assigning, setAssigning] = useState(false);
+  const [assigning, setAssigning] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
-  const defaultPrograms = ["thrivemed-apollo", "thrivemed-atlas", "thrivemed-hub"];
+  const defaultPrograms = [
+    "thrivemed-apollo",
+    "thrivemed-atlas",
+    "thrivemed-hub",
+  ];
 
   useEffect(() => {
     if (!id) return;
@@ -45,7 +58,6 @@ const [assigning, setAssigning] = useState(false);
         const userSnap = await getDoc(userRef);
         if (userSnap.exists()) setUserData(userSnap.data());
         else console.error("User not found");
-        console.log("cursor-pointer", userSnap.data())
       } catch (error) {
         console.error("Error fetching user data:", error);
       }
@@ -69,43 +81,43 @@ const [assigning, setAssigning] = useState(false);
   }, [id]);
 
   const handleProgramSelect = (program: string, isChecked: boolean) => {
-  setSelectedPrograms((prev) =>
-    isChecked ? [...prev, program] : prev.filter((p) => p !== program)
-  );
-};
-
-const handleAssignPrograms = async () => {
-  if (!id || selectedPrograms.length === 0) return;
-  setAssigning(true);
-  try {
-    const userRef = doc(db, "users", id as string);
-    const updates = selectedPrograms.reduce(
-      (acc, program) => ({ ...acc, [`assignedPrograms.${program}`]: true }),
-      {}
+    setSelectedPrograms((prev) =>
+      isChecked ? [...prev, program] : prev.filter((p) => p !== program)
     );
-    await updateDoc(userRef, updates);
+  };
 
-    // Update local state
-    setUserData((prev: any) => ({
-      ...prev,
-      assignedPrograms: {
-        ...(prev.assignedPrograms || {}),
-        ...selectedPrograms.reduce((acc, program) => ({ ...acc, [program]: true }), {}),
-      },
-    }));
+  const handleAssignPrograms = async () => {
+    if (!id || selectedPrograms.length === 0) return;
+    setAssigning(true);
+    try {
+      const userRef = doc(db, "users", id as string);
+      const updates = selectedPrograms.reduce(
+        (acc, program) => ({ ...acc, [`assignedPrograms.${program}`]: true }),
+        {}
+      );
+      await updateDoc(userRef, updates);
 
-    // Clear selected programs
-    setSelectedPrograms([]);
+      setUserData((prev: any) => ({
+        ...prev,
+        assignedPrograms: {
+          ...(prev.assignedPrograms || {}),
+          ...selectedPrograms.reduce(
+            (acc, program) => ({ ...acc, [program]: true }),
+            {}
+          ),
+        },
+      }));
 
-    // Success alert
-    alert("Programs assigned successfully!");
-  } catch (error) {
-    console.error("Error assigning programs:", error);
-    alert("Error assigning programs. Please try again.");
-  } finally {
-    setAssigning(false);
-  }
-};
+      setSelectedPrograms([]);
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+    } catch (error) {
+      console.error("Error assigning programs:", error);
+      alert("Error assigning programs. Please try again.");
+    } finally {
+      setAssigning(false);
+    }
+  };
 
   const handleFileUpload = async (file: File) => {
     if (!id) return;
@@ -145,222 +157,361 @@ const handleAssignPrograms = async () => {
     }
   };
 
-    const handleViewPdf = (downloadURL: string) => {
+  const handleViewPdf = (downloadURL: string) => {
     setSelectedPdf(downloadURL);
     setTimeout(() => {
       viewerRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 100); // Small delay to ensure the component has rendered
+    }, 100);
   };
 
   if (!userData) {
     return (
-      <div className="p-8 text-gray-600 text-sm animate-pulse">
-        Loading user details...
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-blue-100">
+        <div className="flex flex-col items-center p-8 space-y-4 bg-white rounded-2xl shadow-xl border border-blue-100">
+          <div className="w-16 h-16 border-4 border-t-blue-500 border-b-blue-200 border-l-blue-200 border-r-blue-200 rounded-full animate-spin"></div>
+          <p className="text-blue-700 font-semibold">Loading user details...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-gray-50 min-h-screen flex justify-center px-4">
-      <motion.div
-        className="relative p-6 sm:p-8 w-full max-w-3xl space-y-6 rounded-xl shadow bg-gradient-to-b from-indigo-100 via-white to-white"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        {/* Back button */}
-        <div className="sticky top-0 bg-white/80 backdrop-blur-md p-4 rounded-b-lg shadow-md flex items-center gap-2 z-20">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <AnimatePresence>
+          {showSuccess && (
+            <motion.div
+              className="fixed top-6 right-6 bg-green-50 border border-green-200 text-green-800 p-4 rounded-xl shadow-lg z-50 flex items-center space-x-3"
+              initial={{ opacity: 0, y: -50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -50 }}
+            >
+              <CheckCircle className="h-5 w-5 text-green-600" />
+              <span className="font-medium">
+                Programs assigned successfully!
+              </span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div className="flex items-center mb-8">
           <Button
-            variant="outline"
-            className="text-indigo-600 hover:bg-indigo-50"
+            variant="ghost"
+            className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-xl"
             onClick={() => router.back()}
           >
-            <ArrowLeft className="h-4 w-4" />
-            Back
+            <ArrowLeft className="h-5 w-5 mr-2" />
           </Button>
+          <h1 className="text-3xl font-bold text-blue-900 ml-4">
+            Patient Profile
+          </h1>
         </div>
 
-        {/* User Details */}
-        <Card className="p-6 shadow-lg rounded-xl bg-white border border-indigo-100">
-          <h1 className="text-xl font-bold text-indigo-700 mb-4">User Details</h1>
-          <div className="grid grid-cols-1 gap-2 text-sm text-gray-700">
-            <div><span className="font-medium">Full Name:</span> {userData.fullName}</div>
-            <div><span className="font-medium">Email:</span> {userData.email}</div>
-            <div><span className="font-medium">Role:</span> {userData.role || "N/A"}</div>
-            <div><span className="font-medium">Phone:</span> {userData.phone || "N/A"}</div>
-            {userData.dateOfBirth && (
-              <div>
-                <span className="font-medium">Date of Birth:</span>{" "}
-                {new Date(userData.dateOfBirth.seconds * 1000).toLocaleDateString()}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - Patient Info */}
+          <Card className="p-8 bg-white shadow-lg rounded-2xl border border-blue-100">
+            <div className="flex items-center space-x-4 mb-8">
+              <div className="h-20 w-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white shadow-lg">
+                <UserIcon className="h-10 w-10" />
               </div>
-            )}
-            <div><span className="font-medium">Primary Diagnosis:</span> {userData.primaryDiagnosis || "N/A"}</div>
-            <div><span className="font-medium">Medications:</span> {userData.medications || "N/A"}</div>
-            <div>
-              <span className="font-medium">Joined Date:</span>{" "}
-              {userData.createdAt
-                ? new Date(userData.createdAt.seconds * 1000).toLocaleDateString()
-                : "N/A"}
+              <div>
+                <h2 className="text-2xl font-bold text-blue-900">
+                  {userData.fullName}
+                </h2>
+                <p className="text-blue-600 font-medium">{userData.email}</p>
+              </div>
             </div>
-          </div>
-        </Card>
 
-        {/* Assign Programs */}
-{/* Assign Programs */}
-<Card className="p-6 shadow-lg rounded-xl bg-white border border-indigo-100">
-  <h2 className="text-lg font-semibold text-indigo-700 mb-4 flex items-center gap-2">
-    <span className="inline-block bg-indigo-100 text-indigo-600 rounded-full p-1.5">
-      🎓
-    </span>
-    Assign Programs
-  </h2>
-
-  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-    {availablePrograms.map((program) => {
-      const isDefault = defaultPrograms.includes(program);
-      const isAlreadyAssigned = !!userData.assignedPrograms?.[program];
-      const isChecked = selectedPrograms.includes(program);
-
-      return (
-        <label
-          key={program}
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm border ${
-            isDefault || isAlreadyAssigned
-              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-              : "bg-white hover:shadow-md transition cursor-pointer"
-          }`}
-        >
-          <input
-            type="checkbox"
-            disabled={isDefault || isAlreadyAssigned || assigning}
-            checked={isDefault || isAlreadyAssigned || isChecked}
-            onChange={(e) => handleProgramSelect(program, e.target.checked)}
-            className="accent-indigo-500"
-          />
-          <span>{program}</span>
-          {isDefault && <span className="ml-auto text-xs italic">(default)</span>}
-        </label>
-      );
-    })}
-  </div>
-
-  <div className="mt-4 flex justify-end">
-    <Button
-      disabled={selectedPrograms.length === 0 || assigning}
-      onClick={handleAssignPrograms}
-      className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded shadow-sm"
-    >
-      {assigning ? "Assigning..." : "Assign Selected Programs"}
-    </Button>
-  </div>
-</Card>
-
-
-
-        {/* Upload Document */}
-        <Card className="p-6 shadow-lg rounded-xl bg-white border border-indigo-100">
-          <h2 className="text-lg font-semibold text-indigo-700 mb-4">Upload Document</h2>
-          <input
-            type="file"
-            onChange={(e) => {
-              if (e.target.files && e.target.files[0]) {
-                handleFileUpload(e.target.files[0]);
-              }
-            }}
-            disabled={uploading}
-          />
-          {uploading && (
-            <p className="text-xs text-indigo-500 mt-2 animate-pulse">Uploading...</p>
-          )}
-        </Card>
-
-
-  <Card className="p-6 shadow-lg rounded-xl bg-white border border-indigo-100">
-          <h2 className="text-lg font-semibold text-indigo-700 mb-4">Documents</h2>
-          {userData.documents && Object.entries(userData.documents).map(([docId, docData]: any) => {
-            if (typeof docData === "object" && docData.hasOwnProperty("downloadURL") === false) {
-              return Object.entries(docData).map(([nestedId, nestedDoc]: any) => (
-                <div
-                  key={nestedId}
-                  className="flex items-center justify-between border rounded px-3 py-2 bg-indigo-50 hover:bg-indigo-100 transition"
-                >
-                  <span className="text-sm text-gray-700">{nestedDoc.name || nestedId}</span>
-                  {nestedDoc.type === "application/pdf" ? (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-indigo-600 hover:bg-indigo-200 cursor-pointer"
-                      onClick={() => handleViewPdf(nestedDoc.downloadURL)}
-                    >
-                      View PDF
-                    </Button>
-                  ) : (
-                    <a
-                      href={nestedDoc.downloadURL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-indigo-600 hover:underline cursor-pointer"
-                    >
-                      View File
-                    </a>
-                  )}
+            <div className="space-y-4">
+              <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-xl">
+                <FileText className="h-5 w-5 text-blue-500" />
+                <span className="text-blue-900 font-medium">
+                  {userData.phone || "No phone number"}
+                </span>
+              </div>
+              {userData.dateOfBirth && (
+                <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-xl">
+                  <Calendar className="h-5 w-5 text-blue-500" />
+                  <span className="text-blue-900 font-medium">
+                    {new Date(
+                      userData.dateOfBirth.seconds * 1000
+                    ).toLocaleDateString()}
+                  </span>
                 </div>
-              ));
-            } else {
-              return (
-                <div
-                  key={docId}
-                  className="flex items-center justify-between border rounded px-3 py-2 bg-indigo-50 hover:bg-indigo-100 transition"
+              )}
+            </div>
+          </Card>
+
+          {/* Middle Column - Overview */}
+          <Card className="p-8 bg-white shadow-lg rounded-2xl border border-blue-100 lg:col-span-2">
+            <h2 className="text-2xl font-bold text-blue-900 mb-8">Overview</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div>
+                <h3 className="text-sm font-medium text-blue-500 uppercase tracking-wide mb-2">
+                  Primary Diagnosis
+                </h3>
+                <p className="text-xl font-semibold text-blue-900">
+                  {userData.primaryDiagnosis || "N/A"}
+                </p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-blue-500 uppercase tracking-wide mb-2">
+                  Medications
+                </h3>
+                <p className="text-xl font-semibold text-blue-900">
+                  {userData.medications || "N/A"}
+                </p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-blue-500 uppercase tracking-wide mb-2">
+                  Role
+                </h3>
+                <p className="text-xl font-semibold text-blue-900">
+                  {userData.role || "N/A"}
+                </p>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-blue-500 uppercase tracking-wide mb-2">
+                  Joined Date
+                </h3>
+                <p className="text-xl font-semibold text-blue-900">
+                  {userData.createdAt
+                    ? new Date(
+                        userData.createdAt.seconds * 1000
+                      ).toLocaleDateString()
+                    : "N/A"}
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          {/* Programs Section */}
+          <Card className="p-8 bg-white shadow-lg rounded-2xl border border-blue-100 lg:col-span-3">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-2xl font-bold text-blue-900">
+                Assigned Programs
+              </h2>
+              <Button
+                disabled={selectedPrograms.length === 0 || assigning}
+                onClick={handleAssignPrograms}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+              >
+                {assigning ? "Assigning..." : "Assign Selected"}
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {availablePrograms.map((program) => {
+                const isDefault = defaultPrograms.includes(program);
+                const isAlreadyAssigned =
+                  !!userData.assignedPrograms?.[program];
+                const isChecked = selectedPrograms.includes(program);
+
+                return (
+                  <label
+                    key={program}
+                    className={`flex items-center gap-4 p-6 rounded-xl border-2 transition-all duration-200 cursor-pointer ${
+                      isDefault || isAlreadyAssigned
+                        ? "bg-blue-50 border-blue-200"
+                        : isChecked
+                        ? "bg-blue-100 border-blue-300 shadow-md"
+                        : "hover:border-blue-300 hover:bg-blue-50"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      disabled={isDefault || isAlreadyAssigned || assigning}
+                      checked={isDefault || isAlreadyAssigned || isChecked}
+                      onChange={(e) =>
+                        handleProgramSelect(program, e.target.checked)
+                      }
+                      className="h-5 w-5 text-blue-500 rounded border-blue-300 focus:ring-blue-500"
+                    />
+                    <span className="flex-1 font-medium text-blue-900">
+                      {program}
+                    </span>
+                    {isDefault && (
+                      <span className="text-xs px-3 py-1 bg-blue-500 text-white rounded-full font-medium">
+                        default
+                      </span>
+                    )}
+                    {isAlreadyAssigned && !isDefault && (
+                      <span className="text-xs px-3 py-1 bg-green-500 text-white rounded-full font-medium">
+                        assigned
+                      </span>
+                    )}
+                  </label>
+                );
+              })}
+            </div>
+          </Card>
+
+          {/* Documents Section */}
+          <Card className="p-8 bg-white shadow-lg rounded-2xl border border-blue-100 lg:col-span-3">
+            <h2 className="text-2xl font-bold text-blue-900 mb-8">Documents</h2>
+
+            <div className="mb-8">
+              <div className="border-2 border-dashed border-blue-300 rounded-2xl p-12 text-center bg-blue-50 hover:bg-blue-100 transition-colors duration-200">
+                <input
+                  type="file"
+                  id="fileUpload"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      handleFileUpload(e.target.files[0]);
+                    }
+                  }}
+                  disabled={uploading}
+                  className="hidden"
+                />
+
+                <label
+                  htmlFor="fileUpload"
+                  className={`flex flex-col items-center justify-center cursor-pointer ${
+                    uploading ? "opacity-50" : "hover:opacity-80"
+                  }`}
                 >
-                  <span className="text-sm text-gray-700">{docData.name || docId}</span>
-                  {docData.type === "application/pdf" ? (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-indigo-600 hover:bg-indigo-200 cursor-pointer"
-                      onClick={() => handleViewPdf(docData.downloadURL)}
-                    >
-                      View PDF
-                    </Button>
-                  ) : (
-                    <a
-                      href={docData.downloadURL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-indigo-600 hover:underline cursor-pointer"
-                    >
-                      View File
-                    </a>
-                  )}
+                  <div className="  text-white mb-6">
+                    <FileUpload
+                      label="Upload Document"
+                      multiple
+                      accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                    />
+                    <p className="text-sm text-blue-600 mt-6 font-medium">
+                      Supported formats: PDF, JPEG, PNG, DOC • Max size: 10MB
+                      per file
+                    </p>
+                  </div>
+                  <span className="text-blue-900 font-semibold text-lg mb-2">
+                    {uploading ? "Uploading..." : "Upload Document"}
+                  </span>
+                  {/* <span className="text-blue-600">
+                    PDF, DOC, DOCX, or images
+                  </span> */}
+                </label>
+
+                {uploading && (
+                  <div className="mt-6 w-full bg-blue-200 rounded-full h-3">
+                    <div className="bg-blue-500 h-3 rounded-full w-1/2 animate-pulse"></div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {userData.documents &&
+                Object.entries(userData.documents).map(
+                  ([docId, docData]: any) => {
+                    if (
+                      typeof docData === "object" &&
+                      docData.hasOwnProperty("downloadURL") === false
+                    ) {
+                      return Object.entries(docData).map(
+                        ([nestedId, nestedDoc]: any) => (
+                          <div
+                            key={nestedId}
+                            className="flex items-center justify-between p-6 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors duration-200 border border-blue-100"
+                          >
+                            <div className="flex items-center space-x-4">
+                              <div className="h-12 w-12 bg-blue-500 rounded-xl flex items-center justify-center">
+                                <FileText className="h-6 w-6 text-white" />
+                              </div>
+                              <span className="font-semibold text-blue-900">
+                                {nestedDoc.name || nestedId}
+                              </span>
+                            </div>
+
+                            {nestedDoc.type === "application/pdf" ? (
+                              <Button
+                                variant="outline"
+                                className="text-white bg-blue-500 hover:text-blue-700 hover:underline font-medium"
+                                onClick={() =>
+                                  handleViewPdf(nestedDoc.downloadURL)
+                                }
+                              >
+                                View PDF
+                              </Button>
+                            ) : (
+                              <a
+                                href={nestedDoc.downloadURL}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-white bg-blue-500 hover:text-blue-700 hover:underline font-medium"
+                              >
+                                View File
+                              </a>
+                            )}
+                          </div>
+                        )
+                      );
+                    } else {
+                      return (
+                        <div
+                          key={docId}
+                          className="flex items-center justify-between p-6 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors duration-200 border border-blue-100"
+                        >
+                          <div className="flex items-center space-x-4">
+                            <div className="h-12 w-12 bg-blue-500 rounded-xl flex items-center justify-center">
+                              <FileText className="h-6 w-6 text-white" />
+                            </div>
+                            <span className="font-semibold text-blue-900">
+                              {docData.name || docId}
+                            </span>
+                          </div>
+
+                          {docData.type === "application/pdf" ? (
+                            <Button
+                              variant="outline"
+                              className="bg-blue-500 text-white hover:bg-blue-700 border-blue-200 rounded-xl"
+                              onClick={() => handleViewPdf(docData.downloadURL)}
+                            >
+                              View PDF
+                            </Button>
+                          ) : (
+                            <a
+                              href={docData.downloadURL}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-500 hover:text-blue-700 hover:underline font-medium"
+                            >
+                              View File
+                            </a>
+                          )}
+                        </div>
+                      );
+                    }
+                  }
+                )}
+            </div>
+          </Card>
+
+          {/* PDF Viewer */}
+          <AnimatePresence>
+            {selectedPdf && (
+              <motion.div
+                ref={viewerRef}
+                className="lg:col-span-3 relative bg-white rounded-2xl shadow-2xl overflow-hidden border border-blue-100"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 600 }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="absolute top-6 right-6 z-50">
+                  <button
+                    onClick={() => setSelectedPdf(null)}
+                    className="bg-red-100 hover:bg-red-200 text-red-600 rounded-full p-3 transition-colors duration-200 shadow-lg"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
                 </div>
-              );
-            }
-          })}
-        </Card>
-{selectedPdf && (
-  <motion.div
-    ref={viewerRef}
-    className="relative w-full h-[600px] border rounded shadow-lg bg-white border-indigo-100 overflow-hidden"
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    transition={{ delay: 0.3 }}
-  >
-    {/* Close (X) button */}
- <button
-      onClick={() => setSelectedPdf(null)}
-      className="absolute top-2 right-2 text-red-600  bg-red-200 hover:bg-red-300 rounded-full p-1.5 transition z-50"
-    >
-      <X className="w-5 h-5" /> {/* Bigger icon size */}
-    </button>
 
-    <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
-      <Viewer fileUrl={selectedPdf} />
-    </Worker>
-  </motion.div>
-)}
-
-
-      </motion.div>
+                <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js">
+                  <Viewer fileUrl={selectedPdf} />
+                </Worker>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
     </div>
   );
 }

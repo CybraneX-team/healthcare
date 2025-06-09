@@ -41,6 +41,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { Drawer } from "vaul";
 import Neurology from "@/components/neurology";
+import UploadPage from "./upload";
 
 // Import mobile-specific styles directly
 import "@/styles/dashboard-mobile.css";
@@ -414,18 +415,7 @@ export default function DashboardMobile() {
           </div>
         ) : activeTab === "upload" ? (
           <div className="bg-gradient-to-b from-gray-200 to-white min-h-screen px-2">
-            <div className="p-6 bg-white rounded-2xl shadow-sm mt-2 card-mobile">
-              <h2 className="text-xl font-semibold mb-4">Upload Documents</h2>
-              <p className="text-gray-600 text-sm mb-4">
-                Upload your medical documents and reports.
-              </p>
-              <div className="mt-4 flex justify-center">
-                <Button className="bg-blue-500 hover:bg-blue-600 text-white flex items-center gap-2">
-                  <UploadCloud className="h-4 w-4" />
-                  <span>Upload Files</span>
-                </Button>
-              </div>
-            </div>
+            <UploadPage />
           </div>
         ) : activeTab === "progress" ? (
           <div className="bg-gradient-to-b from-gray-200 to-white min-h-screen px-2">

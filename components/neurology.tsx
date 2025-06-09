@@ -40,7 +40,7 @@ const itemVariants = {
 
 export default function Component() {
   return (
-    <div className="min-h-screen p-3 sm:p-4">
+    <div className="min-h-screen p-3 sm:p-4 md:-mt-3">
       <motion.div
         variants={containerVariants}
         initial="hidden"

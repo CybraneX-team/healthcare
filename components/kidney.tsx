@@ -38,7 +38,7 @@ const itemVariants = {
 
 const Kidney = () => {
   return (
-    <div className="min-h-screen p-4 text-black">
+    <div className="min-h-screen p-4 text-black md:-mt-3">
       <motion.div
         variants={containerVariants}
         initial="hidden"

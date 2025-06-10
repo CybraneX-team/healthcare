@@ -38,8 +38,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { rtdb } from "@/utils/firebase";
+import { db, rtdb } from "@/utils/firebase";
 import { DevBundlerService } from "next/dist/server/lib/dev-bundler-service";
+import { getAuth } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
 
 interface ProgramsManagerProps {
   onProgramSelect: (programId: string) => void;
@@ -62,8 +64,23 @@ export function ProgramsManager({
   });
 
   const [programs, setPrograms] = useState<any>([]);
+  const [userProgramProgress, setUserProgramProgress] = useState<Record<string, number>>({});
 
   // Mock data for programs
+    useEffect(() => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const userRef = doc(db, "users", user.uid);
+    getDoc(userRef).then((snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        setUserProgramProgress(data.programProgress || {});
+      }
+    });
+  }, []);
+
   useEffect(() => {
     const fetchPrograms = async () => {
       const programsRef = ref(rtdb, "courses/thrivemed/programs");
@@ -296,7 +313,9 @@ export function ProgramsManager({
 
       {/* Programs list */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
-        {filteredPrograms.map((program: any, index: any) => (
+        {filteredPrograms.map((program: any, index: any) => {
+          const progress = userProgramProgress[program.id] || 0;
+          return (
           <Card
             key={index}
             className="overflow-hidden rounded-xl shadow-sm border-0"
@@ -363,7 +382,7 @@ export function ProgramsManager({
                         }
                         strokeWidth="10"
                         fill="none"
-                        strokeDasharray={`${program.progress * 2.51} 251`}
+                        strokeDasharray={`${progress * 2.51} 251`}
                         strokeDashoffset="0"
                         transform="rotate(-90 50 50)"
                       />
@@ -373,7 +392,7 @@ export function ProgramsManager({
                     <CheckCircle className="h-5 w-5 text-green-500" />
                   ) : (
                     <span className="text-xs font-medium">
-                      {program.progress}%
+                      {progress}%
                     </span>
                   )}
                 </div>
@@ -406,7 +425,9 @@ export function ProgramsManager({
               </div>
             </div>
           </Card>
-        ))}
+        )
+        }
+        )}
       </div>
 
       {/* Edit Program Dialog */}

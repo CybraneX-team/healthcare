@@ -13,8 +13,8 @@ import {
   sendPasswordResetEmail 
 } from "firebase/auth";
 import { getAnalytics } from "firebase/analytics";
-import { getFirestore, doc, setDoc, getDoc, updateDoc, collection } from "firebase/firestore";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, deleteField } from "firebase/firestore";
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { getDatabase } from "firebase/database";
 
 // Your web app's Firebase configuration
@@ -122,8 +122,10 @@ export async function uploadUserDocument(userId: string, file: File, folder: str
   const snapshot = await uploadBytes(storageRef, file);
   const downloadURL = await getDownloadURL(snapshot.ref);
 
-  return downloadURL;
+  // 🔥 Return BOTH the downloadURL and fileName
+  return { downloadURL, fileName };
 }
+
 
 export const resetPassword = async (email: string): Promise<void> => {
   return sendPasswordResetEmail(auth, email);
@@ -147,6 +149,27 @@ export const getUserProgress = async (userId: string, programId: string) => {
   }
   return null;
 };
+
+
+export const deleteUserFile = async (
+  userId: string,
+  category: string,
+  fileId: string,
+  fullStorageName: string // this is the actual file name with timestamp
+) => {
+  // 1️⃣ Remove from Firestore
+  const userDocRef = doc(db, "users", userId);
+  await updateDoc(userDocRef, {
+    [`${category}.${fileId}`]: deleteField()
+  });
+
+  // 2️⃣ Remove from Storage
+  const filePath = `documents/${userId}/${category}/${fullStorageName}`;
+  const fileRef = ref(storage, filePath);
+  await deleteObject(fileRef);
+};
+
+
 
 export const rtdb = getDatabase(app);
 export { app, auth, db, storage, analytics };

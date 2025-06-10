@@ -212,11 +212,11 @@ export default function Dashboard() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(false); // Add loading state
   const [extractedText, setExtractedText] = useState(""); // Optional: show result
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  // const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
-  };
+  // const handleUploadClick = () => {
+  //   fileInputRef.current?.click();
+  // };
 
   const handleFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>

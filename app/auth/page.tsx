@@ -1,15 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { ArrowRight, Heart, Shield, Activity } from "lucide-react";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "@/utils/firebase";
 
 export default function AuthPage() {
   const router = useRouter();
-  
+
+  useEffect(() => {
+  const unsubscribe = onAuthStateChanged(auth, (user) => {
+    if (user) {
+      // User is already logged in, redirect to dashboard
+      router.push("/dashboard");
+    }
+    // Else, do nothing (let them stay on this page)
+  });
+
+  // Cleanup the subscription on unmount
+  return () => unsubscribe();
+}, [router]);
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}

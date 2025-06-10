@@ -1,8 +1,6 @@
 "use client";
 
-import type React from "react";
-
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -21,11 +19,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import Image from "next/image";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
-import {
-  getCurrentUser,
-  uploadUserDocument,
-  updateUserProfile,
-} from "@/utils/firebase";
+import { getCurrentUser, uploadUserDocument, updateUserProfile, getUserProfile, deleteUserFile } from "@/utils/firebase";
+import { toast } from "react-toastify";
 
 type FileCategory = "labs" | "radiology" | "prescriptions";
 
@@ -38,6 +33,7 @@ interface UploadedFile {
   uploadProgress: number;
   previewUrl?: string;
   dateUploaded: Date;
+  fullStorageName: string; // ✅ Add this!
 }
 
 export default function UploadPage() {
@@ -49,6 +45,67 @@ export default function UploadPage() {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
+  
+;
+
+useEffect(() => {
+  const fetchUploadedFiles = async () => {
+    const user = getCurrentUser();
+    console.log("current user", user 
+
+    )
+    if (!user) return;
+
+    const profile = await getUserProfile(user.uid);
+    if (!profile) return;
+
+    const categories: FileCategory[] = ["labs", "radiology", "prescriptions"];
+    const files: UploadedFile[] = [];
+
+    categories.forEach(category => {
+      // First, check top-level keys (like `radiology`, `labs`, etc.)
+      if (profile[category]) {
+        Object.entries(profile[category]).forEach(([id, fileData]: any) => {
+          files.push({
+            id,
+            name: fileData.name,
+            size: fileData.size,
+            type: fileData.type,
+            category: category as FileCategory,
+            uploadProgress: 100,
+            previewUrl: fileData.downloadURL,
+            dateUploaded: new Date(fileData.uploadedAt),
+             fullStorageName: fileData.fullStorageName || "",
+          });
+        });
+      }
+
+      // Second, check inside `documents` if it exists
+      if (profile.documents && profile.documents[category]) {
+        Object.entries(profile.documents[category]).forEach(([id, fileData]: any) => {
+          files.push({
+            id,
+            name: fileData.name,
+            size: fileData.size,
+            type: fileData.type,
+            category: category as FileCategory,
+            uploadProgress: 100,
+            previewUrl: fileData.downloadURL,
+            dateUploaded: new Date(fileData.uploadedAt),
+             fullStorageName: fileData.fullStorageName || "",
+          });
+        });
+      }
+    });
+
+    console.log("Fetched uploaded files:", files);
+    setUploadedFiles(files);
+  };
+
+  fetchUploadedFiles();
+}, []);
+
+;
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -67,6 +124,19 @@ export default function UploadPage() {
       handleFiles(e.dataTransfer.files);
     }
   };
+  
+  const handleViewFile = (url: string) => {
+  window.open(url, "_blank");
+};
+
+const handleDownloadFile = (url: string, filename: string) => {
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
 
   const handleFileSelect = () => {
     fileInputRef.current?.click();
@@ -77,37 +147,38 @@ export default function UploadPage() {
       handleFiles(e.target.files);
     }
   };
+  
+ const handleFiles = (files: FileList) => {
+  // Create a map to store the actual File objects by their generated ID
+  const fileMap = new Map<string, File>();
 
-  const handleFiles = (files: FileList) => {
-    // Create a map to store the actual File objects by their generated ID
-    const fileMap = new Map<string, File>();
+  const newFiles: UploadedFile[] = Array.from(files).map(file => {
+    const id = Math.random().toString(36).substring(2, 9);
+    // Store the actual File object in the map
+    fileMap.set(id, file);
 
-    const newFiles: UploadedFile[] = Array.from(files).map((file) => {
-      const id = Math.random().toString(36).substring(2, 9);
-      // Store the actual File object in the map
-      fileMap.set(id, file);
+    return {
+      id,
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      category: activeTab,
+      uploadProgress: 0,
+      dateUploaded: new Date(),
+      fullStorageName: "" // ✅ add this line to match the UploadedFile type
+    };
+  });
 
-      return {
-        id,
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        category: activeTab,
-        uploadProgress: 0,
-        dateUploaded: new Date(),
-      };
-    });
+  setUploadingFiles(prev => [...prev, ...newFiles]);
 
-    setUploadingFiles((prev) => [...prev, ...newFiles]);
-
-    // Upload files to Firebase Storage
-    newFiles.forEach((uploadedFile) => {
-      const actualFile = fileMap.get(uploadedFile.id);
-      if (actualFile) {
-        simulateFileUpload(uploadedFile, actualFile);
-      }
-    });
-  };
+  // Upload files to Firebase Storage
+  newFiles.forEach(uploadedFile => {
+    const actualFile = fileMap.get(uploadedFile.id);
+    if (actualFile) {
+      simulateFileUpload(uploadedFile, actualFile);
+    }
+  });
+};
 
   const simulateFileUpload = async (file: UploadedFile, actualFile: File) => {
     try {
@@ -123,10 +194,11 @@ export default function UploadPage() {
       );
 
       // Upload file to Firebase Storage
-      const downloadURL = await uploadUserDocument(
-        user.uid,
-        actualFile,
-        file.category
+    const { downloadURL, fileName } = await uploadUserDocument(user.uid, actualFile, file.category);
+      
+      // Update progress to 100%
+      setUploadingFiles(prev =>
+        prev.map(f => f.id === file.id ? { ...f, uploadProgress: 100 } : f)
       );
 
       // Update progress to 100%
@@ -143,18 +215,17 @@ export default function UploadPage() {
 
       // Store file reference in Firestore (only metadata, not the actual file)
       await updateUserProfile(user.uid, {
-        documents: {
-          [file.category]: {
-            [file.id]: {
-              name: file.name,
-              size: file.size,
-              type: file.type,
-              downloadURL,
-              uploadedAt: new Date().toISOString(),
-            },
-          },
-        },
-      });
+      [`${file.category}.${file.id}`]: {
+        name: file.name,
+        size: file.size,
+        fullStorageName: fileName,  
+        type: file.type,
+        downloadURL,
+        uploadedAt: new Date().toISOString()
+      }
+    });
+    
+    toast.success("File uploaded successfully!");
     } catch (error) {
       console.error("File upload failed:", error);
 
@@ -163,11 +234,44 @@ export default function UploadPage() {
       // You could add error handling UI here
     }
   };
+  
+  const activeTabFiles = uploadedFiles.filter(file => file.category === activeTab);
 
-  const handleDeleteFile = (fileId: string) => {
-    setUploadedFiles((prev) => prev.filter((file) => file.id !== fileId));
-  };
+const handleDeleteFile = async (fileId: string) => {
+  try {
+    const fileToDelete = uploadedFiles.find(file => file.id === fileId);
+    if (!fileToDelete) {
+      console.warn("File not found in local state");
+      return;
+    }
 
+    const user = getCurrentUser();
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
+
+    // Ensure file has a valid fullStorageName
+    if (!fileToDelete.fullStorageName) {
+      console.error("File is missing fullStorageName, cannot delete from storage.");
+      toast.error("File is missing storage reference.");
+      return;
+    }
+
+    // Use the correct full storage name (with timestamp prefix)
+    await deleteUserFile(user.uid, fileToDelete.category, fileId, fileToDelete.fullStorageName);
+
+    // Remove from local state
+    setUploadedFiles(prev => prev.filter(file => file.id !== fileId));
+
+    toast.success("File deleted successfully!");
+  } catch (error) {
+    console.error("File deletion failed:", error);
+    toast.error("Failed to delete file. Please try again.");
+  }
+};
+
+
+  
   const handleFinish = () => {
     // Show loading animation before redirecting
     setIsRedirecting(true);
@@ -432,57 +536,63 @@ export default function UploadPage() {
                       <AnimatePresence>
                         {uploadedFiles
                           .filter((file) => file.category === activeTab)
-                          .map((file) => (
-                            <motion.div
-                              key={file.id}
-                              initial={{ opacity: 0, scale: 0.95 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              exit={{ opacity: 0, scale: 0.95 }}
-                              whileHover={{ y: -2 }}
-                              className="bg-white border border-green-100 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-200"
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center">
-                                  <div className="h-12 w-12 bg-green-500 rounded-lg flex items-center justify-center mr-4">
-                                    <FileText className="h-6 w-6 text-white" />
+                          .map((file) => {
+                            console.log("file", file)
+                            return (
+                              <motion.div
+                                key={file.id}
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                whileHover={{ y: -2 }}
+                                className="bg-white border border-green-100 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-200"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center">
+                                    <div className="h-12 w-12 bg-green-500 rounded-lg flex items-center justify-center mr-4">
+                                      <FileText className="h-6 w-6 text-white" />
+                                    </div>
+                                    <div>
+                                      <p className="font-semibold text-gray-900 truncate max-w-[300px]">
+                                        {file.name}
+                                      </p>
+                                      <p className="text-sm text-gray-500">
+                                        {formatFileSize(file.size)} •{" "}
+                                        {new Date().toLocaleDateString()}
+                                      </p>
+                                    </div>
                                   </div>
-                                  <div>
-                                    <p className="font-semibold text-gray-900 truncate max-w-[300px]">
-                                      {file.name}
-                                    </p>
-                                    <p className="text-sm text-gray-500">
-                                      {formatFileSize(file.size)} •{" "}
-                                      {new Date().toLocaleDateString()}
-                                    </p>
+                                  <div className="flex items-center space-x-2">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-10 w-10 text-gray-500 hover:text-blue-500 hover:bg-blue-50 rounded-lg"
+                                      onClick={()=>{handleViewFile(file.previewUrl ? file.previewUrl : "" )}}
+                                    >
+                                      <Eye className="h-5 w-5" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-10 w-10 text-gray-500 hover:text-blue-500 hover:bg-blue-50 rounded-lg"
+                                      onClick={()=>{handleDownloadFile(file?.previewUrl? file?.previewUrl : "", file.name)}}
+                                    >
+                                      <Download className="h-5 w-5" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-10 w-10 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg"
+                                      onClick={() => handleDeleteFile(file.id)}
+                                    >
+                                      <Trash2 className="h-5 w-5" />
+                                    </Button>
                                   </div>
                                 </div>
-                                <div className="flex items-center space-x-2">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-10 w-10 text-gray-500 hover:text-blue-500 hover:bg-blue-50 rounded-lg"
-                                  >
-                                    <Eye className="h-5 w-5" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-10 w-10 text-gray-500 hover:text-blue-500 hover:bg-blue-50 rounded-lg"
-                                  >
-                                    <Download className="h-5 w-5" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-10 w-10 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg"
-                                    onClick={() => handleDeleteFile(file.id)}
-                                  >
-                                    <Trash2 className="h-5 w-5" />
-                                  </Button>
-                                </div>
-                              </div>
-                            </motion.div>
-                          ))}
+                              </motion.div>
+                            )
+                          })
+                        }
                       </AnimatePresence>
                     </div>
                   </CardContent>

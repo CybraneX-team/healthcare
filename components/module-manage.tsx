@@ -98,7 +98,7 @@ export function ModulesManager({
             id,
             ...mod,
           }));
-          console.log("loadedModules", loadedModules);
+          // console.log("loadedModules", loadedModules);
           setModules(loadedModules);
         } else {
           setModules([]); // No modules yet
@@ -178,12 +178,12 @@ async function recalculateAllProgramProgressForUser(programId: string) {
       ? 0
       : Math.round((totalCompletedCount / totalVideosCount) * 100);
 
-  console.log(
-    "Recalculated Progress:",
-    `totalVideos=${totalVideosCount}`,
-    `totalCompleted=${totalCompletedCount}`,
-    `programProgress=${programProgressPercent}`
-  );
+  // console.log(
+  //   "Recalculated Progress:",
+  //   `totalVideos=${totalVideosCount}`,
+  //   `totalCompleted=${totalCompletedCount}`,
+  //   `programProgress=${programProgressPercent}`
+  // );
 
   // 4️⃣ Save recalculated data to Firestore
   await updateDoc(userRef, {

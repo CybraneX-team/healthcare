@@ -271,16 +271,16 @@ const handleDeleteFile = async (fileId: string) => {
 };
 
 
-  
-  const handleFinish = () => {
+  // this function's implementation  is commented out because file is getting upload already 
+  // const handleFinish = () => {
     // Show loading animation before redirecting
-    setIsRedirecting(true);
+    // setIsRedirecting(true);
 
-    // Redirect to dashboard with a slight delay for animation
-    setTimeout(() => {
-      router.push("/dashboard");
-    }, 1500);
-  };
+    // // Redirect to dashboard with a slight delay for animation
+    // setTimeout(() => {
+    //   router.push("/dashboard");
+    // }, 1500);
+  // };
 
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return bytes + " B";
@@ -289,7 +289,7 @@ const handleDeleteFile = async (fileId: string) => {
   };
 
   // Use the keyboard navigation hook
-  useKeyboardNavigation(handleFinish, [uploadedFiles]);
+  // useKeyboardNavigation(handleFinish, [uploadedFiles]);
 
   return (
     <div className="min-h-screen p-2 md:p-8 md:-mt-10">
@@ -601,7 +601,10 @@ const handleDeleteFile = async (fileId: string) => {
             )}
 
             {/* Submit Button */}
-            <div className="flex justify-center mt-12">
+
+             {/*  this button  is commented out because file is getting upload already  */}
+
+            {/* <div className="flex justify-center mt-12">
               <Button
                 onClick={handleFinish}
                 className="flex items-center gap-3 bg-blue-500 hover:bg-blue-600 text-white px-8 py-4 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
@@ -610,7 +613,7 @@ const handleDeleteFile = async (fileId: string) => {
                 <span>Complete Upload</span>
                 <ArrowRight className="h-5 w-5" />
               </Button>
-            </div>
+            </div> */}
           </div>
         </div>
       </motion.div>

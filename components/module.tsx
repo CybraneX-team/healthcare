@@ -23,7 +23,7 @@ export function ModuleOverview({
   completedVideos,
   moduleProgress,
 }: ModuleOverviewProps) {
-  console.log("moduleee progress",moduleProgress )
+  // console.log("moduleee progress",moduleProgress )
   const [expandedSections, setExpandedSections] = useState<
     Record<string, boolean>
   >({

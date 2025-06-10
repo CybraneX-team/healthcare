@@ -96,7 +96,6 @@ export function ProgramsManager({
             year: "numeric",
           }),
         }));
-        console.log("loadedPrograms=loadedPrograms", loadedPrograms);
         setPrograms(loadedPrograms);
       }
     };

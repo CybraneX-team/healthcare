@@ -33,7 +33,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 // Import organ components
 import HeartComponent from "@/components/heart-component";
 import LiverComponent from "@/components/liver-component";
-import LungsModel from "@/components/lungs-model";
 import PancreasComponent from "@/components/pancreas-component";
 import Upload from "@/components/upload";
 import EnhancedAnatomy from "@/components/enhanced-anatomy";
@@ -349,6 +348,39 @@ export default function Dashboard() {
       padding: 20px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
     }
+
+    .organ-component-wrapper {
+      max-height: calc(100vh - 140px);
+      overflow-y: auto;
+    }
+
+    .organ-component-wrapper .bg-white {
+      margin-bottom: 1rem;
+    }
+
+    .organ-component-wrapper .p-8 {
+      padding: 1rem !important;
+    }
+
+    .organ-component-wrapper .p-6 {
+      padding: 0.75rem !important;
+    }
+
+    .organ-component-wrapper .mb-6 {
+      margin-bottom: 0.75rem !important;
+    }
+
+    .organ-component-wrapper .mb-4 {
+      margin-bottom: 0.5rem !important;
+    }
+
+    .organ-component-wrapper .gap-10 {
+      gap: 0.75rem !important;
+    }
+
+    .organ-component-wrapper .gap-6 {
+      gap: 0.5rem !important;
+    }
   `;
 
   // Function to handle tab changes
@@ -361,18 +393,18 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-200">
+    <div className="h-screen bg-gray-200">
       <style jsx>{organSwitcherStyle}</style>
       <style jsx global>{`
         body {
-          overflow: ${activeTab === "overview" ? "auto" : "auto"};
+          overflow: ${activeTab === "overview" ? "hidden" : "auto"};
         }
       `}</style>
-      <div className="h-full">
-        <main className="w-full h-full">
+      <div className="h-full flex flex-col">
+        <main className="w-full flex-1 flex flex-col">
           {/* Digital Twin Navigation - Moved outside conditionals so it stays in same position */}
-          <div className="px-6 pt-8 pb-12">
-            <div className="flex justify-center items-center w-full mb-6 relative">
+          <div className="px-6 py-4 flex-shrink-0">
+            <div className="flex justify-center items-center w-full mb-2 relative">
               <div className="flex bg-gray-100 rounded-full p-1 overflow-hidden">
                 <Button
                   variant="ghost"
@@ -448,75 +480,46 @@ export default function Dashboard() {
             </div>
           </div>
           {activeTab === "overview" ? (
-            <div className="digital-twin px-6 py-0 bg-gradient-to-b from-gray-200 to-white min-h-screen overflow-hidden">
+            <div className="digital-twin flex-1 px-6 bg-gradient-to-b from-gray-200 to-white overflow-hidden">
               {/* Main Content */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+              <div className="h-full grid grid-cols-1 lg:grid-cols-12 gap-6">
                 {/* Left column - Enhanced anatomy with organ switcher */}
-                <div className="lg:col-span-4 flex flex-col justify-center items-center mt-8">
-                  <EnhancedAnatomy
-                    selectedOrgan={selectedOrgan}
-                    onOrganSelect={setSelectedOrgan}
-                  />
+                <div className="lg:col-span-4 flex items-center justify-center">
+                  <div className="w-full flex justify-center">
+                    <EnhancedAnatomy
+                      selectedOrgan={selectedOrgan}
+                      onOrganSelect={setSelectedOrgan}
+                    />
+                  </div>
                 </div>
 
                 {/* Right column - Dynamic content based on selected organ */}
-                <div className="lg:col-span-8">
-                  {selectedOrgan === "heart" && <HeartComponent />}
+                <div className="lg:col-span-8 flex flex-col overflow-hidden md:mt-6 3xl:mt-20">
+                  {selectedOrgan === "heart" && (
+                    <div className="h-full overflow-y-auto pr-2 organ-component-wrapper">
+                      <HeartComponent />
+                    </div>
+                  )}
                   {selectedOrgan === "lungs" && (
-                    // <div className="text-center p-8 bg-white rounded-3xl shadow-sm">
-                    //   <h3 className="text-2xl font-semibold mb-4">
-                    //     Lungs Component
-                    //   </h3>
-                    //   <p className="text-gray-600 mb-6">
-                    //     Lungs data will be displayed here. Create a separate
-                    //     LiverComponent for detailed implementation.
-                    //   </p>
-                    // </div>
-                    // <PancreasComponent />
-                    <Cardiology />
+                    <div className="h-full overflow-y-auto pr-2 organ-component-wrapper">
+                      <Kidney />
+                    </div>
                   )}
                   {selectedOrgan === "liver" && (
-                    //  <LiverComponent />
-                    <Kidney />
-                  )}
-                  {selectedOrgan === "brain" && <Neurology />}
-                  {/* <div className="flex justify-end mb-6">
-                    <div className="inline-flex items-center gap-6 bg-white rounded-full py-2 px-4 shadow-sm">
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center justify-center w-6 h-6 rounded-full bg-red-100">
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
-                              stroke="#FF0000"
-                              strokeWidth="2"
-                            />
-                            <path
-                              d="M12 6V12L16 14"
-                              stroke="#FF0000"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                            />
-                          </svg>
-                        </div>
-                        <span className="text-sm font-medium">
-                          2314 Kcal burned
-                        </span>
-                      </div>
-                      <div className="text-sm font-medium">
-                        2314 Kcal Consumed
-                      </div>
+                    <div className="h-full overflow-y-auto pr-2 organ-component-wrapper">
+                      <Neurology />
                     </div>
-                  </div> */}
-
-                  {/* Main Stats Grid */}
-
-                  {/* Bottom Stats Grid */}
+                  )}
+                  {selectedOrgan === "brain" && (
+                    <div className="h-full overflow-y-hidden pr-2 organ-component-wrapper">
+                      <Cardiology />
+                    </div>
+                  )}
+                  {selectedOrgan === "kidney" && (
+                    <div className="h-full overflow-y-hidden pr-2 organ-component-wrapper">
+                      <Kidney />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

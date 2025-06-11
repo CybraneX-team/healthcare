@@ -22,29 +22,36 @@ const organData: OrganInfo[] = [
     id: "liver",
     name: "Liver",
     position: { x: 85, y: 45 }, // Label position as percentage - moved to right side
-    dotPosition: { x: 45, y: 43 }, // Dot position on the liver area
+    dotPosition: { x: 45, y: 40 }, // Dot position on the liver area
     imagePath: "/liver_light.png",
   },
   {
     id: "heart",
     name: "Heart",
-    position: { x: 20, y: 25 }, // Label position - left side
-    dotPosition: { x: 45, y: 30 }, // Dot position on the heart area
+    position: { x: 0, y: 25 }, // Label position - left side
+    dotPosition: { x: 50, y: 35 }, // Dot position on the heart area
     imagePath: "/heart_light.png",
   },
   {
     id: "lungs",
     name: "Lungs",
-    position: { x: 75, y: 25 }, // Label position - right side
-    dotPosition: { x: 40, y: 25 }, // Dot position on the lungs area
-    imagePath: "/lungs.png", // Fallback to available lungs image
+    position: { x: 80, y: 30 }, // Label position - right side
+    dotPosition: { x: 57, y: 32 }, // Dot position on the lungs area
+    imagePath: "/lungs_light.png", // Fallback to available lungs image
   },
   {
     id: "brain",
     name: "Brain",
     position: { x: 20, y: 8 }, // Label position - top left
-    dotPosition: { x: 50, y: 12 }, // Dot position on the brain area
-    imagePath: "/liver_light_copy.png", // Fallback - could be replaced when brain_light.png is available
+    dotPosition: { x: 50, y: 15 }, // Dot position on the brain area
+    imagePath: "/brain_light.png", // Fallback - could be replaced when brain_light.png is available
+  },
+  {
+    id: "kidney",
+    name: "Kidney",
+    position: { x: 20, y: 20 }, // Label position - top left
+    dotPosition: { x: 50, y: 15 }, // Dot position on the brain area
+    imagePath: "/kidney_light.png", // Fallback - could be replaced when brain_light.png is available
   },
 ];
 
@@ -109,6 +116,7 @@ export default function EnhancedAnatomy({ selectedOrgan, onOrganSelect }: Enhanc
       heart: "#ef4444", // red
       lungs: "#3b82f6", // blue
       brain: "#8b5cf6", // purple
+      kindey: "#8b5cf6", // purple
     };
     return colors[organId as keyof typeof colors] || "#6b7280";
   };
@@ -122,50 +130,43 @@ export default function EnhancedAnatomy({ selectedOrgan, onOrganSelect }: Enhanc
   };
 
   return (
-    <div className="relative w-full max-w-lg mx-auto">
+    <div className="relative w-full max-w-sm mx-auto">
       {/* Background anatomy image */}
-      <div className="relative">
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={currentImagePath}
-            // initial={{ 
-            //   opacity: 0,
-            //   scale: 1,
-            //   filter: "blur(4px)"
-            // }}
-            // animate={{ 
-            //   opacity: 1,
-            //   scale: 1,
-            //   filter: "blur(0px)"
-            // }}
-            // exit={{ 
-            //   opacity: 0,
-            //   scale: 1.02,
-            //   filter: "blur(2px)"
-            // }}
-            // transition={{
-            //   duration: 0.4,
-            //   ease: [0.25, 0.46, 0.45, 0.94],
-            //   opacity: { duration: 0.3 },
-            //   scale: { 
-            //     type: "spring",
-            //     stiffness: 300,
-            //     damping: 30
-            //   },
-            //   filter: { duration: 0.2 }
-            // }}
-          >
-            <Image
-              src={currentImagePath}
-              alt="Human Anatomy"
-              width={400}
-              height={500}
-              className="w-full h-auto object-contain"
-              onLoad={() => setIsLoaded(true)}
-              priority
-            />
-          </motion.div>
-        </AnimatePresence>
+      <div className="relative w-full" style={{ height: '750px' }}>
+      <AnimatePresence mode="wait" initial={false}>
+  <motion.div
+    key={currentImagePath}
+    className="absolute inset-0 flex items-start justify-center pt-2"
+    initial={{
+      opacity: 0
+    }}
+    animate={{
+      opacity: 1
+    }}
+    exit={{
+      opacity: 0
+    }}
+    transition={{
+      duration: 0.3,
+      ease: "easeInOut"
+    }}
+  >
+    <Image
+      src={currentImagePath}
+      alt="Human Anatomy"
+      width={550}
+      height={700}
+      className="object-contain"
+      style={{ 
+        width: '550px', 
+        height: '700px', 
+        objectFit: 'contain' 
+      }}
+      onLoad={() => setIsLoaded(true)}
+      priority
+    />
+  </motion.div>
+</AnimatePresence>
         
         {/* Overlay SVG for lines and dots */}
         {isLoaded && (
@@ -253,10 +254,10 @@ export default function EnhancedAnatomy({ selectedOrgan, onOrganSelect }: Enhanc
                       r="2.5"
                       fill="none"
                       stroke={getLineColor(organ.id)}
-                      strokeWidth="0.3"
+                      strokeWidth="0.2"
                       initial={{ scale: 0, opacity: 1 }}
                       animate={{ 
-                        scale: [1, 1.4, 1], 
+                        scale: [1, 1.2, 1], 
                         opacity: [0.9, 0.3, 0.9] 
                       }}
                       transition={{ 
@@ -289,9 +290,9 @@ export default function EnhancedAnatomy({ selectedOrgan, onOrganSelect }: Enhanc
           >
             <div
               className={`
-                bg-white/98 backdrop-blur-md rounded-xl px-4 py-2.5 shadow-lg border-2
-                cursor-pointer transition-all duration-300 hover:scale-110 hover:shadow-xl
-                min-w-[80px] text-center relative
+                bg-white/98 backdrop-blur-md rounded-xl px-3 py-2 shadow-sm border-1
+                cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl
+                min-w-[50px] text-center relative
                 ${selectedOrgan === organ.id 
                   ? 'border-2 shadow-2xl transform scale-105' 
                   : 'border-white/50'
@@ -308,14 +309,14 @@ export default function EnhancedAnatomy({ selectedOrgan, onOrganSelect }: Enhanc
               {/* Active indicator dot */}
               {selectedOrgan === organ.id && (
                 <div 
-                  className="absolute -top-1 -right-1 w-3 h-3 rounded-full animate-pulse"
+                  className="absolute -top-1 -right-1 w-2 h2 rounded-full animate-pulse"
                   style={{ backgroundColor: getLineColor(organ.id) }}
                 />
               )}
               
               <span
                 className={`
-                  text-sm font-bold transition-colors duration-300 block
+                  text-xs font-medium transition-colors duration-300 block
                   ${selectedOrgan === organ.id ? 'text-gray-900' : 'text-gray-700'}
                 `}
                 style={{

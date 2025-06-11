@@ -49,7 +49,6 @@ import "@/styles/dashboard-mobile.css";
 // Import organ components
 import HeartComponent from "@/components/heart-component";
 import LiverComponent from "@/components/liver-component";
-import LungsModel from "@/components/lungs-model";
 import { CombinedLabsSection } from "./Lab-Services";
 import PancreasComponent from "./pancreas-component";
 import Cardiology from "./cardiology";
@@ -204,7 +203,7 @@ export default function DashboardMobile() {
                   {selectedOrgan === "heart" && (
                     <motion.div
                       key="heart"
-                      className="relative w-full max-w-[250px] mb-2 mt-3"
+                      className="relative w-full max-w-[250px] mb-2"
                       variants={mainOrganVariants}
                       initial="hidden"
                       animate="visible"
@@ -242,16 +241,13 @@ export default function DashboardMobile() {
                       animate="visible"
                       exit="exit"
                     >
-                      <div className="relative h-[220px] w-full flex items-center justify-center">
-                        <div className="absolute w-full h-full rounded-full bg-gradient-to-b from-blue-50 to-transparent opacity-30 z-0"></div>
-                        <LungsModel />
-                      </div>
+
                     </motion.div>
                   )}
                   {selectedOrgan === "liver" && (
                     <motion.div
                       key="liver"
-                      className="relative w-full max-w-[250px] mb-2 mt-2"
+                      className="relative w-full max-w-[250px] mb-2"
                       variants={mainOrganVariants}
                       initial="hidden"
                       animate="visible"
@@ -386,7 +382,7 @@ export default function DashboardMobile() {
                   </div>
                 ) : selectedOrgan === "liver" ? (
                   <div className="px-2">
-                    {/* <LiverComponent /> */}
+                    {/* <Neurology /> */}
                     <Kidney />
                   </div>
                 ) : selectedOrgan === "brain" ? (
@@ -400,7 +396,7 @@ export default function DashboardMobile() {
                   //     </p>
                   //   </div>
                   // </div>
-                  <Neurology />
+                  <PancreasComponent />
                 ) : null}
               </div>
             </div>

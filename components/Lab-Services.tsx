@@ -8,7 +8,7 @@ export const CombinedLabsSection = () => {
   return (
     <div className="px-6 bg-gradient-to-b from-gray-200 to-white min-h-screen -mt-12">
       {/* Toggle switch between Labs and Services */}
-      <div className="flex justify-center my-4">
+      <div className="flex justify-center my-4 mt-14">
         <div className="flex bg-gray-100 rounded-lg p-1 overflow-hidden">
           <button
             className={`rounded-lg px-6 py-2 ${

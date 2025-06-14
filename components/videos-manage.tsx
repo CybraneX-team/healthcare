@@ -43,6 +43,7 @@ import {
 } from "firebase/database";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import { useProgramContext } from "@/hooks/useProgressData";
 
 interface VideosManagerProps {
   programId: string;
@@ -61,6 +62,8 @@ export function VideosManager({
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isAdding, setisAdding] = useState(false);
+  const [loadingText, setloadingText] = useState<any>("Adding Video");
   const [selectedVideo, setSelectedVideo] = useState<any>(null);
   const [newVideo, setNewVideo] = useState({
     title: "",
@@ -70,13 +73,13 @@ export function VideosManager({
     order: 1,
     todo: [""],
   });
-
+  const {recentActivity, setrecentActivity}  = useProgramContext()
   // const [currentModuleForVideo, setCurrentModuleForVideo] = useState<Module | null>(null);
 
   // Mock program and module data
   const program = {
     id: programId,
-    name: programId === "thrivemed-hub" ? "Thrivemed Hub" : "Thrivemed Apollo",
+    name: programId,
   };
 
   const module = {
@@ -194,7 +197,6 @@ useEffect(() => {
     const snapshot = await get(videosRef);
     if (snapshot.exists()) {
       const data = snapshot.val();
-      console.log("fetchModuleVideos", data);
       // setVideos(data); // optionally map/transform and set to state
       const loadedPrograms = Object.entries(data).map(([id, value]: any) => ({
         id,
@@ -270,6 +272,9 @@ useEffect(() => {
 
 
 const handleAddVideo = async () => {
+  setisAdding(true)
+  setIsAddDialogOpen(false);
+
   const id = newVideo.title.toLowerCase().replace(/\s+/g, "-");
   const auth = getAuth();
   const user = auth.currentUser;
@@ -277,13 +282,24 @@ const handleAddVideo = async () => {
 
   const userRef = doc(db, "users", user.uid);
 
+  const newItem = {
+      activity:  `Added  Video   ${newVideo.title}`,
+      name:      newVideo.title,
+      createdAt: Date.now(),
+    }
+  
+      setrecentActivity((prev : any ) => {
+        const next = [...prev, newItem];
+        // fire-and-forget; no await needed here
+        updateDoc(userRef, { recentActivity: next });
+        return next;
+      });
   const nowISOString = new Date().toISOString();
   const nowFormattedDate = new Date().toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
   });
-  console.log("newVideonewVideo", newVideo)
   const newVideoData = {
     id,
     ...newVideo,
@@ -369,17 +385,19 @@ const handleAddVideo = async () => {
     }
   } catch (error) {
     console.error("Error saving to Firebase:", error);
-  }
+  }finally{
 
-  setNewVideo({
-    title: "",
-    description: "",
-    youtubeId: "",
-    duration: "00:00",
-    order: 1,
-    todo: [""],
-  });
-  setIsAddDialogOpen(false);
+    setNewVideo({
+      title: "",
+      description: "",
+      youtubeId: "",
+      duration: "00:00",
+      order: 1,
+      todo: [""],
+    });
+    setisAdding(false)
+    
+  }
 };
 
 
@@ -388,11 +406,33 @@ const handleAddVideo = async () => {
 const handleEditVideo = async () => {
   if (!selectedVideo) return;
 
+  setisAdding(true)
+  setloadingText("Editing Video")
+  setIsEditDialogOpen(false);
+
   const updatedVideo = {
     ...selectedVideo,
     updatedAt: new Date().toISOString(),
   };
+  const auth = getAuth();
 
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const userRef = doc(db, "users", user.uid);
+
+  const newItem = {
+      activity:  `Edited  Video   ${updatedVideo.title}`,
+      name:      updatedVideo.title,
+      createdAt: Date.now(),
+    }
+  
+      setrecentActivity((prev : any ) => {
+        const next = [...prev, newItem];
+        // fire-and-forget; no await needed here
+        updateDoc(userRef, { recentActivity: next });
+        return next;
+      });
   try {
     const videoRef = ref(
       rtdb,
@@ -406,22 +446,41 @@ const handleEditVideo = async () => {
     );
 
     setVideos(updatedVideos);
-    setIsEditDialogOpen(false);
   } catch (error) {
     console.error("Failed to update video in Firebase:", error);
+  }finally{
+    setisAdding(false)
+    setloadingText("Adding Video")
   }
 };
 
 
 const handleDeleteVideo = async () => {
   if (!selectedVideo) return;
+  setisAdding(true)
+  setloadingText("deleting video")
+
+    setIsDeleteDialogOpen(false);
 
   const auth = getAuth();
   const user = auth.currentUser;
   if (!user) return;
 
+
   const userRef = doc(db, "users", user.uid);
 
+  const newItem = {
+      activity:  `Deleted  Video   ${newVideo.title}`,
+      name:      newVideo.title,
+      createdAt: Date.now(),
+    }
+  
+      setrecentActivity((prev : any ) => {
+        const next = [...prev, newItem];
+        // fire-and-forget; no await needed here
+        updateDoc(userRef, { recentActivity: next });
+        return next;
+      });
   try {
     // 1️⃣ Remove video from RTDB
     const videoRef = ref(
@@ -432,7 +491,6 @@ const handleDeleteVideo = async () => {
 
     // 2️⃣ Update videos state
     setVideos((prev) => prev.filter((video) => video.id !== selectedVideo.id));
-    setIsDeleteDialogOpen(false);
 
     // 3️⃣ Fetch user's completed videos
     const userSnap = await getDoc(userRef);
@@ -493,6 +551,9 @@ const handleDeleteVideo = async () => {
     });
   } catch (error) {
     console.error("Failed to delete video from Firebase:", error);
+  }finally{
+    setisAdding(false)
+    setloadingText("addding video")
   }
 };
 ;
@@ -516,6 +577,14 @@ const handleDeleteVideo = async () => {
   };
 
   return (
+    <>
+        {isAdding && (
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4
+                    bg-black/30 backdrop-blur-sm">
+      <div className="loader" />               
+      <span className="text-sm my-5 font-medium text-white">{loadingText}</span>
+    </div>
+  )}
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="flex flex-col sm:flex-row sm:items-center mb-6 gap-4">
         <div className="flex items-center gap-4 flex-1 min-w-0">
@@ -528,7 +597,7 @@ const handleDeleteVideo = async () => {
           </Button>
           <div className="min-w-0 flex-1">
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
-              {program.name}: {module.title}
+              {module.id}: videos
             </h1>
             <p className="text-sm text-gray-500">
               Manage videos for this module
@@ -1064,5 +1133,6 @@ const handleDeleteVideo = async () => {
         </DialogContent>
       </Dialog>
     </div>
-  );
-}
+  
+  </>
+)}

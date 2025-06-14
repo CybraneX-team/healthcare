@@ -5,8 +5,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ref, get, set, remove } from "firebase/database";
-import { rtdb } from "@/utils/firebase"; // ensure this exports getDatabase(app)
+import { ref, get, set, remove,  } from "firebase/database";
+import { rtdb, giveLoggedInUser } from "@/utils/firebase"; // ensure this exports getDatabase(app)
 
 import {
   Dialog,
@@ -37,6 +37,7 @@ import { doc, getDoc } from "firebase/firestore";
 import {  onValue } from "firebase/database";
 import { db } from "@/utils/firebase";
 import { getAuth } from "firebase/auth";
+import { useProgramContext } from "@/hooks/useProgressData";
 
 interface ModulesManagerProps {
   programId: string;
@@ -65,7 +66,10 @@ export function ModulesManager({
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [loadingText, setloadingText] = useState("Adding Module");
   const [selectedModule, setSelectedModule] = useState<any>(null);
+  const [isAdding, setIsAdding] = useState<any>(false);
+  const [userCompletedVideos, setUserCompletedVideos] = useState<Record<string, Record<string, string[]>>>({});
   const [newModule, setNewModule] = useState({
     title: "",
     description: "",
@@ -75,13 +79,13 @@ export function ModulesManager({
   // Mock program data
   const program = {
     id: programId,
-    name: programId === "thrivemed-hub" ? "Thrivemed Hub" : "Thrivemed Apollo",
+    name: programId ,
     description: "Personalized Health Roadmaps",
   };
 
   // Mock data for modules
   const [modules, setModules] = useState<Module[]>([]);
-
+  const {recentActivity, setrecentActivity} = useProgramContext()
   useEffect(() => {
     const fetchModules = async () => {
       try {
@@ -112,6 +116,24 @@ export function ModulesManager({
       fetchModules();
     }
   }, [programId]);
+
+  useEffect(() => {
+  const fetchUserCompletion = async () => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+      const data = userSnap.data();
+      setUserCompletedVideos(data.completedVideos || {});
+    }
+  };
+
+  fetchUserCompletion();
+}, []);
+
 
   const filteredModules = modules
     .filter(
@@ -194,6 +216,24 @@ async function recalculateAllProgramProgressForUser(programId: string) {
 
 
   const handleAddModule = async () => {
+    setIsAddDialogOpen(false); 
+    setIsAdding(true); 
+    const user  = await giveLoggedInUser()
+
+    const userRef = doc(db, "users", user?.uid ?  user?.uid : "")
+    const newItem = {
+        activity:  `Added Module  ${newModule.title}`,
+        name:      newModule.description,
+        createdAt: Date.now(),
+      }
+    setrecentActivity((prev : any ) => {
+      const next = [...prev, newItem];
+      // fire-and-forget; no await needed here
+      updateDoc(userRef, { recentActivity: next });
+      return next;
+    });
+    
+
     const id = newModule.title.toLowerCase().replace(/\s+/g, "-");
     const moduleData = {
       id,
@@ -217,9 +257,12 @@ async function recalculateAllProgramProgressForUser(programId: string) {
 
       // Reset form & close dialog
       setNewModule({ title: "", description: "", order: modules.length + 1 });
-      setIsAddDialogOpen(false);
+      // setIsAddDialogOpen(false);
     } catch (error) {
       console.error("Failed to add module:", error);
+    }finally {
+      setIsAdding(false); 
+        
     }
   };
 
@@ -227,38 +270,78 @@ async function recalculateAllProgramProgressForUser(programId: string) {
 
 
 
-  const handleEditModule = async () => {
-    if (!selectedModule) return;
+ const handleEditModule = async () => {
+  setIsAdding(true);
+  setloadingText("Editing Module");
+  setIsEditDialogOpen(false);
 
-    const updatedModule = {
-      ...selectedModule,
-      updatedAt: new Date().toISOString(),
-    };
+  if (!selectedModule) return;
 
-    try {
-      const moduleRef = ref(
-        rtdb,
-        `courses/thrivemed/programs/${programId}/modules/${selectedModule.id}`
-      );
-
-      await set(moduleRef, updatedModule);
-
-// 🔥 Initialize module progress for this program (to include new module)
-      // await initializeModuleProgressForNewModules(programId);
-
-      // 🔥 Recalculate program progress
-
-      // Update local state
-      // await recalculateAllProgramProgressForUser()
-      setModules([...modules, updatedModule]);
-      setNewModule({ title: "", description: "", order: modules.length + 1 });
-      setIsAddDialogOpen(false);
-    } catch (error) {
-      console.error("Error updating module in Firebase:", error);
-    }
+  const updatedModule = {
+    ...selectedModule,
+    updatedAt: new Date().toISOString(),
+    createdAt: selectedModule.createdAt || new Date().toISOString(), // fallback
   };
+
+  const user = await giveLoggedInUser();
+  const userRef = doc(db, "users", user?.uid || "");
+
+  const newItem = {
+    activity: `Edited Module ${selectedModule.title}`,
+    name: selectedModule.title,
+    createdAt: Date.now(),
+  };
+
+  setrecentActivity((prev: any) => {
+    const next = [...prev, newItem];
+    updateDoc(userRef, { recentActivity: next });
+    return next;
+  });
+
+  try {
+    const moduleRef = ref(
+      rtdb,
+      `courses/thrivemed/programs/${programId}/modules/${selectedModule.id}`
+    );
+
+    
+    const updatedModules = modules.map((module: any) =>
+      module.id === selectedModule.id ? updatedModule : module
+  );
+  
+    await set(moduleRef, updatedModule);
+    setModules(updatedModules);
+    setNewModule({ title: "", description: "", order: modules.length + 1 });
+  } catch (error) {
+    console.error("Error updating module in Firebase:", error);
+  } finally {
+    setIsAdding(false);
+    setloadingText("Adding Module");
+  }
+};
+
 
   const handleDeleteModule = async () => {
+    setIsAdding(true); 
+    setloadingText("Deleting Module")
+    setIsDeleteDialogOpen(false);
+
+    const user  = await giveLoggedInUser()
+
+    const userRef = doc(db, "users", user?.uid ?  user?.uid : "")
+    const newItem = {
+        activity:  `Deleted Module  ${newModule.title}`,
+        name:      newModule.description,
+        createdAt: Date.now(),
+      }
+
+    setrecentActivity((prev : any ) => {
+      const next = [...prev, newItem];
+      // fire-and-forget; no await needed here
+      updateDoc(userRef, { recentActivity: next });
+      return next;
+    });
+
     if (!selectedModule) return;
 
     try {
@@ -272,12 +355,16 @@ async function recalculateAllProgramProgressForUser(programId: string) {
       const updatedModules = modules.filter(
         (module: Module) => module.id !== selectedModule.id
       );
+
+      console.log("updatedModules", updatedModules)
        await recalculateAllProgramProgressForUser(programId)
 
       setModules(updatedModules);
-      setIsDeleteDialogOpen(false);
     } catch (error) {
       console.error("Error deleting module from Firebase:", error);
+    }finally{
+      setIsAdding(false); 
+      setloadingText("Adding Module")
     }
   };
 
@@ -292,6 +379,15 @@ async function recalculateAllProgramProgressForUser(programId: string) {
   };
 
   return (
+    <div >
+    {isAdding && (
+  <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4
+                  bg-black/30 backdrop-blur-sm">
+    <div className="loader" />               
+    <span className="text-sm my-5 font-medium text-white">{loadingText}…</span>
+  </div>
+)}
+
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="flex flex-col sm:flex-row sm:items-center mb-6 gap-4">
         <div className="flex items-center gap-4 flex-1 min-w-0">
@@ -403,7 +499,14 @@ async function recalculateAllProgramProgressForUser(programId: string) {
 
       {/* Modules list */}
       <div className="space-y-4">
-        {filteredModules.map((module) => (
+        {filteredModules.map((module) =>  {
+          const videoIds = Object.keys(module.videos || {});
+      const completedIds = userCompletedVideos[programId]?.[module.id] || [];
+      const completedCount = completedIds.length;
+      const totalCount = videoIds.length;
+      const progress = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
+
+          return (
           <Card
             key={module.id}
             className="overflow-hidden rounded-xl shadow-sm border-0"
@@ -454,10 +557,10 @@ async function recalculateAllProgramProgressForUser(programId: string) {
                 <div className="flex justify-between text-sm mb-1">
                   <span className="text-gray-500">Progress</span>
                   <span className="font-medium text-gray-900">
-                    {module.progress}%
+                    {progress}%
                   </span>
                 </div>
-                <Progress value={module.progress} className="h-2" />
+                <Progress value={progress} className="h-2" />
               </div>
 
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -480,7 +583,7 @@ async function recalculateAllProgramProgressForUser(programId: string) {
               </div>
             </div>
           </Card>
-        ))}
+        )})}
       </div>
 
       {/* Edit Module Dialog */}
@@ -592,6 +695,8 @@ async function recalculateAllProgramProgressForUser(programId: string) {
           </div>
         </DialogContent>
       </Dialog>
+    </div>
+    
     </div>
   );
 }

@@ -140,7 +140,6 @@ export function LabsSection() {
     const isExpanded = expandedCenterId === center.id;
 
     if (loading) {
-      console.log("got true");
       return (
         <div className="flex items-center justify-center h-96">
           <p className="text-gray-600 text-lg animate-pulse">

@@ -282,7 +282,6 @@ export default function Dashboard() {
         const userSnap = await getDoc(userRef);
 
         if (userSnap.exists() && userSnap.data().role === "admin") {
-          console.log("userSnap.data()" , userSnap.data())
           setIsAdmin(true);
         }
       } catch (error) {
@@ -467,7 +466,7 @@ export default function Dashboard() {
                 <Link href="/admin">
                   <Button
                     variant="ghost"
-                    className={`rounded-xl px-8 py-4 bg-blue-500 text-white hover:bg-blue-600 absolute left-10 font-medium`}
+                    className={`rounded-xl px-8 py-2 bg-blue-500 text-white hover:bg-blue-600 absolute left-10 font-medium`}
                   >
                     Admin
                   </Button>

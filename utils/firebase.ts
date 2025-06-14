@@ -169,6 +169,12 @@ export const deleteUserFile = async (
   await deleteObject(fileRef);
 };
 
+export const giveLoggedInUser =  async ()=>{
+  const auth = getAuth();
+  const user = auth.currentUser;
+  if (!user ) return;
+  return user
+}
 
 
 export const rtdb = getDatabase(app);

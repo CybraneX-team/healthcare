@@ -14,6 +14,8 @@ interface VideoPlayerViewProps {
   completedVideos: any
   onMarkComplete: (videoId: string, moduleId: string) => void;
   moduleProgress: Record<string, number>;
+  moduleTitle : any;
+  videoTitle  : any;
 }
 
 export function VideoPlayerView({
@@ -23,6 +25,8 @@ export function VideoPlayerView({
   programData,
   onBack,
   completedVideos,
+  moduleTitle,
+  videoTitle,
   onMarkComplete,
   moduleProgress,
 }: VideoPlayerViewProps) {
@@ -31,11 +35,12 @@ export function VideoPlayerView({
   const [comments, setComments] = useState<any[]>([]);
 
 
-
+  // console.log( "programId",  programId , "moduleId" , moduleId, "videoId" , videoId, "video-title" ,videoTitle  ,"module-title", moduleTitle)
   // Update current video when videoId changes
   useEffect(() => {
     setCurrentVideoId(videoId);
   }, [videoId]);
+  
   
   // Get module and video data from programData
   const moduleData = programData.modules[moduleId];
@@ -66,9 +71,8 @@ export function VideoPlayerView({
       handleVideoComplete();
     }
   };
-  console.log("comple", completedVideos)
-  console.log("moduleVideos", moduleVideos)
-  // console.log("comple", video.id)
+
+
   return (
     <div className="min-h-screen">
       {/* Header */}
@@ -87,17 +91,21 @@ export function VideoPlayerView({
           </div>
         </div>
         <div className="ml-auto px-8">
-          <Button
-            onClick={handleMarkComplete}
-            disabled={completedVideos[programId][moduleId]?.includes(videoId) || false}
-            className={`rounded-full px-4 py-2 text-sm ${
-              completedVideos[programId][moduleId]?.includes(videoId)
-                ? "bg-green-500 hover:bg-green-600 text-white"
-                : "bg-blue-500 hover:bg-blue-600 text-white"
-            }`}
-          >
-            {completedVideos[programId][moduleId]?.includes(videoId) ? "Completed" : "Mark Complete"}
-          </Button>
+         <Button
+  onClick={handleMarkComplete}
+  disabled={!!completedVideos?.[programId]?.[moduleId]?.includes(currentVideoId)}
+  className={`rounded-full px-4 py-2 text-sm ${
+    !!completedVideos?.[programId]?.[moduleId]?.includes(currentVideoId)
+      ? "bg-green-500 hover:bg-green-600 text-white"
+      : "bg-blue-500 hover:bg-blue-600 text-white"
+  }`}
+>
+  {!!completedVideos?.[programId]?.[moduleId]?.includes(currentVideoId)
+    ? "Completed"
+    : "Mark Complete"}
+</Button>
+
+
         </div>
       </div>
 
@@ -126,11 +134,13 @@ export function VideoPlayerView({
                     onClick={() => handleVideoSelect(video.id)}
                   >
                     <div className="flex items-center gap-3">
-                      {completedVideos[programId][moduleId]?.includes(video.id)? (
+                      {
+                      !!completedVideos?.[programId]?.[moduleId]?.includes(video.id) ? (
                         <CheckCircle className="h-5 w-5 text-green-500" />
                       ) : (
                         <Circle className="h-5 w-5 text-gray-300" />
-                      )}
+                      )
+                    }
                       <div>
                         <div className="text-sm font-medium text-gray-900">
                           {video.title}

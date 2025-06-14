@@ -78,7 +78,6 @@ const calculateModuleProgress = (module: any, completedVideos: Record<string, bo
         // 2️⃣ Fetch current user's assigned programs from Firestore
         const auth = getAuth();
         const user = auth.currentUser;
-        console.log("userrr", user)
         if (!user) {
           setPrograms([]);
           setLoading(false);
@@ -92,18 +91,17 @@ const calculateModuleProgress = (module: any, completedVideos: Record<string, bo
           : {};
 
         // 3️⃣ Merge default and user-assigned programs
-        const defaultPrograms = ["thrivemed-apollo", "thrivemed-atlas", "thrivemed-hub"];
-        const assignedProgramIds = new Set([
-          ...defaultPrograms,
-          ...Object.entries(userAssignedPrograms)
-            .filter(([_, assigned]) => assigned)
-            .map(([program]) => program),
-        ]);
+        const assignedProgramIds = new Set(
+        Object.entries(userAssignedPrograms)
+          .filter(([_, assigned]) => assigned)
+          .map(([program]) => program)
+      );
 
-        // 4️⃣ Filter programs to only assigned ones
-        const assignedPrograms = programsArray.filter((p) =>
-          assignedProgramIds.has(p.id)
-        );
+
+      // 4️⃣ Filter programs to only assigned ones
+      const assignedPrograms = programsArray.filter((p) =>
+        assignedProgramIds.has(p.id)
+    );
 
         setPrograms(assignedPrograms);
         setLoading(false);
@@ -138,6 +136,13 @@ const calculateModuleProgress = (module: any, completedVideos: Record<string, bo
   });
 
   return (
+    <>
+    {programs.length === 0 && (
+      <div className="text-center relative top-48 py-12">
+        <p className="text-gray-500">No assigned programs.</p>
+      </div>
+    )}
+
     <div className="min-h-screen ">
       <div className="py-8 px-8">
         <h1 className="text-2xl font-bold mb-6 text-gray-900">
@@ -329,7 +334,7 @@ const calculateModuleProgress = (module: any, completedVideos: Record<string, bo
               </div>
             ) : (
               <div className="text-center py-12">
-                <p className="text-gray-500">No programs found</p>
+                {/* <p className="text-gray-500">No programs found</p> */}
               </div>
             )}
           </TabsContent>
@@ -491,5 +496,6 @@ const calculateModuleProgress = (module: any, completedVideos: Record<string, bo
         </Tabs>
       </div>
     </div>
+    </>
   );
 }

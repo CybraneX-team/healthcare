@@ -1,3 +1,4 @@
+
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
@@ -20,6 +21,13 @@ import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import { ref as dbRef, onValue } from "firebase/database";
 import "@react-pdf-viewer/core/lib/styles/index.css";
+import { toast } from "react-toastify";
+// import { PDFDownloadLink, pdf } from '@react-pdf/renderer';
+import { pdf } from '@react-pdf/renderer';
+import { ClinicalSummaryPdf } from '@/components/ClinicalReport';
+import { SalesScriptPdf } from '@/components/SalesScriptPdf';
+import OverlayLoader from "@/components/OverlayLoader";
+
 
 const Viewer = dynamic(
   () => import("@react-pdf-viewer/core").then((mod) => mod.Viewer),
@@ -42,6 +50,16 @@ export default function UserDetailsPage() {
   const [selectedPrograms, setSelectedPrograms] = useState<string[]>([]);
   const [assigning, setAssigning] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState<{ active: boolean, message: string }>({
+  active: false,
+  message: "",
+});
+  const [processingText, setprocessingText] = useState<{ active: boolean, message: string }>({
+  active: false,
+  message: "",
+});
+const [showLabData, setShowLabData] = useState(false);
+
 
   const defaultPrograms = [
     "thrivemed-apollo",
@@ -56,7 +74,10 @@ export default function UserDetailsPage() {
       try {
         const userRef = doc(db, "users", id as string);
         const userSnap = await getDoc(userRef);
-        if (userSnap.exists()) setUserData(userSnap.data());
+        if (userSnap.exists()) {
+        setUserData(userSnap.data());
+        }
+
         else console.error("User not found");
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -119,43 +140,76 @@ export default function UserDetailsPage() {
     }
   };
 
-  const handleFileUpload = async (file: File) => {
-    if (!id) return;
-    setUploading(true);
+const handleFileUpload = async (file: File) => {
+  setprocessingText({active: true, message : "Processing and Uploading PDF"})
+  if (!id) return;
+  setUploading(true);
+
+  try {
+    const category = "labs"; // ✅ You can make this dynamic later
+    const storage = getStorage();
+    const timestamp = Date.now();
+    const storageRef = ref(storage, `documents/${id}/${category}/${timestamp}-${file.name}`);
+    await uploadBytes(storageRef, file);
+    const downloadURL = await getDownloadURL(storageRef);
+    const fullStorageName = `${timestamp}-${file.name}`;
+
+    // 🔁 Call API to extract data from uploaded file
+    const formData = new FormData();
+    formData.append("file", file);
+
+    let extractedData = "";
     try {
-      const storage = getStorage();
-      const storageRef = ref(storage, `documents/${id}/labs/${file.name}`);
-      await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(storageRef);
-
-      const userRef = doc(db, "users", id as string);
-      const docKey = file.name.split(".")[0];
-
-      const updatedDocuments = {
-        ...(userData.documents || {}),
-        [docKey]: {
-          downloadURL,
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          uploadedAt: new Date().toISOString(),
-        },
-      };
-
-      await updateDoc(userRef, {
-        documents: updatedDocuments,
+      const res = await fetch("/api/process-pdf", {
+        method: "POST",
+        body: formData,
       });
-
-      setUserData((prev: any) => ({
-        ...prev,
-        documents: updatedDocuments,
-      }));
-    } catch (error) {
-      console.error("Error uploading file:", error);
-    } finally {
-      setUploading(false);
+      const result = await res.json();
+      extractedData = result.extractedJson || "";
+    } catch (err) {
+      console.warn("Extraction failed:", err);
     }
-  };
+
+    const userRef = doc(db, "users", id as string);
+    const docKey = file.name.split(".")[0];
+
+    const updatedCategoryDocs = {
+      ...(userData?.[category] || {}),
+      [docKey]: {
+        downloadURL,
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        uploadedAt: new Date().toISOString(),
+        fullStorageName,
+      },
+    };
+
+    // 👇 Combine both updates
+    await updateDoc(userRef, {
+      [category]: updatedCategoryDocs,
+      [`extractedLabData`]: extractedData,
+    });
+
+    // 👇 Update local state
+    setUserData((prev: any) => ({
+      ...prev,
+      [category]: updatedCategoryDocs,
+      [`extractedLabData`]: extractedData,
+    }));
+
+    toast.success("File uploaded and processed successfully!");
+  } catch (error) {
+    console.error("Error uploading or processing file:", error);
+    toast.error("File upload or processing failed.");
+  } finally {
+    setUploading(false);
+    setprocessingText({active: false, message : ""})
+  }
+};
+
+
+
 
   const handleViewPdf = (downloadURL: string) => {
     setSelectedPdf(downloadURL);
@@ -163,6 +217,126 @@ export default function UserDetailsPage() {
       viewerRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 100);
   };
+
+
+// const handleDownloadClinicalSummary = async () => {
+//   if (!userData?.extractedLabData) return toast.error("No extracted lab data found.");
+
+//   try {
+//     const res = await fetch("/api/generate-summary", {
+//       method: "POST",
+//       body: JSON.stringify({
+//         extractedText: userData.extractedLabData,
+//         type: "summary",
+//       }),
+//     });
+
+//     const data = await res.json();
+
+//     const blob = await pdf(<ClinicalSummaryPdf summary={data.result} />).toBlob();
+//     const url = URL.createObjectURL(blob);
+//     const a = document.createElement("a");
+//     a.href = url;
+//     a.download = "Clinical_Summary.pdf";
+//     a.click();
+//     URL.revokeObjectURL(url);
+
+//     toast.success("Clinical Summary PDF downloaded!");
+//   } catch (err) {
+//     console.error(err);
+//     toast.error("Failed to download clinical summary.");
+//   }
+// };
+
+const handleDownloadClinicalSummary = async () => {
+  if (!userData?.extractedLabData) return toast.error("No extracted lab data found.");
+  setPdfLoading({ active: true, message: "Generating Clinical Summary PDF..." });
+
+  try {
+    const res = await fetch("/api/generate-summary", {
+      method: "POST",
+      body: JSON.stringify({ extractedText: userData.extractedLabData, type: "summary" }),
+    });
+
+    const data = await res.json();
+
+    const blob = await pdf(<ClinicalSummaryPdf summary={data.result} />).toBlob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "Clinical_Summary.pdf";
+    a.click();
+    URL.revokeObjectURL(url);
+
+    toast.success("Clinical Summary PDF downloaded!");
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to download clinical summary.");
+  } finally {
+    setPdfLoading({ active: false, message: "" });
+  }
+};
+
+
+// const handleDownloadSalesScript = async () => {
+//   if (!userData?.extractedLabData) return toast.error("No extracted lab data found.");
+
+//   try {
+//     const res = await fetch("/api/generate-summary", {
+//       method: "POST",
+//       body: JSON.stringify({
+//         extractedText: userData.extractedLabData,
+//         type: "sales",
+//       }),
+//     });
+
+//     const data = await res.json();
+
+//     const blob = await pdf(<SalesScriptPdf script={data.result} />).toBlob();
+//     const url = URL.createObjectURL(blob);
+//     const a = document.createElement("a");
+//     a.href = url;
+//     a.download = "Sales_Script.pdf";
+//     a.click();
+//     URL.revokeObjectURL(url);
+
+//     toast.success("Sales Script PDF downloaded!");
+//   } catch (err) {
+//     console.error(err);
+//     toast.error("Failed to download sales script.");
+//   }
+// };
+
+const handleDownloadSalesScript = async () => {
+  if (!userData?.extractedLabData) return toast.error("No extracted lab data found.");
+  setPdfLoading({ active: true, message: "Generating Sales Script PDF..." });
+
+  try {
+    const res = await fetch("/api/generate-summary", {
+      method: "POST",
+      body: JSON.stringify({ extractedText: userData.extractedLabData, type: "sales" }),
+    });
+
+    const data = await res.json();
+
+    const blob = await pdf(<SalesScriptPdf script={data.result} />).toBlob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "Sales_Script.pdf";
+    a.click();
+    URL.revokeObjectURL(url);
+
+    toast.success("Sales Script PDF downloaded!");
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to download sales script.");
+  } finally {
+    setPdfLoading({ active: false, message: "" });
+  }
+};
+
+
 
   if (!userData) {
     return (
@@ -176,6 +350,12 @@ export default function UserDetailsPage() {
   }
 
   return (
+    <>
+    {pdfLoading.active || processingText.active && <OverlayLoader message={
+      pdfLoading.active? 
+      pdfLoading.message :
+      processingText.message
+      } />}
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <AnimatePresence>
@@ -242,6 +422,7 @@ export default function UserDetailsPage() {
             </div>
           </Card>
 
+
           {/* Middle Column - Overview */}
           <Card className="p-8 bg-white shadow-lg rounded-2xl border border-blue-100 lg:col-span-2">
             <h2 className="text-2xl font-bold text-blue-900 mb-8">Overview</h2>
@@ -285,6 +466,80 @@ export default function UserDetailsPage() {
             </div>
           </Card>
 
+     <Card className="p-8 bg-white shadow-lg rounded-2xl border border-blue-100 lg:col-span-3">
+  <div className="flex items-center justify-between mb-4 cursor-pointer" onClick={() => setShowLabData((prev) => !prev)}>
+    <h2 className="text-2xl font-bold text-blue-900">Extracted Lab Data</h2>
+    <button className="text-blue-600 font-semibold hover:underline focus:outline-none">
+      {showLabData ? "Hide" : "Show"}
+    </button>
+  </div>
+
+  {showLabData && (
+    <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mt-4">
+      {(() => {
+        try {
+          const cleaned = userData?.extractedLabData
+            ?.replace(/^```json/, "")
+            ?.replace(/```$/, "")
+            ?.trim();
+
+          const parsed = JSON.parse(cleaned || "{}");
+
+          return Object.entries(parsed).map(([sectionName, sectionData]: [string, any]) => (
+            <div key={sectionName} className="bg-white p-6 rounded-xl shadow border min-w-[250px] w-full">
+              <h3 className="text-blue-700 font-bold text-md mb-2 capitalize">
+                {sectionName.replace(/_/g, " ")}
+              </h3>
+              <ul className="list-disc list-inside text-blue-900 space-y-1">
+                {Object.entries(sectionData || {}).map(([label, value]) => (
+                  <li key={label}>
+                    <span className="font-medium capitalize">{label.replace(/_/g, " ")}:</span>{" "}
+                    {value === null || value === ""
+                      ? "N/A"
+                      : typeof value === "object" && !Array.isArray(value) ? (
+                          <ul className="ml-4 list-disc text-sm">
+                            {Object.entries(value).map(([k, v]) => (
+                              <li key={k}>
+                                <span className="font-medium capitalize">{k.replace(/_/g, " ")}:</span>{" "}
+                                {v === null || v === "" ? "N/A" : String(v)}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : String(value)}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ));
+        } catch (e) {
+          return <p className="text-red-500">Unable to parse lab data.</p>;
+        }
+      })()}
+    </div>
+  )}
+</Card>
+
+
+
+          {/* Clinical Tools Section */}
+<Card className="p-8 bg-white shadow-lg rounded-2xl border border-blue-100 lg:col-span-3">
+  <h2 className="text-2xl font-bold text-blue-900 mb-6">Generate Reports</h2>
+  <div className="flex flex-wrap gap-4">
+    <Button
+      className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700"
+      onClick={handleDownloadClinicalSummary}
+    >
+      Download Clinical Summary PDF
+    </Button>
+    <Button
+      className="bg-green-600 text-white px-6 py-3 rounded-xl hover:bg-green-700"
+      onClick={handleDownloadSalesScript}
+    >
+      Download Sales Script PDF
+    </Button>
+  </div>
+</Card>
+
           {/* Programs Section */}
           <Card className="p-8 bg-white shadow-lg rounded-2xl border border-blue-100 lg:col-span-3">
             <div className="flex items-center justify-between mb-8">
@@ -299,6 +554,7 @@ export default function UserDetailsPage() {
                 {assigning ? "Assigning..." : "Assign Selected"}
               </Button>
             </div>
+
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {availablePrograms.map((program) => {
@@ -345,7 +601,7 @@ export default function UserDetailsPage() {
               })}
             </div>
           </Card>
-
+          
           {/* Documents Section */}
           <Card className="p-8 bg-white shadow-lg rounded-2xl border border-blue-100 lg:col-span-3">
             <h2 className="text-2xl font-bold text-blue-900 mb-8">Documents</h2>
@@ -398,89 +654,64 @@ export default function UserDetailsPage() {
             </div>
 
             <div className="space-y-4">
-              {userData.documents &&
-                Object.entries(userData.documents).map(
-                  ([docId, docData]: any) => {
-                    if (
-                      typeof docData === "object" &&
-                      docData.hasOwnProperty("downloadURL") === false
-                    ) {
-                      return Object.entries(docData).map(
-                        ([nestedId, nestedDoc]: any) => (
-                          <div
-                            key={nestedId}
-                            className="flex items-center justify-between p-6 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors duration-200 border border-blue-100"
-                          >
-                            <div className="flex items-center space-x-4">
-                              <div className="h-12 w-12 bg-blue-500 rounded-xl flex items-center justify-center">
-                                <FileText className="h-6 w-6 text-white" />
-                              </div>
-                              <span className="font-semibold text-blue-900">
-                                {nestedDoc.name || nestedId}
-                              </span>
-                            </div>
+               {(() => {
+    const categories = ["labs", "radiology", "prescriptions"];
+    const allDocs: { id: string; data: any }[] = [];
 
-                            {nestedDoc.type === "application/pdf" ? (
-                              <Button
-                                variant="outline"
-                                className="text-white bg-blue-500 hover:text-blue-700 hover:underline font-medium"
-                                onClick={() =>
-                                  handleViewPdf(nestedDoc.downloadURL)
-                                }
-                              >
-                                View PDF
-                              </Button>
-                            ) : (
-                              <a
-                                href={nestedDoc.downloadURL}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-white bg-blue-500 hover:text-blue-700 hover:underline font-medium"
-                              >
-                                View File
-                              </a>
-                            )}
-                          </div>
-                        )
-                      );
-                    } else {
-                      return (
-                        <div
-                          key={docId}
-                          className="flex items-center justify-between p-6 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors duration-200 border border-blue-100"
-                        >
-                          <div className="flex items-center space-x-4">
-                            <div className="h-12 w-12 bg-blue-500 rounded-xl flex items-center justify-center">
-                              <FileText className="h-6 w-6 text-white" />
-                            </div>
-                            <span className="font-semibold text-blue-900">
-                              {docData.name || docId}
-                            </span>
-                          </div>
+    categories.forEach((cat) => {
+      const section = userData?.[cat];
+      if (section && typeof section === "object") {
+        Object.entries(section).forEach(([docId, docData]: any) => {
+          if (docData?.downloadURL) {
+            allDocs.push({ id: docId, data: docData });
+          }
+        });
+      }
+    });
 
-                          {docData.type === "application/pdf" ? (
-                            <Button
-                              variant="outline"
-                              className="bg-blue-500 text-white hover:bg-blue-700 border-blue-200 rounded-xl"
-                              onClick={() => handleViewPdf(docData.downloadURL)}
-                            >
-                              View PDF
-                            </Button>
-                          ) : (
-                            <a
-                              href={docData.downloadURL}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-500 hover:text-blue-700 hover:underline font-medium"
-                            >
-                              View File
-                            </a>
-                          )}
-                        </div>
-                      );
-                    }
-                  }
-                )}
+    if (allDocs.length === 0) {
+      return (
+        <p className="text-blue-600 text-center">
+          No documents uploaded yet.
+        </p>
+      );
+    }
+
+    return allDocs.map(({ id, data }) => (
+      <div
+        key={id}
+        className="flex items-center justify-between p-6 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors duration-200 border border-blue-100"
+      >
+        <div className="flex items-center space-x-4">
+          <div className="h-12 w-12 bg-blue-500 rounded-xl flex items-center justify-center">
+            <FileText className="h-6 w-6 text-white" />
+          </div>
+          <span className="font-semibold text-blue-900">
+            {data.name || id}
+          </span>
+        </div>
+
+        {data.type === "application/pdf" ? (
+          <Button
+            variant="outline"
+            className="bg-blue-500 text-white hover:bg-blue-700 border-blue-200 rounded-xl"
+            onClick={() => handleViewPdf(data.downloadURL)}
+          >
+            View PDF
+          </Button>
+        ) : (
+          <a
+            href={data.downloadURL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-500 hover:text-blue-700 hover:underline font-medium"
+          >
+            View File
+          </a>
+        )}
+      </div>
+    ));
+  })()}
             </div>
           </Card>
 
@@ -513,5 +744,6 @@ export default function UserDetailsPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

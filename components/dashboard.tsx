@@ -239,7 +239,6 @@ export default function Dashboard() {
       }
 
       const data = await res.json();
-      console.log("Extracted Text:", data.extractedText);
       setExtractedText(data.extractedText);
     } catch (err) {
       console.error("Error:", err);

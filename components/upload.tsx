@@ -211,16 +211,8 @@ const handleDownloadFile = (url: string, filename: string) => {
       ]);
 
       // Store file reference in Firestore (only metadata, not the actual file)
-      await updateUserProfile(user.uid, {
-      [`${file.category}.${file.id}`]: {
-        name: file.name,
-        size: file.size,
-        fullStorageName: fileName,  
-        type: file.type,
-        downloadURL,
-        uploadedAt: new Date().toISOString()
-      }
-    });
+
+
     try {
       const formData = new FormData();
       formData.append("file", actualFile);
@@ -231,7 +223,20 @@ const handleDownloadFile = (url: string, filename: string) => {
       });
 
       const result = await res.json();
-} catch (err) {
+
+      await updateUserProfile(user.uid, {
+      [file.category]: {
+        [file.id]: {
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          fullStorageName: fileName,
+          downloadURL,
+          uploadedAt: new Date().toISOString()
+        }
+      }, 
+       [`extracted${file.category}Data`]: result.extractedJson ? result.extractedJson : `` 
+    });}  catch (err) {
   console.error("Groq extraction failed:", err);
 }
     toast.success("File uploaded successfully!");
@@ -253,7 +258,6 @@ const handleDeleteFile = async (fileId: string) => {
       console.warn("File not found in local state");
       return;
     }
-    console.log("fileToDelete", fileToDelete)
     const user = getCurrentUser();
     if (!user) {
       throw new Error("User not authenticated");
@@ -546,7 +550,6 @@ const handleDeleteFile = async (fileId: string) => {
                         {uploadedFiles
                           .filter((file) => file.category === activeTab)
                           .map((file) => {
-                            console.log("file", file)
                             return (
                               <motion.div
                                 key={file.id}

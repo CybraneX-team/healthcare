@@ -14,21 +14,32 @@ async function extractTextFromPDF(pdfBuffer: Buffer): Promise<string> {
   }
 }
 
-// 🤖 Send to Groq LLM
+
 async function sendToGroqLLM(extractedText: string): Promise<any> {
  
   const prompt = `
-        Extract the patient's data into the JSON format provided below from the following report text ur json should excatly be in format of 
-        the text extrated from PDF:
+You are a medical report parser.
 
-        text extrated from PDF:
-        """
-        ${extractedText}
-        """
+Your job is to extract data from the following medical report into the **exact JSON schema** shown below. Do not add, rename, or remove any keys.
 
-        JSON output format: ${samplePdfData} Your response should always be in this format 
+🧠 Mapping Instructions:
+- Some field names in the report may differ in wording or format (e.g., "Bilirubin-Total" or "Total Bilirubin" → "bilirubin").
+- When this happens, **intelligently match** the report value to the most appropriate field in the schema.
+- Use medical reasoning to assign values to the correct schema key.
 
-        `;
+📝 Output Rules:
+- The output must include **every field** from the schema, even if it was not found in the report.
+- Use the **string "null"** (not the value null) for missing or unavailable values.
+- Output only valid raw JSON — no explanations, markdown, or formatting.
+
+📄 Report:
+"""
+${extractedText}
+"""
+
+📘 JSON Schema:
+${JSON.stringify(samplePdfData, null, 2)}
+`;
 
     const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
@@ -39,7 +50,7 @@ async function sendToGroqLLM(extractedText: string): Promise<any> {
       body: JSON.stringify({
         model: "meta-llama/llama-4-scout-17b-16e-instruct",
         messages: [{ role: "user", content: prompt }],
-        temperature: 0.2,
+        temperature: 0.1,
       }),
     });
 
@@ -50,7 +61,6 @@ async function sendToGroqLLM(extractedText: string): Promise<any> {
     }
 
     const result = await res.json();
-    console.log("Groq API result:", result); // Optional
     return result.choices?.[0]?.message?.content ?? "No response from Groq";
 
     }

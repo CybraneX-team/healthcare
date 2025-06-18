@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, UploadCloud, Menu, X } from "lucide-react";
 import Image from "next/image";
@@ -41,30 +41,109 @@ export default function FoodIntakeModal({ isOpen, onClose }: FoodIntakeModalProp
     }
   });
 
+
+  type FoodItem = {
+    item: string;
+    quantity: string; 
+    calories: number;
+    protein: number;
+    carbs: number;
+    fats: number;
+    _originalMacros?: {
+      calories: number;
+      protein: number;
+      carbs: number;
+      fats: number;
+      quantity: number;
+      unit: string;
+    };
+    _quantityNum?: number; 
+    _unit?: string;
+    checked?: boolean;
+    isManual?: boolean;
+  };
+  const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [apiDebug, setApiDebug] = useState<string>("");
+
   const tabs = ["Meal Intake", "Water Intake", "Workout", "Sleep periods", "Cardio", "Weight", "Habits"];
 
-  // Sample food stats data
-  const foodStats = {
-    carbohydrates: 2500,
-    fats: 1200,
-    protein: 12,
-    total: 3700
-  };
+  function parseQuantity(qty: string): {num: number, unit: string} {
+    // Match leading number (int or float)
+    const match = qty.match(/^(\d+(?:\.\d+)?)/);
+    if (match) {
+      const num = parseFloat(match[1]);
+      const unit = qty.slice(match[1].length).trim();
+      return { num, unit };
+    }
+    return { num: 1, unit: qty };
+  }
 
-  // Handle file upload (placeholder)
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Process file upload logic would go here
-    console.log("File uploaded:", e.target.files);
+  function processApiItems(items: any[]): FoodItem[] {
+    return items.map((item) => {
+      const { num, unit } = parseQuantity(item.quantity);
+      return {
+        ...item,
+        _originalMacros: {
+          calories: item.calories / num,
+          protein: item.protein / num,
+          carbs: item.carbs / num,
+          fats: item.fats / num,
+          quantity: num,
+          unit,
+        },
+        _quantityNum: num,
+        _unit: unit,
+        checked: true,
+      };
+    });
+  }
+
+  const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLoading(true);
+    setError(null);
+    setApiDebug("");
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+      const res = await fetch("/api/calories-tracker", {
+        method: "POST",
+        body: formData,
+      });
+      const text = await res.text();
+      setApiDebug(text);
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        setError("Invalid JSON response from API");
+        setLoading(false);
+        return;
+      }
+      if (!res.ok) {
+        setError(data.error || "Failed to analyze image");
+        setLoading(false);
+        return;
+      }
+      let arr = Array.isArray(data) ? data : data.items;
+      setFoodItems(processApiItems(arr || []));
+    } catch (err) {
+      setError("Failed to analyze image");
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Update manual entries
-  const updateManualEntry = (field: keyof typeof manualEntries, value: number) => {
-    const newEntries = { ...manualEntries, [field]: value };
-    newEntries.total = newEntries.carbohydrates + newEntries.fats + newEntries.protein;
-    setManualEntries(newEntries);
-  };
+  // const updateManualEntry = (field: keyof typeof manualEntries, value: number) => {
+  //   const newEntries = { ...manualEntries, [field]: value };
+  //   newEntries.total = newEntries.carbohydrates + newEntries.fats + newEntries.protein;
+  //   setManualEntries(newEntries);
+  // };
 
-  // Handle habit changes
   const toggleFasting = () => {
     setHabits(prev => ({
       ...prev,
@@ -113,6 +192,73 @@ export default function FoodIntakeModal({ isOpen, onClose }: FoodIntakeModalProp
         enabled: !prev.exercise.enabled
       }
     }));
+  };
+
+  // Only allow editing the numeric quantity
+  const handleQuantityChange = (idx: number, newNum: string) => {
+    setFoodItems((prev) =>
+      prev.map((item, i) => {
+        if (i !== idx) return item;
+        const num = parseFloat(newNum);
+        const safeNum = isNaN(num) || num <= 0 ? 1 : num;
+        const orig = item._originalMacros!;
+        return {
+          ...item,
+          _quantityNum: safeNum,
+          calories: Math.round(orig.calories * safeNum),
+          protein: Math.round(orig.protein * safeNum),
+          carbs: Math.round(orig.carbs * safeNum),
+          fats: Math.round(orig.fats * safeNum),
+        };
+      })
+    );
+  };
+
+  // Remove a food item
+  const handleRemoveItem = (idx: number) => {
+    setFoodItems((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  // Add a manual item
+  const handleAddManualItem = () => {
+    setFoodItems((prev) => [
+      ...prev,
+      {
+        item: "",
+        quantity: "1 unit",
+        calories: 0,
+        protein: 0,
+        carbs: 0,
+        fats: 0,
+        _originalMacros: {
+          calories: 0,
+          protein: 0,
+          carbs: 0,
+          fats: 0,
+          quantity: 1,
+          unit: "unit",
+        },
+        _quantityNum: 1,
+        _unit: "unit",
+        checked: true,
+        isManual: true,
+      },
+    ]);
+  };
+
+  // Save/log meal intake (placeholder)
+  const handleSaveMeal = () => {
+    // TODO: Implement save logic (API call, state update, etc.)
+    alert("Meal intake saved! (Implement actual save logic)");
+  };
+
+  // Toggle checklist
+  const handleToggleCheck = (idx: number) => {
+    setFoodItems((prev) =>
+      prev.map((item, i) =>
+        i === idx ? { ...item, checked: !item.checked } : item
+      )
+    );
   };
 
   const renderHabitsContent = () => (
@@ -347,6 +493,158 @@ export default function FoodIntakeModal({ isOpen, onClose }: FoodIntakeModalProp
           <span className="text-gray-500 text-sm sm:text-base text-center">Click to upload or drag and drop</span>
         </label>
       </div>
+      {/* Loading/Error */}
+      {loading && <div className="mt-4 text-blue-600">Analyzing image...</div>}
+      {error && <div className="mt-4 text-red-600">{error}</div>}
+      {apiDebug && (
+        <div className="mt-2 text-xs text-gray-400 break-all">
+          <b>API Response:</b> {apiDebug}
+        </div>
+      )}
+      {/* Food items table or no items message */}
+      {foodItems.length > 0 ? (
+        <div className="mt-8">
+          <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100">
+            <h3 className="text-lg font-bold mb-4 text-blue-700 flex items-center gap-2">
+              <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#2563eb" opacity="0.1"/><path d="M8 12l2.5 2.5L16 9" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              Detected Food Items
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="min-w-full rounded-xl overflow-hidden border border-gray-200 text-sm">
+                <thead>
+                  <tr className="bg-blue-50 text-blue-900">
+                    <th className="px-4 py-2 font-semibold"></th>
+                    <th className="px-4 py-2 font-semibold">Item</th>
+                    <th className="px-4 py-2 font-semibold">Quantity</th>
+                    <th className="px-4 py-2 font-semibold">Calories</th>
+                    <th className="px-4 py-2 font-semibold">Protein (g)</th>
+                    <th className="px-4 py-2 font-semibold">Carbs (g)</th>
+                    <th className="px-4 py-2 font-semibold">Fats (g)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {foodItems.map((item, idx) => (
+                    <tr key={idx} className={`even:bg-gray-50 ${!item.checked ? 'opacity-50' : ''}`}>
+                      <td className="px-2 py-2 text-center">
+                        <input
+                          type="checkbox"
+                          checked={!!item.checked}
+                          onChange={() => handleToggleCheck(idx)}
+                          className="accent-blue-600 w-5 h-5"
+                        />
+                      </td>
+                      <td className="px-4 py-2 text-gray-800 font-medium">
+                        {item.isManual ? (
+                          <input
+                            type="text"
+                            value={item.item}
+                            onChange={e => setFoodItems(prev => prev.map((it, i) => i === idx ? { ...it, item: e.target.value } : it))}
+                            className="border border-gray-300 rounded-lg px-2 py-1 w-28 focus:outline-none focus:ring-2 focus:ring-blue-200 transition"
+                            placeholder="Name"
+                          />
+                        ) : (
+                          item.item
+                        )}
+                      </td>
+                      <td className="px-4 py-2 flex items-center gap-2">
+                        {item.isManual ? (
+                          <>
+                            <input
+                              type="number"
+                              min={1}
+                              value={item._quantityNum ?? 1}
+                              onChange={e => handleQuantityChange(idx, e.target.value)}
+                              className="border border-gray-300 rounded-lg px-2 py-1 w-14 focus:outline-none focus:ring-2 focus:ring-blue-200 transition text-center"
+                            />
+                            <input
+                              type="text"
+                              value={item._unit}
+                              onChange={e => setFoodItems(prev => prev.map((it, i) => i === idx ? { ...it, _unit: e.target.value } : it))}
+                              className="border border-gray-300 rounded-lg px-2 py-1 w-20 focus:outline-none focus:ring-2 focus:ring-blue-200 transition text-center"
+                              placeholder="unit"
+                            />
+                          </>
+                        ) : (
+                          <>
+                            <input
+                              type="number"
+                              min={1}
+                              value={item._quantityNum ?? 1}
+                              onChange={e => handleQuantityChange(idx, e.target.value)}
+                              className="border border-gray-300 rounded-lg px-3 py-1 w-16 focus:outline-none focus:ring-2 focus:ring-blue-200 transition text-center"
+                            />
+                            <span className="text-gray-500 text-xs ml-1">× {item.isManual ? 'unit' : item._unit}</span>
+                          </>
+                        )}
+                      </td>
+                      <td className="px-4 py-2 text-center text-blue-700 font-semibold">
+                        {item.isManual ? (
+                          <input
+                            type="number"
+                            value={item.calories}
+                            min={0}
+                            onChange={e => setFoodItems(prev => prev.map((it, i) => i === idx ? { ...it, calories: Number(e.target.value) } : it))}
+                            className="border border-gray-300 rounded-lg px-2 py-1 w-16 focus:outline-none focus:ring-2 focus:ring-blue-200 transition text-center"
+                          />
+                        ) : item.calories}
+                      </td>
+                      <td className="px-4 py-2 text-center">
+                        {item.isManual ? (
+                          <input
+                            type="number"
+                            value={item.protein}
+                            min={0}
+                            onChange={e => setFoodItems(prev => prev.map((it, i) => i === idx ? { ...it, protein: Number(e.target.value) } : it))}
+                            className="border border-gray-300 rounded-lg px-2 py-1 w-14 focus:outline-none focus:ring-2 focus:ring-blue-200 transition text-center"
+                          />
+                        ) : item.protein}
+                      </td>
+                      <td className="px-4 py-2 text-center">
+                        {item.isManual ? (
+                          <input
+                            type="number"
+                            value={item.carbs}
+                            min={0}
+                            onChange={e => setFoodItems(prev => prev.map((it, i) => i === idx ? { ...it, carbs: Number(e.target.value) } : it))}
+                            className="border border-gray-300 rounded-lg px-2 py-1 w-14 focus:outline-none focus:ring-2 focus:ring-blue-200 transition text-center"
+                          />
+                        ) : item.carbs}
+                      </td>
+                      <td className="px-4 py-2 text-center">
+                        {item.isManual ? (
+                          <input
+                            type="number"
+                            value={item.fats}
+                            min={0}
+                            onChange={e => setFoodItems(prev => prev.map((it, i) => i === idx ? { ...it, fats: Number(e.target.value) } : it))}
+                            className="border border-gray-300 rounded-lg px-2 py-1 w-14 focus:outline-none focus:ring-2 focus:ring-blue-200 transition text-center"
+                          />
+                        ) : item.fats}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3 mt-6 justify-between items-center">
+              <button
+                onClick={handleAddManualItem}
+                className="bg-gray-100 hover:bg-blue-50 text-blue-700 font-medium px-4 py-2 rounded-lg border border-gray-200 transition"
+              >
+                + Add Item Manually
+              </button>
+              <button
+                onClick={handleSaveMeal}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg shadow-sm transition"
+              >
+                Save Meal Intake
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (!loading && !error && apiDebug && (
+        <div className="mt-8 text-gray-500">No food items detected in the image.</div>
+      ))}
     </div>
   );
 
@@ -426,4 +724,4 @@ export default function FoodIntakeModal({ isOpen, onClose }: FoodIntakeModalProp
       </div>
     </div>
   );
-} 
+}

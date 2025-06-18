@@ -104,6 +104,13 @@ const Kidney = ({ data }: KidneyProps) => {
   const urineAlbumin = 20; // This could come from urine tests
   const urinePH = 6.5;
 
+  // Toxins data (heavy metals) - based on Risk Stats
+  const toxicBurden = 43;
+  const mercury = 5; // μg/L μg/dL
+  const cadmium = 1.3; // μg/g
+  const lead = 1.6; // μg/dL
+  const bpa = 1.5; // ng/mL
+
   // Determine kidney health status
   const getKidneyStatus = (egfr: number): { status: string; color: string } => {
     if (egfr >= 90) return { status: "Healthy", color: "bg-green-100 text-green-800" };
@@ -119,7 +126,7 @@ const Kidney = ({ data }: KidneyProps) => {
   const hydrationLevel = 75; // percentage
 
   return (
-    <div className="min-h-screen p-4 text-black md:-mt-3">
+    <div className="h-full overflow-y-auto md:overflow-y-hidden p-4 text-black md:-mt-3">
       <motion.div
         variants={containerVariants}
         initial="hidden"
@@ -129,10 +136,10 @@ const Kidney = ({ data }: KidneyProps) => {
       >
         {/* Card 1: Kidney Health and Urine PH */}
         <motion.div variants={itemVariants} className="md:col-span-8">
-          <div className="bg-white rounded-3xl shadow-sm h-full p-8">
+          <div className="bg-white rounded-3xl shadow-sm h-auto p-8">
             <div className="flex justify-between items-start">
               <div>
-                <h2 className="text-xl md:text-3xl font-semibold text-gray-900 mb-4">
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">
                   Kidney Health
                 </h2>
                 <div className="">
@@ -140,16 +147,11 @@ const Kidney = ({ data }: KidneyProps) => {
                     {kidneyStatus.status}
                   </span> */}
                 </div>
-                <p className="text-gray-500 mt-24">Random Urine Albumin</p>
-                <div className="mt-2">
-                  <p className="text-2xl font-semibold">{urineAlbumin}</p>
-                  <p className="text-xl text-black font-light">mcg/minute</p>
-                </div>
               </div>
 
-              <div className="text-right">
+              <div className="text-right p-1">
                 <p className="text-gray-500">Urine PH</p>
-                <p className="text-2xl font-semibold">{urinePH}</p>
+                <p className="text-3xl font-semibold">{urinePH}</p>
                 <div className="mt-2">
                   {/* <span className={`inline-block px-2 py-1 rounded-full text-xs ${
                     urinePH >= 6.0 && urinePH <= 7.0 ? "bg-green-100 text-green-800" :
@@ -160,12 +162,20 @@ const Kidney = ({ data }: KidneyProps) => {
                 </div>
               </div>
             </div>
+            
+            <div className="mt-16">
+              <div className="mt-2">
+                <p className="text-3xl font-bold text-gray-900">{eGFR}</p>
+                <p className="text-sm text-gray-500 mt-1">{eGFRUnit}</p>
+                <p className="text-gray-500 text-md">Creatine Levels</p>
+              </div>
+            </div>
           </div>
         </motion.div>
 
         {/* Card 2: Hydration */}
         <motion.div variants={itemVariants} className="md:col-span-4">
-          <div className="bg-white rounded-3xl shadow-sm h-full p-6">
+          <div className="bg-white rounded-3xl shadow-sm h-[110%] p-8">
             <div className="flex flex-col h-full">
               <h2 className="text-xl md:text-2xl font-semibold text-gray-900 mb-4">
                 Hydration
@@ -195,9 +205,6 @@ const Kidney = ({ data }: KidneyProps) => {
                       className="transition-all duration-500"
                     />
                   </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-xl font-semibold">{hydrationLevel}%</span>
-                  </div>
                 </div>
               </div>
               <button className="mt-6 bg-gray-100 text-gray-700 rounded-full py-2 px-4 w-full hover:bg-gray-200 transition-colors">
@@ -207,82 +214,97 @@ const Kidney = ({ data }: KidneyProps) => {
           </div>
         </motion.div>
 
-        {/* Card 3: BUN Creatinine ratio */}
-        <motion.div variants={itemVariants} className="md:col-span-7">
-          <div className="bg-white rounded-3xl shadow-sm h-full p-8">
-            <h2 className="text:xl md:text-2xl font-semibold text-gray-900 mb-4">
-              BUN Creatinine Ratio
+        {/* Card 3: Risks Stats with Random Urine Albumin */}
+        <motion.div variants={itemVariants} className="md:col-span-4 -mt-6">
+          <div className="bg-white rounded-3xl shadow-sm h-auto p-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-8">
+              Risks Stats
             </h2>
-            <div className="flex gap-2 mb-6">
-              <span className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm">
-                Creatinine
-              </span>
-              <span className="bg-blue-100 text-blue-500 px-4 py-1 rounded-full text-sm">
-                BUN
-              </span>
-            </div>
-            <div className="flex items-center gap-2 mb-6 bg-gray-100 p-3 rounded-3xl">
-              <div className="bg-blue-500 h-32 w-8 rounded-full flex items-end">
-                <div 
-                  className="bg-blue-600 w-full rounded-full transition-all duration-500"
-                  style={{ height: `${Math.min((creatinine / 2) * 100, 100)}%` }}
-                ></div>
-              </div>
-              <div 
-                className="bg-blue-200 h-32 flex-grow rounded-2xl transition-all duration-500"
-                style={{ height: `${Math.min((bun / 50) * 100, 100)}%` }}
-              ></div>
-            </div>
-            <div>
-              <p className="text-2xl font-semibold">{eGFR}</p>
-              <p className="text-gray-500 text-sm">{eGFRUnit}</p>
-              <p className="text-gray-500 mt-2 text-lg">eGFR</p>
+            
+            <div className="mt-24">
+              <p className="text-gray-500 text-md mb-4">Random Urine <br/>Albumin</p>
               <div className="mt-2">
-                {/* <span className={`inline-block px-2 py-1 rounded-full text-xs ${kidneyStatus.color}`}>
-                  {kidneyStatus.status}
-                </span> */}
+                <p className="text-5xl font-semibold text-gray-900">{urineAlbumin}</p>
+                <p className="text-sm text-gray-500 font-light mt-2">mcg/minute</p>
               </div>
             </div>
           </div>
         </motion.div>
 
-        {/* Card 4: BUN Levels and Stats */}
-        <motion.div variants={itemVariants} className="md:col-span-5 ">
-          <div className="bg-white rounded-3xl shadow-sm h-full p-6 flex flex-col justify-between">
+        {/* Card 4: Toxins Data */}
+        <motion.div variants={itemVariants} className="md:col-span-4 -mt-6">
+          <div className="bg-white rounded-3xl shadow-sm h-auto p-8">
+            <div className="flex justify-between items-start">
+              <span className="text-gray-500 text-md">Toxins <br/>(heavy metals)</span>
+              <div className="text-right flex flex-col">
+                <span className="text-gray-500 text-sm">Toxic Burden</span>
+                <span className="text-3xl font-bold text-gray-900 ml-4">{toxicBurden}</span>
+              </div>
+            </div>
+            
+            <div className="space-y-2 mt-0">
+              <div className="flex justify-between items-center p-2 px-4 bg-gray-100 rounded-3xl">
+                <span className="text-gray-600 text-md font-medium">Mercury</span>
+                <div className="text-right">
+                  <span className="text-xl font-semibold text-gray-900">{mercury}</span>
+                  <span className="text-gray-500 text-sm ml-1">μg/L μg/dL</span>
+                </div>
+              </div>
+              
+              <div className="flex justify-between items-center p-2 px-4 bg-gray-100 rounded-2xl">
+                <span className="text-gray-600 text-md font-medium">Cadmium</span>
+                <div className="text-right">
+                  <span className="text-xl font-semibold text-gray-900">{cadmium}</span>
+                  <span className="text-gray-500 text-sm ml-1">μg/g</span>
+                </div>
+              </div>
+              
+              <div className="flex justify-between items-center p-2 px-4 bg-gray-100 rounded-2xl">
+                <span className="text-gray-600 text-md font-medium">Lead</span>
+                <div className="text-right">
+                  <span className="text-xl font-semibold text-gray-900">{lead}</span>
+                  <span className="text-gray-500 text-sm ml-1">μg/dL</span>
+                </div>
+              </div>
+              
+              <div className="flex justify-between items-center p-2 px-4 bg-gray-100 rounded-2xl">
+                <span className="text-gray-600 text-md font-medium">BPA</span>
+                <div className="text-right">
+                  <span className="text-xl font-semibold text-gray-900">{bpa}</span>
+                  <span className="text-gray-500 text-sm ml-1">ng/mL</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Card 5: BUN Levels and Stats */}
+        <motion.div variants={itemVariants} className="md:col-span-4 mt-7">
+          <div className="bg-white rounded-3xl shadow-sm h-auto p-6 flex flex-col justify-between">
             <div className="flex justify-between items-start mb-8">
-              {/* <span className={`px-4 py-1 rounded-full text-sm ${
-                bun <= 20 ? "bg-green-100 text-green-500" :
-                bun <= 40 ? "bg-yellow-100 text-yellow-500" :
-                "bg-red-100 text-red-500"
-              }`}>
-                {bun <= 20 ? "Healthy" : bun <= 40 ? "Monitor" : "Elevated"}
-              </span> */}
+              <span className="px-4 py-2 rounded-full text-sm bg-blue-100 text-blue-600 font-medium">
+                Healthy
+              </span>
               <div className="text-right">
-                <h3 className="md:text-xl font-semibold text-gray-900">
+                <h3 className="text-lg font-normal text-gray-900">
                   BUN Levels
                 </h3>
-                <p className="text-xl font-light">{bun} {bunUnit}</p>
+                <p className="text-lg font-bold text-gray-900">{bun}mg/dl</p>
               </div>
             </div>
 
-            <div className="flex justify-between items-end">
+            <div className="flex justify-between items-end mt-16">
               <div>
-                <p className="md:text-2xl font-semibold">{uricAcid} mg/dL</p>
-                <p className="text-xl text-gray-900">Uric Acid Levels</p>
-                <div className="mt-2">
-                  {/* <span className={`inline-block px-2 py-1 rounded-full text-xs ${
-                    uricAcid <= 7.0 ? "bg-green-100 text-green-800" :
-                    "bg-yellow-100 text-yellow-800"
-                  }`}>
-                    {uricAcid <= 7.0 ? "Normal" : "Elevated"}
-                  </span> */}
+                <p className="text-gray-500">Uric Acid</p>
+            <div className="flex">
+                  <p className="text-3xl font-semibold text-gray-900">{uricAcid}</p>
+                  <p className="text-xl mt-2 ml-1 text-gray-900">mg/dl</p>
                 </div>
               </div>
 
               <div className="text-right">
-                <p className="text-gray-500">Creatinine</p>
-                <p className="text-4xl font-semibold">{creatinine}</p>
-                <p className="text-gray-500 text-sm">{creatinineUnit}</p>
+                <p className="text-gray-500 text-sm">eGFR</p>
+                <p className="text-3xl font-bold text-gray-900">{eGFR}</p>
               </div>
             </div>
           </div>

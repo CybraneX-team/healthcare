@@ -40,7 +40,7 @@ export function AdminSidebar({
     { id: "modules", label: "Modules", icon: FolderKanban },
     { id: "videos", label: "Videos", icon: Video },
     { id: "users", label: "Users", icon: Users },
-    { id: "settings", label: "Settings", icon: Settings },
+    // { id: "settings", label: "Settings", icon: Settings },
   ];
 
   return (
@@ -104,7 +104,7 @@ export function AdminSidebar({
           </nav>
         </div>
 
-        <div className="p-4 border-t border-gray-200">
+        {/* <div className="p-4 border-t border-gray-200">
           <Button
             variant="ghost"
             className="w-full justify-start text-gray-700 hover:bg-gray-100"
@@ -112,7 +112,7 @@ export function AdminSidebar({
             <LogOut className="mr-3 h-5 w-5 text-gray-500" />
             Logout
           </Button>
-        </div>
+        </div> */}
       </div>
     </>
   );

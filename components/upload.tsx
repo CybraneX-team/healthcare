@@ -51,9 +51,7 @@ export default function UploadPage() {
 useEffect(() => {
   const fetchUploadedFiles = async () => {
     const user = getCurrentUser();
-    console.log("current user", user 
-
-    )
+    
     if (!user) return;
 
     const profile = await getUserProfile(user.uid);
@@ -98,7 +96,6 @@ useEffect(() => {
       }
     });
 
-    console.log("Fetched uploaded files:", files);
     setUploadedFiles(files);
   };
 
@@ -224,7 +221,19 @@ const handleDownloadFile = (url: string, filename: string) => {
         uploadedAt: new Date().toISOString()
       }
     });
-    
+    try {
+      const formData = new FormData();
+      formData.append("file", actualFile);
+
+      const res = await fetch("/api/process-pdf", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await res.json();
+} catch (err) {
+  console.error("Groq extraction failed:", err);
+}
     toast.success("File uploaded successfully!");
     } catch (error) {
       console.error("File upload failed:", error);
@@ -244,7 +253,7 @@ const handleDeleteFile = async (fileId: string) => {
       console.warn("File not found in local state");
       return;
     }
-
+    console.log("fileToDelete", fileToDelete)
     const user = getCurrentUser();
     if (!user) {
       throw new Error("User not authenticated");

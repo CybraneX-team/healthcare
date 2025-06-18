@@ -302,7 +302,7 @@ export default function UserDetailsPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {availablePrograms.map((program) => {
-                const isDefault = defaultPrograms.includes(program);
+                // const isDefault = defaultPrograms.includes(program);
                 const isAlreadyAssigned =
                   !!userData.assignedPrograms?.[program];
                 const isChecked = selectedPrograms.includes(program);
@@ -311,7 +311,7 @@ export default function UserDetailsPage() {
                   <label
                     key={program}
                     className={`flex items-center gap-4 p-6 rounded-xl border-2 transition-all duration-200 cursor-pointer ${
-                      isDefault || isAlreadyAssigned
+                       isAlreadyAssigned
                         ? "bg-blue-50 border-blue-200"
                         : isChecked
                         ? "bg-blue-100 border-blue-300 shadow-md"
@@ -320,8 +320,8 @@ export default function UserDetailsPage() {
                   >
                     <input
                       type="checkbox"
-                      disabled={isDefault || isAlreadyAssigned || assigning}
-                      checked={isDefault || isAlreadyAssigned || isChecked}
+                      disabled={ isAlreadyAssigned || assigning}
+                      checked={isAlreadyAssigned || isChecked}
                       onChange={(e) =>
                         handleProgramSelect(program, e.target.checked)
                       }
@@ -330,12 +330,12 @@ export default function UserDetailsPage() {
                     <span className="flex-1 font-medium text-blue-900">
                       {program}
                     </span>
-                    {isDefault && (
+                    {/* {isDefault && (
                       <span className="text-xs px-3 py-1 bg-blue-500 text-white rounded-full font-medium">
                         default
                       </span>
-                    )}
-                    {isAlreadyAssigned && !isDefault && (
+                    )} */}
+                    {isAlreadyAssigned  && (
                       <span className="text-xs px-3 py-1 bg-green-500 text-white rounded-full font-medium">
                         assigned
                       </span>

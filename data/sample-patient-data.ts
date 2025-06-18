@@ -222,11 +222,11 @@ export const samplePatientData: PatientData = {
 
 // Example usage functions
 export const getCardiovascularData = (data: PatientData) => {
-  return data.systems.find(system => system.name === "Cardiovascular");
+  return data.systems.find(system  => system.name === "Cardiovascular");
 };
 
 export const getRenalData = (data: PatientData) => {
-  return data.systems.find(system => system.name === "Renal");
+  return data.systems.find(system  => system.name === "Renal");
 };
 
 export const getDigestiveData = (data: PatientData) => {

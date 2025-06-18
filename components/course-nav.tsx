@@ -29,7 +29,7 @@ export function HorizontalNav({ currentView }: HorizontalNavProps) {
   ];
 
   return (
-    <div className="absolute top-32 left-1/2 transform -translate-x-1/2 w-auto z-10 flex-row items-center px-8 hidden md:flex">
+    <div className="absolute top-28 left-1/2 transform -translate-x-1/2 w-auto z-10 flex-row items-center px-8 hidden md:flex">
       {/* Timeline with icons */}
       <div className="flex space-x-8 relative">
         {/* Horizontal line connecting the circles */}

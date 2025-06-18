@@ -9,6 +9,7 @@ import { ref, onValue, set } from "firebase/database";
 import { db, rtdb } from "@/utils/firebase";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import { ProgramProvider } from "@/hooks/useProgressData";
 
 
 
@@ -16,6 +17,8 @@ export default function Course() {
   const [currentView, setCurrentView] = useState<"programs" | "modules" | "video">("programs");
   const [selectedProgram, setSelectedProgram] = useState<string | null>(null);
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
+  const [moduleTitle, setmoduleTitle] = useState<string | null>(null);
+  const [videoTitle, setvideoTitle] = useState<string | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const [programData, setProgramData] = useState<any>(null);
   const [AllModuleProgress, setAllModuleProgress] = useState<any>({});
@@ -50,7 +53,6 @@ export default function Course() {
 
     if (userSnap.exists()) {
       const data = userSnap.data();
-      console.log(data.completedVideos)
       setCompletedVideos(data.completedVideos || {});
     }
   };
@@ -65,9 +67,11 @@ export default function Course() {
     setCurrentView("modules");
   };
 
-  const handleModuleSelect = (moduleId: string, videoId: string) => {
+  const handleModuleSelect = (moduleId: string, videoId: string, moduleTitle : string , videoTitle : string) => {
     setSelectedModule(moduleId);
     setSelectedVideo(videoId);
+    setmoduleTitle(moduleTitle)
+    setvideoTitle(videoTitle)
     setCurrentView("video");
   };
 
@@ -160,7 +164,6 @@ export default function Course() {
 // };
 
 const handleMarkVideoComplete = async (videoId: string, moduleId: string) => {
-  console.log("selectedProgramme", selectedProgram);
 
   const auth = getAuth();
   const user = auth.currentUser;
@@ -230,42 +233,49 @@ const handleMarkVideoComplete = async (videoId: string, moduleId: string) => {
 
 
   return (
-    <div className="min-h-screen flex -mt-10">
-      <div className="">
-        <HorizontalNav currentView={currentView} />
-      </div>
-      <div className="flex-1 md:ml-16">
-        {currentView === "programs" && (
-          <ProgramsList
-            onProgramSelect={handleProgramSelect}
-            moduleProgress={AllModuleProgress}
-            programProgress={programProgresses}
-          />
-        )}
 
-        {currentView === "modules" && selectedProgram && (
-          <ModuleOverview
-            programId={selectedProgram}
-            onModuleSelect={handleModuleSelect}
-            onBack={handleBackToPrograms}
-            completedVideos={completedVideos}
-            moduleProgress={moduleProgress}
-          />
-        )}
 
-        {currentView === "video" && selectedProgram && selectedModule && selectedVideo && programData && (
-          <VideoPlayerView
-            programId={selectedProgram}
-            moduleId={selectedModule}
-            videoId={selectedVideo}
-            programData={programData}
-            onBack={handleBackToModules}
-            completedVideos={completedVideos}
-            onMarkComplete={handleMarkVideoComplete}
-            moduleProgress={moduleProgress}
-          />
-        )}
+      <div className="min-h-screen flex -mt-10">
+        <div className="">
+          <HorizontalNav currentView={currentView} />
+        </div>
+        <div className="flex-1 md:ml-16">
+          {currentView === "programs" && (
+            <ProgramsList
+              onProgramSelect={handleProgramSelect}
+              moduleProgress={AllModuleProgress}
+              programProgress={programProgresses}
+            />
+          )}
+
+          {currentView === "modules" && selectedProgram && (
+            <ModuleOverview
+              programId={selectedProgram}
+              onModuleSelect={handleModuleSelect}
+              onBack={handleBackToPrograms}
+              completedVideos={completedVideos}
+              moduleProgress={moduleProgress}
+            />
+          )}
+
+          {currentView === "video" && selectedProgram && selectedModule && selectedVideo && programData && moduleTitle &&
+          videoTitle &&   (
+            <VideoPlayerView
+              programId={selectedProgram}
+              moduleId={selectedModule}
+              videoId={selectedVideo}
+              moduleTitle={moduleTitle}
+              videoTitle={videoTitle}
+              programData={programData}
+              onBack={handleBackToModules}
+              completedVideos={completedVideos}
+              onMarkComplete={handleMarkVideoComplete}
+              moduleProgress={moduleProgress}
+            />
+          )}
+        </div>
       </div>
-    </div>
+
+
   );
 }

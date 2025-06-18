@@ -75,11 +75,11 @@ useEffect(() => {
       setUser(null);
 
       if (currentPath.startsWith("/dashboard")) {
-        router.replace("/auth/login");
+        router.replace("/auth");
       } else if (currentPath.startsWith("/auth/logout")) {
-        router.replace("/auth/login");
+        router.replace("/auth");
       } else {
-        router.replace("/auth/login");
+        router.replace("/auth");
       }
     }
 

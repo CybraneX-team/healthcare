@@ -41,7 +41,9 @@ import {
 import { db, rtdb } from "@/utils/firebase";
 import { DevBundlerService } from "next/dist/server/lib/dev-bundler-service";
 import { getAuth } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { useProgramContext } from "@/hooks/useProgressData";
+import { setRequestMeta } from "next/dist/server/request-meta";
 
 interface ProgramsManagerProps {
   onProgramSelect: (programId: string) => void;
@@ -55,8 +57,10 @@ export function ProgramsManager({
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isLoading, setisLoading] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<any>(null);
+  const [loadingText, setloadingText] = useState<any>("Adding Programme");
   const [newProgram, setNewProgram] = useState({
     name: "",
     description: "",
@@ -65,7 +69,7 @@ export function ProgramsManager({
 
   const [programs, setPrograms] = useState<any>([]);
   const [userProgramProgress, setUserProgramProgress] = useState<Record<string, number>>({});
-
+  const {recentActivity,setrecentActivity}  = useProgramContext()
   // Mock data for programs
     useEffect(() => {
     const auth = getAuth();
@@ -110,7 +114,31 @@ export function ProgramsManager({
   );
 
   const handleAddProgram = async () => {
-    const id = newProgram.name.toLowerCase().replace(/\s+/g, "-");
+    setisLoading(true)
+    setIsAddDialogOpen(false);
+     const id = newProgram.name.toLowerCase().replace(/\s+/g, "-");
+
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (!user ) return;
+
+      const userRef = doc(db, "users", user.uid)
+              const newItem = {
+          activity:  "Added new program",
+          name:      newProgram.name,
+          createdAt: Date.now(),
+        };
+
+        setrecentActivity((prev : any ) => {
+          const next = [...prev, newItem];
+          // fire-and-forget; no await needed here
+          updateDoc(userRef, { recentActivity: next });
+          return next;
+        });
+
+      await updateDoc(userRef, {
+      recentActivity: recentActivity,
+    });
 
     const newProgramData = {
       id,
@@ -138,19 +166,41 @@ export function ProgramsManager({
       ]);
     } catch (error) {
       console.error("Error saving to Firebase:", error);
+    }finally{
+      setNewProgram({ name: "", description: "", status: "active" });
+      setisLoading(false)
     }
 
-    setNewProgram({ name: "", description: "", status: "active" });
-    setIsAddDialogOpen(false);
   };
 
   const handleEditProgram = async () => {
+    setisLoading(true)
+    setloadingText("Editing Programme")
+    setIsEditDialogOpen(false);
     if (!selectedProgram) return;
 
     const updatedData = {
       ...selectedProgram,
       updatedAt: new Date().toISOString(),
     };
+
+      const auth = getAuth();
+        const user = auth.currentUser;
+        if (!user ) return;
+
+        const userRef = doc(db, "users", user.uid)
+        const newItem = {
+            activity:  `Updated  program ${selectedProgram.name}`,
+            name:      selectedProgram.name,
+            createdAt: Date.now(),
+          };
+
+        setrecentActivity((prev : any ) => {
+          const next = [...prev, newItem];
+          // fire-and-forget; no await needed here
+          updateDoc(userRef, { recentActivity: next });
+          return next;
+        });
 
     try {
       const programRef = ref(
@@ -169,16 +219,39 @@ export function ProgramsManager({
       );
 
       setPrograms(updatedPrograms);
-      setIsEditDialogOpen(false);
     } catch (error) {
       console.error("Failed to update program in Firebase:", error);
+    }finally{
+      setisLoading(false);
+      setloadingText("Adding Programme");
     }
   };
 
   const handleDeleteProgram = async () => {
     if (!selectedProgram) return;
+    setisLoading(false);
+    setloadingText("Deleting  Programme");
+    setIsDeleteDialogOpen(false);
 
     try {
+         const auth = getAuth();
+        const user = auth.currentUser;
+        if (!user ) return;
+
+        const userRef = doc(db, "users", user.uid)
+        const newItem = {
+            activity:  `Deleted   program ${selectedProgram.name}`,
+            name:      selectedProgram.name,
+            createdAt: Date.now(),
+          };
+
+        setrecentActivity((prev : any ) => {
+          const next = [...prev, newItem];
+          // fire-and-forget; no await needed here
+          updateDoc(userRef, { recentActivity: next });
+          return next;
+        });
+
       const programRef = ref(
         rtdb,
         `courses/thrivemed/programs/${selectedProgram.id}`
@@ -189,9 +262,11 @@ export function ProgramsManager({
         (program: any) => program.id !== selectedProgram.id
       );
       setPrograms(updatedPrograms);
-      setIsDeleteDialogOpen(false);
     } catch (error) {
       console.error("Error deleting program from Firebase:", error);
+    }finally{
+      setisLoading(false);
+      setloadingText("Adding  Programme");
     }
   };
 
@@ -206,6 +281,14 @@ export function ProgramsManager({
   };
 
   return (
+    <>
+        {isLoading && (
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4
+                    bg-black/30 backdrop-blur-sm">
+      <div className="loader" />               
+      <span className="text-sm my-5 font-medium text-white">{loadingText}…</span>
+    </div>
+  )}
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
         <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
@@ -542,5 +625,7 @@ export function ProgramsManager({
         </DialogContent>
       </Dialog>
     </div>
+
+  </>
   );
 }

@@ -1,82 +1,134 @@
+// app/api/process-pdf-batch/route.ts
 import { samplePdfData } from "@/sameple-text-json";
 import { NextRequest, NextResponse } from "next/server";
 import pdf from "pdf-parse";
 
-
-// 📄 Extract text from PDFs using only pdf-parse
-async function extractTextFromPDF(pdfBuffer: Buffer): Promise<string> {
+async function extractTextFromPDF(buffer: Buffer): Promise<string> {
   try {
-    const parsed = await pdf(pdfBuffer);
+    const parsed = await pdf(buffer);
+    // console.log("📄 Raw extracted text length:", parsed.text?.length);
     return parsed.text?.trim() ?? "";
   } catch (err) {
-    console.error("PDF parse error:", err);
+    console.error("❌ PDF parse error:", err);
     return "";
   }
 }
 
+const extractUnifiedJson = (groqRawOutput: string) => {
+  const arrays = groqRawOutput
+    .split(/\n\s*\n/) // split by double newlines (most likely between arrays)
+    .map(str => str.trim())
+    .filter(Boolean)
+    .map(str => {
+      try {
+        return JSON.parse(str);
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean) // remove failed parses
+    .flat(); // flatten multiple arrays into one big array of objects
 
-async function sendToGroqLLM(extractedText: string): Promise<any> {
- 
-  const prompt = `
+  // Merge all objects into one
+  const unifiedJson = arrays.reduce((acc, curr) => {
+    return {
+      ...acc,
+      ...curr,
+    };
+  }, {});
+
+  return unifiedJson;
+};
+
+async function sendToGroqLLM(allText: string): Promise<any> {
+const prompt = `
 You are a medical report parser.
 
-Your job is to extract data from the following medical report into the **exact JSON schema** shown below. Do not add, rename, or remove any keys.
+Your job is to extract structured data from multiple medical reports. Below is the combined raw text.
 
-🧠 Mapping Instructions:
-- Some field names in the report may differ in wording or format (e.g., "Bilirubin-Total" or "Total Bilirubin" → "bilirubin").
-- When this happens, **intelligently match** the report value to the most appropriate field in the schema.
-- Use medical reasoning to assign values to the correct schema key.
+Please return ONLY one unified JSON object based on the schema below — combining all the information found across all reports.
+Important mapping hints:
+- "AST (SGOT)" refers to "ast"
+- "ALT (SGPT)" refers to "alt"
+- "Bilirubin Total" maps to "bilirubin"
+- "GGT" or "GGTP" maps to "ggt"
 
-📝 Output Rules:
-- The output must include **every field** from the schema, even if it was not found in the report.
-- Use the **string "null"** (not the value null) for missing or unavailable values.
-- Output only valid raw JSON — no explanations, markdown, or formatting.
+❗️STRICT RULES:
+- Return ONLY the raw JSON.
+- NO markdown code fences.
+- NO explanations.
+- NO comments.
+- The response MUST start with '{' and end with '}'.
+- If no value is found, use null or empty string appropriately.
+- Do NOT wrap the response or include any text outside the JSON.
 
-📄 Report:
-"""
-${extractedText}
-"""
-
-📘 JSON Schema:
+JSON Schema:
 ${JSON.stringify(samplePdfData, null, 2)}
+
+Combined Reports:
+${allText}
 `;
 
-    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "meta-llama/llama-4-scout-17b-16e-instruct",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.1,
-      }),
-    });
+;
 
-    if (!res.ok) {
-      const errorDetails = await res.text();
-      console.error("Groq API Error:", res.status, errorDetails);
-      return "Groq API call failed.";
-    }
+  // console.log("🧠 Prompt sent to Groq:\n", prompt.slice(0, 1000), "...[truncated]");
 
-    const result = await res.json();
-    return result.choices?.[0]?.message?.content ?? "No response from Groq";
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "meta-llama/llama-4-scout-17b-16e-instruct",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.1,
+    }),
+  });
 
-    }
+  if (!res.ok) {
+    const errText = await res.text();
+    console.error("❌ Groq error response:", errText);
+    return null;
+  }
 
-  // 📬 Main API entry point
-  export async function POST(req: NextRequest) {
-    const formData = await req.formData();
-    const file = formData.get("file") as File;
+  const result = await res.json();
+  const content = result.choices?.[0]?.message?.content;
 
-    if (!file) {
-      return NextResponse.json({ error: "No file uploaded." }, { status: 400 });
-    }
+  // console.log("📬 Raw Groq reply:\n", content);
+  return content;
+}
 
+// app/api/process-pdf/route.ts
+
+export async function POST(req: NextRequest) {
+  const formData = await req.formData();
+  const files = formData.getAll("files") as File[];
+
+  if (!files.length) {
+    return NextResponse.json({ error: "No files uploaded." }, { status: 400 });
+  }
+
+  let combinedText = "";
+  const extractedTexts: string[] = [];
+
+  for (const file of files) {
     const buffer = Buffer.from(await file.arrayBuffer());
     const text = await extractTextFromPDF(buffer);
-    const extractedJson = await sendToGroqLLM(text);
-
-    return NextResponse.json({ extractedJson });
+    extractedTexts.push(`--- FILE: ${file.name} ---\n${text}`);
   }
+
+  combinedText = extractedTexts.join("\n\n");
+
+  const rawReply = await sendToGroqLLM(combinedText);
+
+  try {
+    const cleaned = rawReply.replace(/```json|```/gi, "").trim();
+    const finalData = extractUnifiedJson(cleaned);
+    return NextResponse.json({ extractedJsonArray: finalData });
+  } catch (err) {
+    console.error("❌ Failed to parse JSON from Groq:", err, rawReply);
+    return NextResponse.json({ extractedJsonArray: [] });
+  }
+}
+

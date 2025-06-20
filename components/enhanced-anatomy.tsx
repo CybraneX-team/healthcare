@@ -136,9 +136,9 @@ export default function EnhancedAnatomy({ selectedOrgan, onOrganSelect }: Enhanc
       <div className="relative w-full" style={{ height: "750px" }}>
         {/* Image Container for Crossfade */}
         <div className="absolute inset-0 flex items-start justify-center pt-2">
-          {organData.map((organ) => (
+          {organData.map((organ, index) => (
             <motion.div
-              key={organ.imagePath}
+              key={index}
               className="absolute inset-0 flex items-start justify-center pt-2"
               initial={{ opacity: 0 }}
               animate={{ opacity: currentImagePath === organ.imagePath ? 1 : 0 }}

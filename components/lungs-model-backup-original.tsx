@@ -45,12 +45,11 @@ function Model({ onOrganClick, setOrganPositions }: ModelProps) {
   useEffect(() => {
     const loader = new GLTFLoader();
     
-    console.log("Starting to load 3D model...");
+    // console.log("Starting to load 3D model...");
     
     loader.load(
       "/3d.glb",
-      (loadedGltf) => {
-        console.log("3D model loaded successfully:", loadedGltf);
+      (loadedGltf : any) => {
         setGltf(loadedGltf);
         setLoading(false);
         
@@ -58,14 +57,11 @@ function Model({ onOrganClick, setOrganPositions }: ModelProps) {
         const box = new THREE.Box3().setFromObject(loadedGltf.scene);
         const size = box.getSize(new THREE.Vector3());
         const center = box.getCenter(new THREE.Vector3());
-        console.log("Model size:", size);
-        console.log("Model center:", center);
-        console.log("Model bounds:", box);
       },
-      (progress) => {
-        console.log("Loading progress:", (progress.loaded / progress.total) * 100 + "%");
+      (progress : any) => {
+        // console.log("Loading progress:", (progress.loaded / progress.total) * 100 + "%");
       },
-      (error) => {
+      (error : any) => {
         console.error("Error loading 3D model:", error);
         setError(error.message || "Failed to load model");
         setLoading(false);
@@ -76,7 +72,7 @@ function Model({ onOrganClick, setOrganPositions }: ModelProps) {
   // Setup organ meshes for interactivity
   useEffect(() => {
     if (gltf?.scene && modelRef.current) {
-      console.log("Setting up model interactivity...");
+      // console.log("Setting up model interactivity...");
       // Keep model interactive but don't try to detect organs automatically
       gltf.scene.traverse((node: any) => {
         if (node.isMesh) {
@@ -96,7 +92,7 @@ function Model({ onOrganClick, setOrganPositions }: ModelProps) {
   
   // Handle click event on the model
   const handleClick = (event: ThreeEvent<MouseEvent>) => {
-    console.log("Model clicked:", event);
+    // console.log("Model clicked:", event);
     // Prevent event propagation
     event.stopPropagation();
     
@@ -561,7 +557,7 @@ export default function LungsModel() {
           style={{ width: "100%", height: "100%" }}
           onCreated={({ gl, scene }) => {
             gl.setClearColor(new THREE.Color(0xf0f8ff), 1);
-            console.log("Canvas created, scene:", scene);
+            // console.log("Canvas created, scene:", scene);
           }}
           onError={(e: any) => setError(e?.message || "Failed to load model")}
         >

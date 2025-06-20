@@ -8,6 +8,7 @@ import { db, rtdb } from "@/utils/firebase";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileUpload } from "@/components/ui/file-upload";
+import { deleteObject } from "firebase/storage";
 import {
   ArrowLeft,
   FileText,
@@ -16,6 +17,8 @@ import {
   X,
   CheckCircle,
   Calendar,
+  Eye, 
+  Download
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
@@ -53,12 +56,14 @@ export default function UserDetailsPage() {
   const [pdfLoading, setPdfLoading] = useState<{ active: boolean, message: string }>({
   active: false,
   message: "",
-});
-  const [processingText, setprocessingText] = useState<{ active: boolean, message: string }>({
-  active: false,
-  message: "",
-});
-const [showLabData, setShowLabData] = useState(false);
+  });
+    const [processingText, setprocessingText] = useState<{ active: boolean, message: string }>({
+    active: false,
+    message: "",
+  });
+  const [downloadingFile, setDownloadingFile] = useState(false);
+
+  const [showLabData, setShowLabData] = useState(false);
 
 
   const defaultPrograms = [
@@ -140,76 +145,109 @@ const [showLabData, setShowLabData] = useState(false);
     }
   };
 
-const handleFileUpload = async (file: File) => {
-  setprocessingText({active: true, message : "Processing and Uploading PDF"})
+const handleMultipleFileUpload = async (files: FileList) => {
   if (!id) return;
+
+  const fileArray = Array.from(files);
+  if (!fileArray.length) return;
+
+  setprocessingText({ active: true, message: "Uploading and extracting all PDFs..." });
   setUploading(true);
 
   try {
-    const category = "labs"; // ✅ You can make this dynamic later
+    // Upload all files to Firebase Storage
     const storage = getStorage();
-    const timestamp = Date.now();
-    const storageRef = ref(storage, `documents/${id}/${category}/${timestamp}-${file.name}`);
-    await uploadBytes(storageRef, file);
-    const downloadURL = await getDownloadURL(storageRef);
-    const fullStorageName = `${timestamp}-${file.name}`;
+    const uploadedMetadata = await Promise.all(
+      fileArray.map(async (file) => {
+        const timestamp = Date.now();
+        const category = "labs";
+        const fullStorageName = `${timestamp}-${file.name}`;
+        const storageRef = ref(storage, `documents/${id}/${category}/${fullStorageName}`);
+        await uploadBytes(storageRef, file);
+        const downloadURL = await getDownloadURL(storageRef);
+        return {
+          file,
+          fullStorageName,
+          downloadURL,
+          docKey: file.name.split(".")[0],
+          category,
+        };
+      })
+    );
 
-    // 🔁 Call API to extract data from uploaded file
+    // Send all files to Groq API
     const formData = new FormData();
-    formData.append("file", file);
+    fileArray.forEach((file) => formData.append("files", file));
 
-    let extractedData = "";
-    try {
-      const res = await fetch("/api/process-pdf", {
-        method: "POST",
-        body: formData,
-      });
-      const result = await res.json();
-      extractedData = result.extractedJson || "";
-    } catch (err) {
-      console.warn("Extraction failed:", err);
-    }
-
-    const userRef = doc(db, "users", id as string);
-    const docKey = file.name.split(".")[0];
-
-    const updatedCategoryDocs = {
-      ...(userData?.[category] || {}),
-      [docKey]: {
-        downloadURL,
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        uploadedAt: new Date().toISOString(),
-        fullStorageName,
-      },
-    };
-
-    // 👇 Combine both updates
-    await updateDoc(userRef, {
-      [category]: updatedCategoryDocs,
-      [`extractedLabData`]: extractedData,
+    const res = await fetch("/api/process-pdf", {
+      method: "POST",
+      body: formData,
     });
 
-    // 👇 Update local state
+    const { extractedJsonArray: rawReply } = await res.json();
+
+    // ✅ Fix: extract JSON inside code block if needed
+    let cleanedReply = rawReply;
+    if (typeof rawReply === "string") {
+      const match = rawReply.match(/```json\s*([\s\S]*?)```/i);
+      cleanedReply = match ? match[1] : rawReply;
+    }
+
+    let extractedJsonArray;
+    try {
+      extractedJsonArray = JSON.parse(cleanedReply);
+    } catch (err) {
+      console.error("❌ Failed to parse Groq JSON:", cleanedReply);
+      toast.error("Failed to parse extracted data.");
+      extractedJsonArray = [];
+    }
+
+    if (!extractedJsonArray) throw new Error("Groq extraction failed or returned nothing.");
+
+    // Construct Firestore updates
+    const userRef = doc(db, "users", id as string);
+    const updatedDocs: any = {};
+    const structuredExtractedData: Record<string, any> = {};
+
+    uploadedMetadata.forEach((meta, index) => {
+      const extracted = extractedJsonArray?.[index] || "";
+      updatedDocs[meta.docKey] = {
+        name: meta.file.name,
+        size: meta.file.size,
+        type: meta.file.type,
+        uploadedAt: new Date().toISOString(),
+        downloadURL: meta.downloadURL,
+        fullStorageName: meta.fullStorageName,
+      };
+      structuredExtractedData[meta.docKey] = extracted;
+    });
+
+    await updateDoc(userRef, {
+      labs: {
+        ...(userData?.labs || {}),
+        ...updatedDocs,
+      },
+      extractedLabData: JSON.stringify(structuredExtractedData, null, 2),
+    });
+
     setUserData((prev: any) => ({
       ...prev,
-      [category]: updatedCategoryDocs,
-      [`extractedLabData`]: extractedData,
+      labs: {
+        ...(prev?.labs || {}),
+        ...updatedDocs,
+      },
+      extractedLabData: JSON.stringify(structuredExtractedData, null, 2),
     }));
 
-    toast.success("File uploaded and processed successfully!");
-  } catch (error) {
-    console.error("Error uploading or processing file:", error);
-    toast.error("File upload or processing failed.");
+    toast.success("All files uploaded and processed!");
+  } catch (err) {
+    console.error("❌ Upload failed:", err);
+    toast.error("Upload or extraction failed.");
   } finally {
     setUploading(false);
-    setprocessingText({active: false, message : ""})
+    setprocessingText({ active: false, message: "" });
   }
 };
-
-
-
 
   const handleViewPdf = (downloadURL: string) => {
     setSelectedPdf(downloadURL);
@@ -218,6 +256,37 @@ const handleFileUpload = async (file: File) => {
     }, 100);
   };
 
+  const handleDeleteFile = async (category: string, fileId: string, fullStorageName: string) => {
+  try {
+    if (!id) return;
+
+    const userRef = doc(db, "users", id as string);
+
+    // Remove file metadata from Firestore
+    const updatedDocs = { ...(userData?.[category] || {}) };
+    delete updatedDocs[fileId];
+
+    await updateDoc(userRef, {
+      [category]: updatedDocs,
+    });
+
+    // Delete from Firebase Storage
+    const storage = getStorage();
+    const fileRef = ref(storage, `documents/${id}/${category}/${fullStorageName}`);
+    await deleteObject(fileRef); // Ensure this works depending on your Firebase version
+
+    // Update local state
+    setUserData((prev: any) => ({
+      ...prev,
+      [category]: updatedDocs,
+    }));
+
+    toast.success("File deleted successfully.");
+  } catch (error) {
+    console.error("File deletion failed:", error);
+    toast.error("Failed to delete file.");
+  }
+};
 
 // const handleDownloadClinicalSummary = async () => {
 //   if (!userData?.extractedLabData) return toast.error("No extracted lab data found.");
@@ -351,11 +420,14 @@ const handleDownloadSalesScript = async () => {
 
   return (
     <>
-    {pdfLoading.active || processingText.active && <OverlayLoader message={
-      pdfLoading.active? 
-      pdfLoading.message :
-      processingText.message
-      } />}
+  {(pdfLoading.active || processingText.active || downloadingFile) && (
+  <OverlayLoader message={
+    pdfLoading.active ? pdfLoading.message :
+    processingText.active ? processingText.message :
+    "Downloading file..."
+  } />
+)}
+
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <AnimatePresence>
@@ -477,13 +549,17 @@ const handleDownloadSalesScript = async () => {
   {showLabData && (
     <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mt-4">
       {(() => {
+        let parsed = {};
         try {
-          const cleaned = userData?.extractedLabData
-            ?.replace(/^```json/, "")
-            ?.replace(/```$/, "")
-            ?.trim();
-
-          const parsed = JSON.parse(cleaned || "{}");
+        if (typeof userData?.extractedLabData === "string") {
+        const cleaned = userData.extractedLabData
+          .replace(/^```json/, "")
+          .replace(/```$/, "")
+          .trim();
+        parsed = JSON.parse(cleaned || "{}");
+      } else if (typeof userData?.extractedLabData === "object") {
+        parsed = userData.extractedLabData;
+      }
 
           return Object.entries(parsed).map(([sectionName, sectionData]: [string, any]) => (
             <div key={sectionName} className="bg-white p-6 rounded-xl shadow border min-w-[250px] w-full">
@@ -613,7 +689,7 @@ const handleDownloadSalesScript = async () => {
                   id="fileUpload"
                   onChange={(e) => {
                     if (e.target.files && e.target.files[0]) {
-                      handleFileUpload(e.target.files[0]);
+                      handleMultipleFileUpload(e.target.files);
                     }
                   }}
                   disabled={uploading}
@@ -662,9 +738,15 @@ const handleDownloadSalesScript = async () => {
       const section = userData?.[cat];
       if (section && typeof section === "object") {
         Object.entries(section).forEach(([docId, docData]: any) => {
-          if (docData?.downloadURL) {
-            allDocs.push({ id: docId, data: docData });
-          }
+  if (docData?.downloadURL) {
+    allDocs.push({
+      id: docId,
+      data: {
+        ...docData,
+        category: cat,
+      },
+    });
+  }
         });
       }
     });
@@ -677,40 +759,71 @@ const handleDownloadSalesScript = async () => {
       );
     }
 
-    return allDocs.map(({ id, data }) => (
-      <div
-        key={id}
-        className="flex items-center justify-between p-6 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors duration-200 border border-blue-100"
-      >
-        <div className="flex items-center space-x-4">
-          <div className="h-12 w-12 bg-blue-500 rounded-xl flex items-center justify-center">
-            <FileText className="h-6 w-6 text-white" />
-          </div>
-          <span className="font-semibold text-blue-900">
-            {data.name || id}
-          </span>
-        </div>
-
-        {data.type === "application/pdf" ? (
-          <Button
-            variant="outline"
-            className="bg-blue-500 text-white hover:bg-blue-700 border-blue-200 rounded-xl"
-            onClick={() => handleViewPdf(data.downloadURL)}
-          >
-            View PDF
-          </Button>
-        ) : (
-          <a
-            href={data.downloadURL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-500 hover:text-blue-700 hover:underline font-medium"
-          >
-            View File
-          </a>
-        )}
+return allDocs.map(({ id, data }) => (
+  <div
+    key={id}
+    className="flex justify-between items-center bg-green-50 rounded-xl p-4 border border-green-100 shadow-sm hover:shadow-md transition"
+  >
+    <div className="flex items-center space-x-4">
+      <div className="h-10 w-10 bg-green-500 rounded-lg flex items-center justify-center">
+        <FileText className="text-white w-5 h-5" />
       </div>
-    ));
+      <div>
+        <p className="text-sm font-semibold text-gray-900 truncate max-w-[220px]">{data.name || id}</p>
+        <p className="text-xs text-gray-500">
+          {(data.size / 1024).toFixed(1)} KB • {new Date(data.uploadedAt).toLocaleDateString()}
+        </p>
+      </div>
+    </div>
+
+    <div className="flex items-center space-x-2">
+  <Button
+    variant="ghost"
+    size="icon"
+    className="h-10 w-10 text-gray-500 hover:text-blue-500 hover:bg-blue-50 rounded-lg"
+    onClick={() => handleViewPdf(data.downloadURL)}
+  >
+    <Eye className="h-5 w-5" />
+  </Button>
+
+  <Button
+    variant="ghost"
+    size="icon"
+    className="h-10 w-10 text-gray-500 hover:text-green-500 hover:bg-green-50 rounded-lg"
+    onClick={async () => {
+      try {
+        setDownloadingFile(true);
+       const a = document.createElement("a");
+      a.href = data.downloadURL;
+      a.download = data.name || "document.pdf";
+      a.click();
+} catch (err) {
+        console.error("Download error:", err);
+        toast.error("Download failed.");
+      } finally {
+        setDownloadingFile(false);
+      }
+    }}
+  >
+    <Download className="h-5 w-5" />
+  </Button>
+
+  <Button
+    variant="ghost"
+    size="icon"
+    className="h-10 w-10 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg"
+    onClick={() =>
+      handleDeleteFile(data.category || "labs", id, data.fullStorageName)
+    }
+  >
+    <X className="h-5 w-5" />
+  </Button>
+</div>
+
+  </div>
+));
+
+
   })()}
             </div>
           </Card>

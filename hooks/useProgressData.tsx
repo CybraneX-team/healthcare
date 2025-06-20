@@ -73,7 +73,6 @@ export const ProgramProvider = ({
           const data = snapshot.val();
           setProgramData(data);
         } else {
-          console.log("No data found for program:", programId);
         }
       } catch (error) {
         console.error("Error fetching program data:", error);
@@ -121,7 +120,7 @@ export const ProgramProvider = ({
         users: totalUsers
       });
     } else {
-      console.log("No programs data found.");
+      // console.log("No programs data found.");
     }
   } catch (error) {
     console.error("Error fetching all programs:", error);
@@ -146,7 +145,7 @@ export const ProgramProvider = ({
           setUserCompletedVideos(data.completedVideos || {});
           setrecentActivity(data.recentActivity || [])
         } else {
-          console.log("No user data found for user:", user.uid);
+          // console.log("No user data found for user:", user.uid);
         }
       } catch (error) {
         console.error("Error fetching user data:", error);

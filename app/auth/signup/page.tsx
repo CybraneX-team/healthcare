@@ -245,7 +245,8 @@ const handleSignup = async () => {
       primaryDiagnosis: profile.primaryDiagnosis,
       medications: profile.medications,
       phone: profile.phone,
-      avatar: profile.avatar
+      avatar: profile.avatar,
+      role: 'patient',
     };
 
     await signup(profile.email, profile.password, userData);

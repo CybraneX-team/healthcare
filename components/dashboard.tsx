@@ -36,6 +36,7 @@ import LiverComponent from "@/components/liver-component";
 import PancreasComponent from "@/components/pancreas-component";
 import Upload from "@/components/upload";
 import EnhancedAnatomy from "@/components/enhanced-anatomy";
+import ReproductiveHealth from "@/components/reproductive-health";
 
 import { PatientSection } from "./PatientSection";
 import Neurology from "@/components/neurology";
@@ -239,7 +240,6 @@ export default function Dashboard() {
       }
 
       const data = await res.json();
-      console.log("Extracted Text:", data.extractedText);
       setExtractedText(data.extractedText);
     } catch (err) {
       console.error("Error:", err);
@@ -493,7 +493,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* Right column - Dynamic content based on selected organ */}
-                <div className="lg:col-span-8 flex flex-col overflow-hidden md:mt-6 3xl:mt-20">
+                <div className="lg:col-span-8 flex flex-col overflow-hidden md:mt-6 2xl:mt-20">
                   {selectedOrgan === "heart" && (
                     <div className="h-full overflow-y-auto pr-2 organ-component-wrapper">
                       <HeartComponent />
@@ -501,7 +501,7 @@ export default function Dashboard() {
                   )}
                   {selectedOrgan === "lungs" && (
                     <div className="h-full overflow-y-auto pr-2 organ-component-wrapper">
-                      <Kidney />
+                      <LiverComponent />
                     </div>
                   )}
                   {selectedOrgan === "liver" && (
@@ -517,6 +517,11 @@ export default function Dashboard() {
                   {selectedOrgan === "kidney" && (
                     <div className="h-full overflow-y-hidden pr-2 organ-component-wrapper">
                       <Kidney />
+                    </div>
+                  )}
+                  {selectedOrgan === "reproductive" && (
+                    <div className="h-full overflow-y-auto pr-2 organ-component-wrapper">
+                      <ReproductiveHealth />
                     </div>
                   )}
                 </div>

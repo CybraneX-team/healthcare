@@ -21,6 +21,7 @@ import Image from "next/image";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { getCurrentUser, uploadUserDocument, updateUserProfile, getUserProfile, deleteUserFile } from "@/utils/firebase";
 import { toast } from "react-toastify";
+import OverlayLoader from "./OverlayLoader";
 
 type FileCategory = "labs" | "radiology" | "prescriptions";
 
@@ -45,8 +46,10 @@ export default function UploadPage() {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
-  
-;
+  const [loadingMessage , setloadingMessage]  = useState({
+    message : "",
+    active : false
+  });
 
 useEffect(() => {
   const fetchUploadedFiles = async () => {
@@ -145,39 +148,62 @@ const handleDownloadFile = (url: string, filename: string) => {
     }
   };
   
- const handleFiles = (files: FileList) => {
-  // Create a map to store the actual File objects by their generated ID
-  const fileMap = new Map<string, File>();
+const handleFiles = async (files: FileList) => {
+  const fileArray = Array.from(files);
+  setUploadingFiles(fileArray.map((file, i) => ({
+    id: `file-${i}`,
+    name: file.name,
+    size: file.size,
+    type: file.type,
+    category: activeTab,
+    uploadProgress: 0,
+    dateUploaded: new Date(),
+    fullStorageName: ""
+  })));
 
-  const newFiles: UploadedFile[] = Array.from(files).map(file => {
-    const id = Math.random().toString(36).substring(2, 9);
-    // Store the actual File object in the map
-    fileMap.set(id, file);
+  try {
+    const formData = new FormData();
+    fileArray.forEach(file => formData.append("files", file));
 
-    return {
-      id,
+    // Optional loader here
+    setloadingMessage({message : "Uploading and extracting text...", active: true});
+    const res = await fetch("/api/process-pdf", {
+      method: "POST",
+      body: formData,
+    });
+
+    const { extractedJsonArray } = await res.json();
+
+    // Example: save each file with its associated extractedJson
+    await Promise.all(
+  fileArray.map(async (file, i) => {
+    const uploadedFile: UploadedFile = {
+      id: `file-${i}`,
       name: file.name,
       size: file.size,
       type: file.type,
       category: activeTab,
       uploadProgress: 0,
       dateUploaded: new Date(),
-      fullStorageName: "" // ✅ add this line to match the UploadedFile type
+      fullStorageName: "", // Firebase will fill this later
     };
-  });
 
-  setUploadingFiles(prev => [...prev, ...newFiles]);
+    await simulateFileUpload(uploadedFile, file, extractedJsonArray);
+  })
+);
 
-  // Upload files to Firebase Storage
-  newFiles.forEach(uploadedFile => {
-    const actualFile = fileMap.get(uploadedFile.id);
-    if (actualFile) {
-      simulateFileUpload(uploadedFile, actualFile);
-    }
-  });
+
+    toast.success("All files processed and saved.");
+  } catch (error) {
+    console.error("Batch upload failed", error);
+    toast.error("Failed to process files.");
+  } finally {
+    setloadingMessage({message : "", active : false});
+  }
 };
 
-  const simulateFileUpload = async (file: UploadedFile, actualFile: File) => {
+
+  const simulateFileUpload = async (file: UploadedFile, actualFile: File, parsedJson : String) => {
     try {
       // Get current user ID from auth
       const user = getCurrentUser();
@@ -211,19 +237,11 @@ const handleDownloadFile = (url: string, filename: string) => {
       ]);
 
       // Store file reference in Firestore (only metadata, not the actual file)
-      await updateUserProfile(user.uid, {
-      [`${file.category}.${file.id}`]: {
-        name: file.name,
-        size: file.size,
-        fullStorageName: fileName,  
-        type: file.type,
-        downloadURL,
-        uploadedAt: new Date().toISOString()
-      }
-    });
+
+
     try {
       const formData = new FormData();
-      formData.append("file", actualFile);
+      formData.append("files", actualFile);
 
       const res = await fetch("/api/process-pdf", {
         method: "POST",
@@ -231,7 +249,21 @@ const handleDownloadFile = (url: string, filename: string) => {
       });
 
       const result = await res.json();
-} catch (err) {
+
+    await updateUserProfile(user.uid, {
+  [file.category]: {
+    [file.id]: {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      fullStorageName: fileName,
+      downloadURL,
+      uploadedAt: new Date().toISOString()
+    }
+  },
+  extractedLabData: parsedJson && typeof parsedJson === "string" ? JSON.parse(parsedJson) : parsedJson
+});
+;}  catch (err) {
   console.error("Groq extraction failed:", err);
 }
     toast.success("File uploaded successfully!");
@@ -253,7 +285,6 @@ const handleDeleteFile = async (fileId: string) => {
       console.warn("File not found in local state");
       return;
     }
-    console.log("fileToDelete", fileToDelete)
     const user = getCurrentUser();
     if (!user) {
       throw new Error("User not authenticated");
@@ -301,6 +332,11 @@ const handleDeleteFile = async (fileId: string) => {
   // useKeyboardNavigation(handleFinish, [uploadedFiles]);
 
   return (
+    <>
+    {loadingMessage.active && (
+    <OverlayLoader message={loadingMessage.message} />
+  )}
+
     <div className="min-h-screen p-2 md:p-8 md:-mt-10">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -545,11 +581,10 @@ const handleDeleteFile = async (fileId: string) => {
                       <AnimatePresence>
                         {uploadedFiles
                           .filter((file) => file.category === activeTab)
-                          .map((file) => {
-                            console.log("file", file)
+                          .map((file, index) => {
                             return (
                               <motion.div
-                                key={file.id}
+                                key={index}
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.95 }}
@@ -627,5 +662,6 @@ const handleDeleteFile = async (fileId: string) => {
         </div>
       </motion.div>
     </div>
+    </>
   );
 }

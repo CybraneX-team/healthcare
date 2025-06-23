@@ -27,9 +27,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { collection, getDocs , doc, updateDoc, deleteDoc, addDoc  } from "firebase/firestore";
+import { collection, getDocs , doc, updateDoc, deleteDoc, addDoc, Timestamp   } from "firebase/firestore";
 import { db } from "@/utils/firebase";
 import { useRouter } from "next/navigation";
+import { Overlay } from "vaul";
+import OverlayLoader from "./OverlayLoader";
 
 interface UsersManagerProps {
   setSidebarOpen: (open: boolean) => void;
@@ -58,9 +60,21 @@ export function UsersManager({ setSidebarOpen }: UsersManagerProps) {
   const [newUser, setNewUser] = useState({
     name: "",
     email: "",
-    role: "student",
+    role: "patient",
+    phone: "",
+    dateOfBirth: "",
+    primaryDiagnosis: "",
+    medications: "",
+    use2FA: false,
   });
+  const [actionLoading, setActionLoading] = useState<{
+  loading: boolean;
+  message: string;
+}>({ loading: false, message: "" });
 
+
+
+  
   const router = useRouter();
     useEffect(() => {
       const fetchUsers = async () => {
@@ -88,6 +102,9 @@ export function UsersManager({ setSidebarOpen }: UsersManagerProps) {
               // ✅ Generate and store a fixed color for this user
               avatarColor: getRandomColor(),
               documents: data.documents || {},
+              medications : data.medications,
+              primaryDiagnosis : data.primaryDiagnosis,
+              dateOfBirth : data.dateOfBirth
             };
           });
 
@@ -162,23 +179,30 @@ const filteredUsers = users.filter((user) => {
   //   setIsEditDialogOpen(false);
   // };
 
-  const handleAddUser = async () => {
+
+const handleAddUser = async () => {
   if (!newUser.name || !newUser.email) return;
+  setIsAddDialogOpen(false);
+
+  setActionLoading({ loading: true, message: "Adding user..." }); // 🔁 Start loader
 
   try {
     const usersCollection = collection(db, "users");
 
-    // Create the new user document
     const docRef = await addDoc(usersCollection, {
       fullName: newUser.name,
       email: newUser.email,
       role: newUser.role,
-      createdAt: new Date(),
-      phone: "", // You can collect this if needed in the future
-      displayName: newUser.name, // For consistency with avatar
+      phone: newUser.phone || "",
+      dateOfBirth: newUser.dateOfBirth || "",
+      primaryDiagnosis: newUser.primaryDiagnosis || "",
+      medications: newUser.medications || "",
+      use2FA: newUser.use2FA || false,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+      displayName: newUser.name,
     });
 
-    // Add the new user to local state
     const newUserData = {
       id: docRef.id,
       name: newUser.name,
@@ -189,7 +213,7 @@ const filteredUsers = users.filter((user) => {
         day: "numeric",
         year: "numeric",
       }),
-      phoneNumber: "",
+      phoneNumber: newUser.phone || "",
       avatar: newUser.name
         .split(" ")
         .map((n) => n[0])
@@ -200,28 +224,51 @@ const filteredUsers = users.filter((user) => {
     };
 
     setUsers((prev) => [...prev, newUserData]);
-    setNewUser({ name: "", email: "", role: "student" });
-    setIsAddDialogOpen(false);
+    setNewUser({
+      name: "",
+      email: "",
+      role: "student",
+      phone: "",
+      dateOfBirth: "",
+      primaryDiagnosis: "",
+      medications: "",
+      use2FA: false,
+    });
   } catch (error) {
     console.error("Error adding user:", error);
+  } finally {
+    setActionLoading({ loading: false, message: "" }); // ✅ Reset loader
   }
 };
 
-  const handleEditUser = async () => {
+
+
+const handleEditUser = async () => {
   if (!selectedUser) return;
+  setIsEditDialogOpen(false);
 
   try {
-    // Reference to the specific document
+    setActionLoading({ loading: true, message: "Editing user..." });
+
     const userRef = doc(db, "users", selectedUser.id);
 
-    // Update the document
-   await updateDoc(userRef, {
-  fullName: selectedUser.name,
-  email: selectedUser.email,
-  role: selectedUser.role,
-  phone: selectedUser.phoneNumber,
-});
+    // Convert date string back to Timestamp (if valid)
+    const parsedDOB = selectedUser.dateOfBirth
+      ? new Date(selectedUser.dateOfBirth)
+      : null;
+    const isValidDate = parsedDOB instanceof Date && !isNaN(parsedDOB.valueOf());
 
+    await updateDoc(userRef, {
+      fullName: selectedUser.name,
+      email: selectedUser.email,
+      role: selectedUser.role,
+      phone: selectedUser.phoneNumber,
+      dateOfBirth: isValidDate ? Timestamp.fromDate(parsedDOB) : "",
+      primaryDiagnosis: selectedUser.primaryDiagnosis || "",
+      medications: selectedUser.medications || "",
+      use2FA: selectedUser.use2FA || false,
+      updatedAt: Timestamp.now(),
+    });
 
     // Update local state
     const updatedUsers = users.map((user) =>
@@ -229,11 +276,13 @@ const filteredUsers = users.filter((user) => {
     );
 
     setUsers(updatedUsers);
-    setIsEditDialogOpen(false);
   } catch (error) {
     console.error("Error updating user:", error);
+  } finally {
+    setActionLoading({ loading: false, message: "" });
   }
 };
+
 
 
   // const handleDeleteUser = () => {
@@ -245,10 +294,14 @@ const filteredUsers = users.filter((user) => {
   // };
 
   const handleDeleteUser = async () => {
+
   if (!selectedUser) return;
 
   try {
     // Reference to the document to delete
+     setIsDeleteDialogOpen(false);
+
+    setActionLoading({ loading: true, message: "Deleting User..." });
     const userRef = doc(db, "users", selectedUser.id);
 
     // Delete from Firestore
@@ -257,17 +310,36 @@ const filteredUsers = users.filter((user) => {
     // Update local state
     const updatedUsers = users.filter((user) => user.id !== selectedUser.id);
     setUsers(updatedUsers);
-    setIsDeleteDialogOpen(false);
   } catch (error) {
     console.error("Error deleting user:", error);
+  }finally{
+     setActionLoading({ loading: false, message: "" });
   }
 };
 
 
-  const openEditDialog = (user: any) => {
-    setSelectedUser({ ...user });
-    setIsEditDialogOpen(true);
-  };
+const openEditDialog = (user: any) => {
+  const timestamp = user.dateOfBirth;
+
+  let formattedDOB = "";
+
+  if (timestamp?.seconds) {
+    // It's a Firestore Timestamp
+    formattedDOB = new Date(timestamp.seconds * 1000).toISOString().split("T")[0];
+  } else if (typeof timestamp === "string") {
+    // It's already a date string
+    formattedDOB = timestamp;
+  }
+
+  setSelectedUser({
+    ...user,
+    dateOfBirth: formattedDOB,
+  });
+
+  setIsEditDialogOpen(true);
+};
+
+
 
   const openDeleteDialog = (user: any) => {
     setSelectedUser(user);
@@ -275,20 +347,25 @@ const filteredUsers = users.filter((user) => {
   };
 
   return (
+  <>
+    {actionLoading.loading && (
+       <OverlayLoader message={actionLoading.message}/>
+  )}
+
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
         <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
           Users Management
         </h1>
 
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen} >
           <DialogTrigger asChild>
             <Button className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg w-full sm:w-auto">
               <Plus className="mr-2 h-4 w-4" />
               Add New User
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px] mx-4">
+          <DialogContent className="sm:max-w-[500px] mx-4 my-5 max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Add New User</DialogTitle>
             </DialogHeader>
@@ -334,9 +411,66 @@ const filteredUsers = users.filter((user) => {
                 >
                   <option value="admin">Admin</option>
                   <option value="instructor">Instructor</option>
-                  <option value="student">Student</option>
+                  <option value="patient">Patient</option>
                 </select>
               </div>
+              <div className="space-y-2">
+            <label htmlFor="phone" className="text-sm font-medium">Phone</label>
+            <Input
+              id="phone"
+              type="text"
+              maxLength={10}
+              value={newUser.phone}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, "").slice(0, 10); // remove non-digits and trim to 10
+                setNewUser({ ...newUser, phone: value });
+              }}
+            />
+
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="dob" className="text-sm font-medium">Date of Birth</label>
+            <Input
+              id="dob"
+              type="date"
+              value={newUser.dateOfBirth}
+              onChange={(e) => setNewUser({ ...newUser, dateOfBirth: e.target.value })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="diagnosis" className="text-sm font-medium">Primary Diagnosis</label>
+            <Input
+              id="diagnosis"
+              type="text"
+              value={newUser.primaryDiagnosis}
+              onChange={(e) => setNewUser({ ...newUser, primaryDiagnosis: e.target.value })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="medications" className="text-sm font-medium">Medications</label>
+            <Input
+              id="medications"
+              type="text"
+              value={newUser.medications}
+              onChange={(e) => setNewUser({ ...newUser, medications: e.target.value })}
+            />
+          </div>
+
+          <div className="space-y-2 flex items-center">
+            <input
+              type="checkbox"
+              id="use2fa"
+              checked={newUser.use2FA}
+              onChange={(e) => setNewUser({ ...newUser, use2FA: e.target.checked })}
+            />
+            <label htmlFor="use2fa" className="ml-2 text-sm font-medium">
+              Enable Two-Factor Authentication
+            </label>
+          </div>
+
             </div>
             <div className="flex flex-col sm:flex-row justify-end gap-3">
               <Button
@@ -376,7 +510,7 @@ const filteredUsers = users.filter((user) => {
         <option value="all">All Roles</option>
         <option value="admin">Admin</option>
         <option value="instructor">Instructor</option>
-        <option value="student">Student</option>
+        <option value="patient">Patient</option>
       </select>
 
       </div>
@@ -491,85 +625,78 @@ const filteredUsers = users.filter((user) => {
 
       {/* Edit User Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[500px] mx-4">
-          <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
-          </DialogHeader>
-          {selectedUser && (
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <label htmlFor="edit-name" className="text-sm font-medium">
-                  Full Name
-                </label>
-                <Input
-                  id="edit-name"
-                  value={selectedUser.name}
-                  onChange={(e) =>
-                    setSelectedUser({ ...selectedUser, name: e.target.value })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="edit-email" className="text-sm font-medium">
-                  Email Address
-                </label>
-                <Input
-                  id="edit-email"
-                  type="email"
-                  value={selectedUser.email}
-                  onChange={(e) =>
-                    setSelectedUser({ ...selectedUser, email: e.target.value })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="edit-role" className="text-sm font-medium">
-                  Role
-                </label>
-                <select
-                  id="edit-role"
-                  className="w-full rounded-md border border-gray-300 p-2"
-                  value={selectedUser.role}
-                  onChange={(e) =>
-                    setSelectedUser({ ...selectedUser, role: e.target.value })
-                  }
-                >
-                  <option value="admin">Admin</option>
-                  <option value="instructor">Instructor</option>
-                  <option value="student">Student</option>
-                </select>
-              </div>
-              <div className="space-y-2">
-              <label htmlFor="edit-phone" className="text-sm font-medium">
-                Phone Number
-              </label>
-              <Input
-                id="edit-phone"
-                type="text"
-                value={selectedUser.phoneNumber || ""}
-                onChange={(e) =>
-                  setSelectedUser({ ...selectedUser, phoneNumber: e.target.value })
-                }
-              />
+      <DialogContent className="sm:max-w-[500px] mx-4 my-5 max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit User</DialogTitle>
+        </DialogHeader>
+        {selectedUser && (
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label htmlFor="edit-name" className="text-sm font-medium">Full Name</label>
+              <Input id="edit-name" value={selectedUser.name} onChange={(e) => setSelectedUser({ ...selectedUser, name: e.target.value })} />
             </div>
+
+            <div className="space-y-2">
+              <label htmlFor="edit-email" className="text-sm font-medium">Email Address</label>
+              <Input id="edit-email" type="email" value={selectedUser.email} onChange={(e) => setSelectedUser({ ...selectedUser, email: e.target.value })} />
             </div>
-          )}
-          <div className="flex flex-col sm:flex-row justify-end gap-3">
-            <Button
-              variant="outline"
-              onClick={() => setIsEditDialogOpen(false)}
-              className="w-full sm:w-auto"
-            >
-              Cancel
-            </Button>
-            <Button
-              className="bg-blue-500 hover:bg-blue-600 w-full sm:w-auto"
-              onClick={handleEditUser}
-            >
-              Save Changes
-            </Button>
+
+            <div className="space-y-2">
+              <label htmlFor="edit-role" className="text-sm font-medium">Role</label>
+              <select id="edit-role" className="w-full rounded-md border border-gray-300 p-2" value={selectedUser.role} onChange={(e) => setSelectedUser({ ...selectedUser, role: e.target.value })}>
+                <option value="admin">Admin</option>
+                <option value="instructor">Instructor</option>
+                <option value="student">Student</option>
+              </select>
+            </div>
+
+         <div className="space-y-2">
+          <label htmlFor="edit-phone" className="text-sm font-medium">Phone Number</label>
+          <Input
+            id="edit-phone"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            maxLength={10}
+            value={selectedUser.phoneNumber || ""}
+            onChange={(e) => {
+              const value = e.target.value.replace(/\D/g, "").slice(0, 10);
+              setSelectedUser({ ...selectedUser, phoneNumber: value });
+            }}
+          />
+        </div>
+
+
+            <div className="space-y-2">
+              <label htmlFor="edit-dob" className="text-sm font-medium">Date of Birth</label>
+              <Input id="edit-dob" type="date" value={selectedUser.dateOfBirth || ""} onChange={(e) => setSelectedUser({ ...selectedUser, dateOfBirth: e.target.value })} />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="edit-diagnosis" className="text-sm font-medium">Primary Diagnosis</label>
+              <Input id="edit-diagnosis" type="text" value={selectedUser.primaryDiagnosis || ""} onChange={(e) => setSelectedUser({ ...selectedUser, primaryDiagnosis: e.target.value })} />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="edit-medications" className="text-sm font-medium">Medications</label>
+              <Input id="edit-medications" type="text" value={selectedUser.medications || ""} onChange={(e) => setSelectedUser({ ...selectedUser, medications: e.target.value })} />
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <input type="checkbox" id="edit-2fa" checked={selectedUser.use2FA || false} onChange={(e) => setSelectedUser({ ...selectedUser, use2FA: e.target.checked })} />
+              <label htmlFor="edit-2fa" className="text-sm font-medium">Enable Two-Factor Authentication</label>
+            </div>
           </div>
-        </DialogContent>
+        )}
+        <div className="flex flex-col sm:flex-row justify-end gap-3">
+          <Button variant="outline" onClick={() => setIsEditDialogOpen(false)} className="w-full sm:w-auto">
+            Cancel
+          </Button>
+          <Button className="bg-blue-500 hover:bg-blue-600 w-full sm:w-auto" onClick={handleEditUser}>
+            Save Changes
+          </Button>
+        </div>
+      </DialogContent>
       </Dialog>
         
       {/* Delete Confirmation Dialog */}
@@ -664,5 +791,7 @@ const filteredUsers = users.filter((user) => {
 )}
 
     </div>
-  );
-}
+
+  </>
+
+)}

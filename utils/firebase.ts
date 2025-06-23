@@ -90,11 +90,12 @@ export const getUserProfile = async (userId: string): Promise<any> => {
 
 export const updateUserProfile = async (userId: string, userData: any): Promise<void> => {
   const userRef = doc(db, 'users', userId);
-  await updateDoc(userRef, {
+  await setDoc(userRef, {
     ...userData,
     updatedAt: new Date()
-  });
+  }, { merge: true }); // ✅ merge ensures it won't overwrite the whole document
 };
+
 
 // Firebase Storage Operations
 export const uploadFile = async (file: File, path: string): Promise<string> => {

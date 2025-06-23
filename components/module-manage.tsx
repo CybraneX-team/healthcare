@@ -356,7 +356,6 @@ async function recalculateAllProgramProgressForUser(programId: string) {
         (module: Module) => module.id !== selectedModule.id
       );
 
-      console.log("updatedModules", updatedModules)
        await recalculateAllProgramProgressForUser(programId)
 
       setModules(updatedModules);

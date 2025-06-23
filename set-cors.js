@@ -15,7 +15,7 @@ fs.writeFileSync(tempFilePath, corsConfig);
 // Command to set CORS configuration
 const command = `gcloud storage buckets update gs://healthcare-17c9a.firebasestorage.app --cors-file=${tempFilePath}`;
 
-console.log('Setting CORS configuration for Firebase Storage...');
+// console.log('Setting CORS configuration for Firebase Storage...');
 exec(command, (error, stdout, stderr) => {
   // Clean up the temporary file
   fs.unlinkSync(tempFilePath);
@@ -26,6 +26,6 @@ exec(command, (error, stdout, stderr) => {
     return;
   }
   
-  console.log('CORS configuration set successfully!');
+  // console.log('CORS configuration set successfully!');
   console.log(stdout);
 });

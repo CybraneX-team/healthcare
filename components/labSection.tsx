@@ -21,7 +21,6 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { rtdb } from "@/utils/firebase";
 import { onValue, ref } from "firebase/database";
 
-
 // Google Maps component
 const GoogleMap = ({ address }: { address: string }) => {
   const mapRef = useRef<HTMLDivElement>(null);

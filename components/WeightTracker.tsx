@@ -14,47 +14,46 @@ import {
 import { useState } from "react";
 import { TrendingUp, Droplets, Zap, Beef, Target } from "lucide-react";
 
-// Enhanced weight tracking data for different periods
 const generateWeightData = (period: "weekly" | "monthly" | "yearly") => {
   switch (period) {
     case "weekly":
       return [
-        { name: "Mon", weight: 71.2, date: "Dec 16" },
-        { name: "Tue", weight: 71.0, date: "Dec 17" },
-        { name: "Wed", weight: 70.8, date: "Dec 18" },
-        { name: "Thu", weight: 70.5, date: "Dec 19" },
-        { name: "Fri", weight: 70.3, date: "Dec 20" },
-        { name: "Sat", weight: 70.1, date: "Dec 21" },
-        { name: "Sun", weight: 69.9, date: "Dec 22" },
+        { name: "Mon", weight: 71.2, target: 70, date: "Dec 16" },
+        { name: "Tue", weight: 71.0, target: 70, date: "Dec 17" },
+        { name: "Wed", weight: 70.8, target: 70, date: "Dec 18" },
+        { name: "Thu", weight: 70.5, target: 70, date: "Dec 19" },
+        { name: "Fri", weight: 70.3, target: 70, date: "Dec 20" },
+        { name: "Sat", weight: 70.1, target: 70, date: "Dec 21" },
+        { name: "Sun", weight: 69.9, target: 70, date: "Dec 22" },
       ];
     case "monthly":
       return [
-        { name: "Week 1", weight: 72.1, date: "Nov W1" },
-        { name: "Week 2", weight: 71.5, date: "Nov W2" },
-        { name: "Week 3", weight: 70.8, date: "Nov W3" },
-        { name: "Week 4", weight: 65.5, date: "Nov W4" },
+        { name: "Week 1", weight: 72.1, target: 70, date: "Nov W1" },
+        { name: "Week 2", weight: 71.5, target: 70, date: "Nov W2" },
+        { name: "Week 3", weight: 70.8, target: 70, date: "Nov W3" },
+        { name: "Week 4", weight: 70.2, target: 70, date: "Nov W4" },
+        { name: "Week 5", weight: 65.9, target: 70, date: "Dec W1" },
       ];
     case "yearly":
       return [
-        { name: "Jan", weight: 74.2, date: "2024" },
-        { name: "Feb", weight: 73.8, date: "2024" },
-        { name: "Mar", weight: 73.1, date: "2024" },
-        { name: "Apr", weight: 72.5, date: "2024" },
-        { name: "May", weight: 71.9, date: "2024" },
-        { name: "Jun", weight: 71.2, date: "2024" },
-        { name: "Jul", weight: 70.8, date: "2024" },
-        { name: "Aug", weight: 70.4, date: "2024" },
-        { name: "Sep", weight: 70.1, date: "2024" },
-        { name: "Oct", weight: 69.8, date: "2024" },
-        { name: "Nov", weight: 69.9, date: "2024" },
-        { name: "Dec", weight: 70.0, date: "2024" },
+        { name: "Jan", weight: 74.2, target: 70, date: "2024" },
+        { name: "Feb", weight: 73.8, target: 70, date: "2024" },
+        { name: "Mar", weight: 73.1, target: 70, date: "2024" },
+        { name: "Apr", weight: 72.5, target: 70, date: "2024" },
+        { name: "May", weight: 71.9, target: 70, date: "2024" },
+        { name: "Jun", weight: 71.2, target: 70, date: "2024" },
+        { name: "Jul", weight: 70.8, target: 70, date: "2024" },
+        { name: "Aug", weight: 70.4, target: 70, date: "2024" },
+        { name: "Sep", weight: 70.1, target: 70, date: "2024" },
+        { name: "Oct", weight: 69.8, target: 70, date: "2024" },
+        { name: "Nov", weight: 69.9, target: 70, date: "2024" },
+        { name: "Dec", weight: 70.0, target: 70, date: "2024" },
       ];
     default:
       return [];
   }
 };
 
-// Enhanced custom tooltip for weight chart
 interface WeightTooltipProps {
   active?: boolean;
   payload?: Array<{
@@ -67,12 +66,30 @@ interface WeightTooltipProps {
 const WeightTooltip = ({ active, payload, label }: WeightTooltipProps) => {
   if (active && payload && payload.length) {
     const weightData = payload.find((p) => p.dataKey === "weight");
+    const targetData = payload.find((p) => p.dataKey === "target");
     const weight = weightData?.value;
+    const target = targetData?.value;
+    const difference = weight && target ? (weight - target).toFixed(1) : "0";
 
     return (
       <div className="bg-white p-3 rounded-xl shadow-lg border border-gray-100">
         <p className="text-sm font-medium text-gray-800 mb-1">{label}</p>
-        <p className="text-sm text-blue-600 font-medium">{`Weight: ${weight} kg`}</p>
+        <div className="space-y-1">
+          <p className="text-sm text-blue-600 font-medium">{`Weight: ${weight} kg`}</p>
+          <p className="text-sm text-gray-500">{`Target: ${target} kg`}</p>
+          <p
+            className={`text-xs font-medium ${
+              Number.parseFloat(difference) > 0
+                ? "text-red-500"
+                : Number.parseFloat(difference) < 0
+                ? "text-green-500"
+                : "text-gray-500"
+            }`}
+          >
+            {Number.parseFloat(difference) > 0 ? `+${difference}` : difference}{" "}
+            kg from target
+          </p>
+        </div>
       </div>
     );
   }
@@ -107,24 +124,19 @@ export const WeightTrackingComponent = () => {
   >("weekly");
   const weightData = generateWeightData(selectedPeriod);
 
-  const currentWeight = weightData[weightData.length - 1]?.weight || 65.5;
+  const currentWeight = weightData[weightData.length - 1]?.weight || 65.9;
   const targetWeight = 70.0;
   const startWeight = weightData[0]?.weight || 71.2;
   const weightChange = currentWeight - startWeight;
 
   return (
-    <div className="min-h-screen md:h-screen bg-gray-50 p-4 md:overflow-hidden overflow-y-auto">
+    <div className="min-h-screen md:h-screen p-4 md:overflow-hidden overflow-y-auto">
       <motion.div
         variants={containerVariants}
         initial="hidden"
         animate="visible"
         className="h-full max-w-7xl mx-auto md:h-full min-h-screen md:min-h-0"
       >
-        {/* Compact Header */}
-        <motion.div variants={itemVariants} className="mb-4">
-          <h1 className="text-2xl font-bold text-gray-900">Weight Tracking</h1>
-        </motion.div>
-
         {/* Bento Grid Layout */}
         <div className="grid grid-cols-12 md:grid-rows-6 gap-4 md:h-[calc(100vh-120px)] min-h-screen md:min-h-0">
           {/* Weight Chart - Main Container (Smaller) */}
@@ -173,28 +185,28 @@ export const WeightTrackingComponent = () => {
                         top: 10,
                         right: 20,
                         left: 10,
-                        bottom: selectedPeriod === "yearly" ? 50 : 5,
+                        bottom: 5,
                       }}
                       barCategoryGap="15%"
                       maxBarSize={40}
                     >
                       <defs>
                         <linearGradient
-                          id="weightBarGradient"
+                          id="targetLineGradient"
                           x1="0"
                           y1="0"
                           x2="0"
                           y2="1"
                         >
                           <stop
-                            offset="0%"
-                            stopColor="#3b82f6"
-                            stopOpacity={1}
+                            offset="5%"
+                            stopColor="#ef4444"
+                            stopOpacity={0.8}
                           />
                           <stop
-                            offset="100%"
-                            stopColor="#1e40af"
-                            stopOpacity={1}
+                            offset="95%"
+                            stopColor="#dc2626"
+                            stopOpacity={0.6}
                           />
                         </linearGradient>
                       </defs>
@@ -207,16 +219,7 @@ export const WeightTrackingComponent = () => {
                         dataKey="name"
                         axisLine={false}
                         tickLine={false}
-                        tick={{
-                          fontSize: selectedPeriod === "yearly" ? 9 : 11,
-                          fill: "#6b7280",
-                        }}
-                        interval={0}
-                        angle={selectedPeriod === "yearly" ? -45 : 0}
-                        textAnchor={
-                          selectedPeriod === "yearly" ? "end" : "middle"
-                        }
-                        height={selectedPeriod === "yearly" ? 60 : 30}
+                        tick={{ fontSize: 11, fill: "#6b7280" }}
                       />
                       <YAxis
                         domain={["dataMin - 1", "dataMax + 1"]}
@@ -229,9 +232,17 @@ export const WeightTrackingComponent = () => {
                       <Tooltip content={<WeightTooltip />} />
                       <Bar
                         dataKey="weight"
-                        fill="url(#weightBarGradient)"
+                        fill="#3b82f6"
                         radius={[4, 4, 0, 0]}
                         name="Weight"
+                      />
+                      <Bar
+                        dataKey="target"
+                        fill="url(#targetLineGradient)"
+                        radius={[2, 2, 0, 0]}
+                        name="Target"
+                        opacity={0.3}
+                        maxBarSize={8}
                       />
                     </BarChart>
                   </ResponsiveContainer>

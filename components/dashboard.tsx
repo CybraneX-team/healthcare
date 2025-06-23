@@ -30,13 +30,13 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 
-// Import organ components
 import HeartComponent from "@/components/heart-component";
 import LiverComponent from "@/components/liver-component";
 import PancreasComponent from "@/components/pancreas-component";
 import Upload from "@/components/upload";
 import EnhancedAnatomy from "@/components/enhanced-anatomy";
 import ReproductiveHealth from "@/components/reproductive-health";
+import WeightTrackingComponent from "./WeightTracker";
 
 import { PatientSection } from "./PatientSection";
 import Neurology from "@/components/neurology";
@@ -538,7 +538,7 @@ export default function Dashboard() {
             <Upload />
           ) : activeTab === "progress" ? (
             <div className="px-6 bg-gradient-to-b from-gray-200 to-white min-h-screen">
-              <div className="p-8 bg-white rounded-3xl shadow-sm mt-4">
+              {/* <div className="p-8 bg-white rounded-3xl shadow-sm mt-4">
                 <h2 className="text-2xl font-semibold mb-4">
                   Overall Progress
                 </h2>
@@ -553,7 +553,8 @@ export default function Dashboard() {
                     <span className="text-sm text-gray-500">100</span>
                   </div>
                 </div>
-              </div>
+              </div> */}
+              <WeightTrackingComponent />
             </div>
           ) : activeTab === "admin" ? (
             <PatientSection />

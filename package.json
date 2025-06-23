@@ -57,6 +57,7 @@
     "embla-carousel-react": "8.5.1",
     "firebase": "^11.7.1",
     "firebase-admin": "^13.4.0",
+    "formidable": "^3.5.4",
     "framer-motion": "^12.10.5",
     "fs-extra": "^11.3.0",
     "groq-sdk": "^0.25.0",
@@ -91,6 +92,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@types/formidable": "^3.4.5",
     "@types/google.maps": "^3.58.1",
     "@types/node": "^22",
     "@types/pdf-parse": "^1.1.5",

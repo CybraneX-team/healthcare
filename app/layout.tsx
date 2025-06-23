@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { RouteGuard } from "@/components/RouteGuard";
 import { Bounce, ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { Toaster } from "@/components/ui/toaster";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -39,8 +40,7 @@ export default function RootLayout({
         pauseOnHover
         theme="light"
         transition={Bounce}
-        />
-        <ThemeProvider
+        />        <ThemeProvider
           attribute="class"
           defaultTheme="light"
           enableSystem
@@ -49,6 +49,7 @@ export default function RootLayout({
           <AuthProvider>
             <RouteGuard>{children}</RouteGuard>
           </AuthProvider>
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>

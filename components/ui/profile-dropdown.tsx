@@ -5,10 +5,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, User, Settings } from "lucide-react";
+import { LogOut, User, Settings, Upload } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export function ProfileDropdown() {
   const { user, logout } = useAuth();
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   
@@ -103,6 +105,18 @@ export function ProfileDropdown() {
               >
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Settings</span>
+              </Button>
+              
+              <Button
+                variant="ghost"
+                className="w-full justify-start px-2 py-1.5 text-gray-700 hover:bg-gray-100 rounded-lg mb-1"
+                onClick={() => {
+                  router.push('/dashboard?tab=upload');
+                  setIsOpen(false);
+                }}
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                <span>Upload Docs</span>
               </Button>
               
               <Button

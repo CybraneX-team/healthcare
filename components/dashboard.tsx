@@ -37,6 +37,7 @@ import Upload from "@/components/upload";
 import EnhancedAnatomy from "@/components/enhanced-anatomy";
 import ReproductiveHealth from "@/components/reproductive-health";
 import WeightTrackingComponent from "./WeightTracker";
+import FoodIntakeModal from "@/components/FoodIntakeModal";
 
 import { PatientSection } from "./PatientSection";
 import Neurology from "@/components/neurology";
@@ -212,6 +213,7 @@ export default function Dashboard() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(false); // Add loading state
   const [extractedText, setExtractedText] = useState(""); // Optional: show result
+  const [isFoodModalOpen, setIsFoodModalOpen] = useState(false);
   // const fileInputRef = useRef<HTMLInputElement>(null);
 
   // const handleUploadClick = () => {
@@ -405,17 +407,7 @@ export default function Dashboard() {
           <div className="px-6 py-4 flex-shrink-0">
             <div className="flex justify-center items-center w-full mb-2 relative">
               <div className="flex bg-gray-100 rounded-full p-1 overflow-hidden">
-                <Button
-                  variant="ghost"
-                  className={`rounded-full px-6 py-2 ${
-                    activeTab === "progress"
-                      ? "bg-blue-500 text-white"
-                      : "text-gray-700"
-                  } text-sm`}
-                  onClick={() => setActiveTab("progress")}
-                >
-                  Overall Progress
-                </Button>
+                
                 <Button
                   variant="ghost"
                   className={`rounded-full px-6 py-2 ${
@@ -450,18 +442,17 @@ export default function Dashboard() {
                 >
                   Directories
                 </Button>
-                <Button
-                  variant="ghost"
-                  className={`rounded-full px-6 py-2 ${
-                    activeTab === "upload"
-                      ? "bg-blue-500 text-white"
-                      : "text-gray-700"
-                  } text-sm`}
-                  onClick={() => setActiveTab("upload")}
-                >
-                  Upload
-                </Button>
               </div>
+              
+              {/* Calorie Tracker Button */}
+              <Button
+                variant="ghost"
+                className="rounded-full px-6 py-5 border border-4 bg-gray-100  border-blue-500 text-gray-700 ml-3 font-medium"
+                onClick={() => setIsFoodModalOpen(true)}
+              >
+                Calorie Tracker
+              </Button>
+              
               {isAdmin && (
                 <Link href="/admin">
                   <Button
@@ -565,6 +556,12 @@ export default function Dashboard() {
           )}
         </main>
       </div>
+      
+      {/* Food Intake Modal */}
+      <FoodIntakeModal 
+        isOpen={isFoodModalOpen} 
+        onClose={() => setIsFoodModalOpen(false)} 
+      />
     </div>
   );
 }

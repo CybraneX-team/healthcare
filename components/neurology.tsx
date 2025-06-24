@@ -89,23 +89,15 @@ export default function Component() {
               </div>
             </div>
 
-            <div className="bg-gray-100 p-4 rounded-3xl">
+            <div className="bg-gray-100 flex justify-between px-4 py-12 rounded-3xl">
               {/* CD-RISC Score */}
               <div>
                 <div className="text-gray-500 text-sm">CD-RISC:</div>
                 <div className="text-lg font-bold text-gray-900">80/100</div>
               </div>
-
-              {/* PHQ-9 and GAD-7 */}
-              <div className="flex items-end justify-between pt-4">
-                <div>
-                  <div className="text-gray-500 text-sm">PHQ-9</div>
-                  <div className="text-lg font-bold text-gray-900">4</div>
-                </div>
-                <div>
-                  <div className="text-gray-500 text-sm">GAD-7</div>
-                  <div className="text-lg font-bold text-gray-900">5</div>
-                </div>
+              <div>
+                <div className="text-gray-900 font-bold text-lg">PTau-217</div>
+                <div className="text-lg font-normal text-gray-600">2 pg/mL</div>
               </div>
             </div>
           </CardContent>
@@ -155,21 +147,7 @@ export default function Component() {
                 Neurotransmitters
               </h2>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
-                {/* Left Column */}
-                <div className="space-y-2">
-                  {/* Norepinephrine */}
-                  <div className="bg-gray-100 rounded-3xl p-3 sm:p-4">
-                    <div className="text-gray-900 font-medium mb-1 text-sm sm:text-base">
-                      Norepinephrine
-                    </div>
-                    <div className="text-gray-500 text-xs mb-4 sm:mb-10">
-                      Normal levels
-                    </div>
-                    <div className="text-base sm:text-lg font-semibold text-gray-900">
-                      0.02 μM
-                    </div>
-                  </div>
+              <div className="flex flex-col gap-1">
 
                   {/* Dopamine */}
                   <div className="bg-gray-100 rounded-3xl p-3 sm:p-4">
@@ -179,53 +157,8 @@ export default function Component() {
                     <div className="text-gray-500 text-xs mb-4 sm:mb-10">
                       Involved in pleasure
                     </div>
-                    <div className="text-base sm:text-lg font-semibold text-gray-900">
+                    <div className="text-base mt-12 sm:text-lg font-semibold text-gray-900">
                       0.002 μM
-                    </div>
-                  </div>
-
-                  {/* Acetylcholine */}
-                  <div className="bg-gray-100 rounded-3xl p-3 sm:p-4">
-                    <div className="text-gray-900 font-medium mb-1 text-sm sm:text-base">
-                      Acetylcholine
-                    </div>
-                    <div className="text-gray-500 text-xs mb-4 sm:mb-10">
-                      Normal levels
-                    </div>
-                    <div className="text-base sm:text-lg font-semibold text-gray-900">
-                      0.002 μM
-                    </div>
-                  </div>
-
-                  {/* Endorphins */}
-                  <div className="bg-gray-100 rounded-3xl p-3 sm:p-4">
-                    <div className="text-gray-900 font-medium mb-1 text-sm sm:text-base">
-                      Endorphins
-                    </div>
-                    <div className="text-gray-500 text-xs mb-4 sm:mb-10">
-                      Endorphin
-                    </div>
-                    <div className="text-base sm:text-lg font-semibold text-gray-900">
-                      0.002 μM
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right Column */}
-                <div className="space-y-2">
-                  {/* Acetylcholine */}
-                  <div className="bg-gray-100 rounded-3xl p-3 sm:p-4">
-                    <div className="text-gray-900 font-medium mb-1 text-sm sm:text-base">
-                      Acetylcholine
-                    </div>
-                    <div className="text-gray-500 text-xs mb-4 sm:mb-10">
-                      Attention, memory, muscle.
-                    </div>
-                    <div className="text-base sm:text-lg font-semibold text-gray-900">
-                      0.05 μM{" "}
-                      <span className="text-gray-400 text-xs sm:text-sm font-normal">
-                        (Varies)
-                      </span>
                     </div>
                   </div>
 
@@ -237,21 +170,8 @@ export default function Component() {
                     <div className="text-gray-500 text-xs mb-4 sm:mb-10">
                       Low Levels indicates Depression
                     </div>
-                    <div className="text-base sm:text-lg font-semibold text-gray-900">
+                    <div className="text-base mt-12 sm:text-lg font-semibold text-gray-900">
                       0.002 μM
-                    </div>
-                  </div>
-
-                  {/* Glutamate */}
-                  <div className="bg-gray-100 rounded-3xl p-3 sm:p-4">
-                    <div className="text-gray-900 font-medium mb-1 text-sm sm:text-base">
-                      Glutamate
-                    </div>
-                    <div className="text-gray-500 text-xs mb-4 sm:mb-10">
-                      Crucial for learning and memory
-                    </div>
-                    <div className="text-base sm:text-lg font-semibold text-gray-900">
-                      2 μM
                     </div>
                   </div>
 
@@ -263,11 +183,10 @@ export default function Component() {
                     <div className="text-gray-500 text-xs mb-4 sm:mb-10">
                       Endorphin
                     </div>
-                    <div className="text-base sm:text-lg font-semibold text-gray-900">
+                    <div className="text-base mt-12 sm:text-lg font-semibold text-gray-900">
                       0.002 μM
                     </div>
                   </div>
-                </div>
               </div>
             </CardContent>
           </Card>

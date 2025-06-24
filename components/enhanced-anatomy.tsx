@@ -22,43 +22,43 @@ const organData: OrganInfo[] = [
     id: "liver",
     name: "Liver",
     position: { x: 85, y: 45 },
-    dotPosition: { x: 45, y: 40 },
-    imagePath: "/liver_light.png",
+    dotPosition: { x: 45, y: 41 },
+    imagePath: "/liver_light.svg",
   },
   {
     id: "heart",
     name: "Heart",
     position: { x: 0, y: 25 },
-    dotPosition: { x: 50, y: 35 },
-    imagePath: "/heart_light.png",
+    dotPosition: { x: 53, y: 37 },
+    imagePath: "/heart_light.svg",
   },
   {
     id: "lungs",
     name: "Lungs",
     position: { x: 80, y: 30 },
-    dotPosition: { x: 57, y: 32 },
-    imagePath: "/lungs_light.png",
+    dotPosition: { x: 50, y: 35 },
+    imagePath: "/lungs_light.svg",
   },
   {
     id: "brain",
     name: "Brain",
     position: { x: 20, y: 8 },
-    dotPosition: { x: 50, y: 15 },
-    imagePath: "/brain_light.png",
+    dotPosition: { x: 50, y: 17 },
+    imagePath: "/brain_light.svg",
   },
   {
     id: "kidney",
     name: "Kidney",
     position: { x: -10, y: 50 },
-    dotPosition: { x: 42, y: 45 },
-    imagePath: "/kidney_light.png",
+    dotPosition: { x: 45, y: 55 },
+    imagePath: "/kidneys_light.svg",
   },
   {
     id: "reproductive",
     name: "Reproductive",
     position: { x: 80, y: 65 },
-    dotPosition: { x: 48, y: 65 },
-    imagePath: "/heart_light.png",
+    dotPosition: { x: 48, y: 60 },
+    imagePath: "/mr_light.svg",
   },
 ];
 
@@ -136,10 +136,25 @@ export default function EnhancedAnatomy({ selectedOrgan, onOrganSelect }: Enhanc
       <div className="relative w-full" style={{ height: "750px" }}>
         {/* Image Container for Crossfade */}
         <div className="absolute inset-0 flex items-start justify-center pt-2">
+          {/* Background anatomy image */}
+          <div className="absolute inset-0 flex items-start justify-center pt-2">
+            <Image
+              src="/bg_anatomy.svg"
+              alt="Anatomy Background"
+              width={550}
+              height={700}
+              className="object-contain"
+              style={{ width: "550px", height: "700px", objectFit: "contain", zIndex: 0 }}
+              priority
+            />
+          </div>
+          
+          {/* Organ images with crossfade */}
           {organData.map((organ, index) => (
             <motion.div
               key={index}
               className="absolute inset-0 flex items-start justify-center pt-2"
+              style={{ zIndex: 1 }}
               initial={{ opacity: 0 }}
               animate={{ opacity: currentImagePath === organ.imagePath ? 1 : 0 }}
               transition={{ duration: 0.5, ease: "easeInOut" }}
@@ -246,6 +261,7 @@ export default function EnhancedAnatomy({ selectedOrgan, onOrganSelect }: Enhanc
                         repeat: Infinity,
                         ease: "easeInOut",
                       }}
+
                     />
                   )}
                 </g>
@@ -265,6 +281,7 @@ export default function EnhancedAnatomy({ selectedOrgan, onOrganSelect }: Enhanc
                 top: `${organ.position.y}%`,
                 transform: "translate(-50%, -50%)",
                 opacity: getOrganOpacity(organ.id),
+                zIndex: 3,
               }}
               variants={labelVariants}
               initial="hidden"

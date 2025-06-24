@@ -545,7 +545,7 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div> */}
-              <WeightTrackingComponent />
+              {/* <WeightTrackingComponent /> */}
             </div>
           ) : activeTab === "admin" ? (
             <PatientSection />

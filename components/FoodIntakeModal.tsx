@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, ChangeEvent } from 'react'
-import { Button } from '@/components/ui/button'
+import { useState, type ChangeEvent } from 'react'
 import { ChevronLeft, UploadCloud, Menu, X } from 'lucide-react'
 import Image from 'next/image'
 import Lottie from 'lottie-react'
@@ -10,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { db } from '@/utils/firebase'
 import { collection, addDoc, doc, setDoc } from 'firebase/firestore'
 import { useToast } from '@/hooks/use-toast'
+import { WeightTrackingComponent } from './WeightTracker'
 
 interface FoodIntakeModalProps {
   isOpen: boolean
@@ -79,16 +79,16 @@ export default function FoodIntakeModal({
   const [uploadedMealImage, setUploadedMealImage] = useState<File | null>(null)
   // Body transformation state
   const [transformationImage, setTransformationImage] = useState<File | null>(
-    null,
+    null
   )
   const [currentWeight, setCurrentWeight] = useState<string>('')
   const [targetWeight, setTargetWeight] = useState<string>('')
   const [transformationResult, setTransformationResult] = useState<any | null>(
-    null,
+    null
   )
   const [transformationLoading, setTransformationLoading] = useState(false)
   const [transformationError, setTransformationError] = useState<string | null>(
-    null,
+    null
   )
 
   const tabs = [
@@ -105,7 +105,7 @@ export default function FoodIntakeModal({
     // Match leading number (int or float)
     const match = qty.match(/^(\d+(?:\.\d+)?)/)
     if (match) {
-      const num = parseFloat(match[1])
+      const num = Number.parseFloat(match[1])
       const unit = qty.slice(match[1].length).trim()
       return { num, unit }
     }
@@ -163,7 +163,7 @@ export default function FoodIntakeModal({
         setLoading(false)
         return
       }
-      let arr = Array.isArray(data) ? data : data.items
+      const arr = Array.isArray(data) ? data : data.items
       setFoodItems(processApiItems(arr || []))
     } catch (err) {
       setError('Failed to analyze image')
@@ -174,7 +174,7 @@ export default function FoodIntakeModal({
 
   // Handle transformation image upload
   const handleTransformationImageUpload = async (
-    e: ChangeEvent<HTMLInputElement>,
+    e: ChangeEvent<HTMLInputElement>
   ) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -187,7 +187,7 @@ export default function FoodIntakeModal({
   const handleTransformationSubmit = async () => {
     if (!transformationImage || !currentWeight || !targetWeight) {
       setTransformationError(
-        'Please provide an image, current weight, and target weight',
+        'Please provide an image, current weight, and target weight'
       )
       return
     }
@@ -219,13 +219,13 @@ export default function FoodIntakeModal({
         setTransformationResult(data)
       } else {
         setTransformationError(
-          'No transformation analysis received. Please try again with a clearer image.',
+          'No transformation analysis received. Please try again with a clearer image.'
         )
       }
     } catch (err) {
       console.error('Transformation request error:', err)
       setTransformationError(
-        'Network error. Please check your connection and try again.',
+        'Network error. Please check your connection and try again.'
       )
     } finally {
       setTransformationLoading(false)
@@ -271,7 +271,7 @@ export default function FoodIntakeModal({
 
   const updateSleepTime = (
     field: 'wakeUpTime' | 'sleepTime',
-    value: string,
+    value: string
   ) => {
     setHabits((prev) => ({
       ...prev,
@@ -297,7 +297,7 @@ export default function FoodIntakeModal({
     setFoodItems((prev) =>
       prev.map((item, i) => {
         if (i !== idx) return item
-        const num = parseFloat(newNum)
+        const num = Number.parseFloat(newNum)
         const safeNum = isNaN(num) || num <= 0 ? 1 : num
         const orig = item._originalMacros!
         return {
@@ -308,7 +308,7 @@ export default function FoodIntakeModal({
           carbs: Math.round(orig.carbs * safeNum),
           fats: Math.round(orig.fats * safeNum),
         }
-      }),
+      })
     )
   }
 
@@ -376,7 +376,7 @@ export default function FoodIntakeModal({
           carbs: totals.carbs + (item.carbs || 0),
           fats: totals.fats + (item.fats || 0),
         }),
-        { calories: 0, protein: 0, carbs: 0, fats: 0 },
+        { calories: 0, protein: 0, carbs: 0, fats: 0 }
       )
 
       // Prepare meal data
@@ -410,7 +410,7 @@ export default function FoodIntakeModal({
         'users',
         user.id,
         'dailySummaries',
-        mealData.date,
+        mealData.date
       )
 
       const { getDoc } = await import('firebase/firestore')
@@ -431,7 +431,7 @@ export default function FoodIntakeModal({
           mealCount: (existingData.mealCount || 0) + 1,
           lastUpdated: new Date(),
         },
-        { merge: true },
+        { merge: true }
       )
       toast({
         title: `${selectedMealType} Logged Successfully! 🍽️`,
@@ -457,8 +457,8 @@ export default function FoodIntakeModal({
   const handleToggleCheck = (idx: number) => {
     setFoodItems((prev) =>
       prev.map((item, i) =>
-        i === idx ? { ...item, checked: !item.checked } : item,
-      ),
+        i === idx ? { ...item, checked: !item.checked } : item
+      )
     )
   }
 
@@ -506,15 +506,19 @@ export default function FoodIntakeModal({
 
             <div className="space-y-3">
               <label
-                className={`flex items-center gap-3 ${habits.fasting.enabled ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+                className={`flex items-center gap-3 ${
+                  habits.fasting.enabled
+                    ? 'cursor-pointer'
+                    : 'cursor-not-allowed'
+                }`}
               >
                 <div
                   className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
                     habits.fasting.enabled && habits.fasting.skipBreakfast
                       ? 'bg-blue-600 border-blue-600'
                       : habits.fasting.enabled
-                        ? 'border-gray-300'
-                        : 'border-gray-200'
+                      ? 'border-gray-300'
+                      : 'border-gray-200'
                   }`}
                 >
                   {habits.fasting.enabled && habits.fasting.skipBreakfast && (
@@ -536,7 +540,9 @@ export default function FoodIntakeModal({
                   )}
                 </div>
                 <span
-                  className={`${habits.fasting.enabled ? 'text-gray-700' : 'text-gray-400'}`}
+                  className={`${
+                    habits.fasting.enabled ? 'text-gray-700' : 'text-gray-400'
+                  }`}
                 >
                   Skip Breakfast
                 </span>
@@ -553,15 +559,19 @@ export default function FoodIntakeModal({
               </label>
 
               <label
-                className={`flex items-center gap-3 ${habits.fasting.enabled ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+                className={`flex items-center gap-3 ${
+                  habits.fasting.enabled
+                    ? 'cursor-pointer'
+                    : 'cursor-not-allowed'
+                }`}
               >
                 <div
                   className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
                     habits.fasting.enabled && habits.fasting.skipLunch
                       ? 'bg-blue-600 border-blue-600'
                       : habits.fasting.enabled
-                        ? 'border-gray-300'
-                        : 'border-gray-200'
+                      ? 'border-gray-300'
+                      : 'border-gray-200'
                   }`}
                 >
                   {habits.fasting.enabled && habits.fasting.skipLunch && (
@@ -583,7 +593,9 @@ export default function FoodIntakeModal({
                   )}
                 </div>
                 <span
-                  className={`${habits.fasting.enabled ? 'text-gray-700' : 'text-gray-400'}`}
+                  className={`${
+                    habits.fasting.enabled ? 'text-gray-700' : 'text-gray-400'
+                  }`}
                 >
                   Skip Lunch
                 </span>
@@ -599,15 +611,19 @@ export default function FoodIntakeModal({
               </label>
 
               <label
-                className={`flex items-center gap-3 ${habits.fasting.enabled ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+                className={`flex items-center gap-3 ${
+                  habits.fasting.enabled
+                    ? 'cursor-pointer'
+                    : 'cursor-not-allowed'
+                }`}
               >
                 <div
                   className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
                     habits.fasting.enabled && habits.fasting.skipDinner
                       ? 'bg-blue-600 border-blue-600'
                       : habits.fasting.enabled
-                        ? 'border-gray-300'
-                        : 'border-gray-200'
+                      ? 'border-gray-300'
+                      : 'border-gray-200'
                   }`}
                 >
                   {habits.fasting.enabled && habits.fasting.skipDinner && (
@@ -629,7 +645,9 @@ export default function FoodIntakeModal({
                   )}
                 </div>
                 <span
-                  className={`${habits.fasting.enabled ? 'text-gray-700' : 'text-gray-400'}`}
+                  className={`${
+                    habits.fasting.enabled ? 'text-gray-700' : 'text-gray-400'
+                  }`}
                 >
                   Skip Dinner
                 </span>
@@ -816,7 +834,9 @@ export default function FoodIntakeModal({
         {transformationImage ? (
           <div className="relative">
             <img
-              src={URL.createObjectURL(transformationImage)}
+              src={
+                URL.createObjectURL(transformationImage) || '/placeholder.svg'
+              }
               alt="Selected image"
               className="max-w-full max-h-64 object-contain rounded-lg"
             />
@@ -898,7 +918,10 @@ export default function FoodIntakeModal({
                   Current Photo ({currentWeight} kg → {targetWeight} kg)
                 </h4>
                 <img
-                  src={URL.createObjectURL(transformationImage!)}
+                  src={
+                    URL.createObjectURL(transformationImage!) ||
+                    '/placeholder.svg'
+                  }
                   alt="Current"
                   className="w-64 h-64 object-cover rounded-lg border-2 border-gray-200 mx-auto"
                 />
@@ -936,7 +959,7 @@ export default function FoodIntakeModal({
                     {transformationResult.key_changes.map(
                       (change: string, index: number) => (
                         <li key={index}>{change}</li>
-                      ),
+                      )
                     )}
                   </ul>
                 </div>
@@ -952,7 +975,7 @@ export default function FoodIntakeModal({
                     {transformationResult.recommendations.map(
                       (rec: string, index: number) => (
                         <li key={index}>{rec}</li>
-                      ),
+                      )
                     )}
                   </ul>
                 </div>
@@ -1020,7 +1043,7 @@ export default function FoodIntakeModal({
           /* Show uploaded image */
           <div className="relative max-w-full max-h-full flex flex-col items-center">
             <img
-              src={URL.createObjectURL(uploadedMealImage)}
+              src={URL.createObjectURL(uploadedMealImage) || '/placeholder.svg'}
               alt="Uploaded food image"
               className="max-w-full max-h-96 object-contain rounded-lg shadow-md mb-4"
             />
@@ -1149,7 +1172,9 @@ export default function FoodIntakeModal({
                   {foodItems.map((item, idx) => (
                     <tr
                       key={idx}
-                      className={`even:bg-gray-50 ${!item.checked ? 'opacity-50' : ''}`}
+                      className={`even:bg-gray-50 ${
+                        !item.checked ? 'opacity-50' : ''
+                      }`}
                     >
                       <td className="px-2 py-2 text-center">
                         <input
@@ -1169,8 +1194,8 @@ export default function FoodIntakeModal({
                                 prev.map((it, i) =>
                                   i === idx
                                     ? { ...it, item: e.target.value }
-                                    : it,
-                                ),
+                                    : it
+                                )
                               )
                             }
                             className="border border-gray-300 rounded-lg px-2 py-1 w-28 focus:outline-none focus:ring-2 focus:ring-blue-200 transition"
@@ -1200,8 +1225,8 @@ export default function FoodIntakeModal({
                                   prev.map((it, i) =>
                                     i === idx
                                       ? { ...it, _unit: e.target.value }
-                                      : it,
-                                  ),
+                                      : it
+                                  )
                                 )
                               }
                               className="border border-gray-300 rounded-lg px-2 py-1 w-20 focus:outline-none focus:ring-2 focus:ring-blue-200 transition text-center"
@@ -1239,8 +1264,8 @@ export default function FoodIntakeModal({
                                         ...it,
                                         calories: Number(e.target.value),
                                       }
-                                    : it,
-                                ),
+                                    : it
+                                )
                               )
                             }
                             className="border border-gray-300 rounded-lg px-2 py-1 w-16 focus:outline-none focus:ring-2 focus:ring-blue-200 transition text-center"
@@ -1260,8 +1285,8 @@ export default function FoodIntakeModal({
                                 prev.map((it, i) =>
                                   i === idx
                                     ? { ...it, protein: Number(e.target.value) }
-                                    : it,
-                                ),
+                                    : it
+                                )
                               )
                             }
                             className="border border-gray-300 rounded-lg px-2 py-1 w-14 focus:outline-none focus:ring-2 focus:ring-blue-200 transition text-center"
@@ -1281,8 +1306,8 @@ export default function FoodIntakeModal({
                                 prev.map((it, i) =>
                                   i === idx
                                     ? { ...it, carbs: Number(e.target.value) }
-                                    : it,
-                                ),
+                                    : it
+                                )
                               )
                             }
                             className="border border-gray-300 rounded-lg px-2 py-1 w-14 focus:outline-none focus:ring-2 focus:ring-blue-200 transition text-center"
@@ -1302,8 +1327,8 @@ export default function FoodIntakeModal({
                                 prev.map((it, i) =>
                                   i === idx
                                     ? { ...it, fats: Number(e.target.value) }
-                                    : it,
-                                ),
+                                    : it
+                                )
                               )
                             }
                             className="border border-gray-300 rounded-lg px-2 py-1 w-14 focus:outline-none focus:ring-2 focus:ring-blue-200 transition text-center"
@@ -1487,11 +1512,15 @@ export default function FoodIntakeModal({
         )}
         {/* Main content */}
         <div className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto flex flex-col">
-          {selectedTab === 'Habits'
-            ? renderHabitsContent()
-            : selectedTab === 'Body Transformation'
-              ? renderBodyTransformationContent()
-              : renderMealIntakeContent()}
+          {selectedTab === 'Habits' ? (
+            renderHabitsContent()
+          ) : selectedTab === 'Body Transformation' ? (
+            renderBodyTransformationContent()
+          ) : selectedTab === 'Weight' ? (
+            <WeightTrackingComponent />
+          ) : (
+            renderMealIntakeContent()
+          )}
         </div>
       </div>
     </div>

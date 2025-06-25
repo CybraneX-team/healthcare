@@ -36,7 +36,6 @@ import PancreasComponent from '@/components/pancreas-component'
 import Upload from '@/components/upload'
 import EnhancedAnatomy from '@/components/enhanced-anatomy'
 import ReproductiveHealth from '@/components/reproductive-health'
-import WeightTrackingComponent from './WeightTracker'
 import FoodIntakeModal from '@/components/FoodIntakeModal'
 
 import { PatientSection } from './PatientSection'
@@ -221,7 +220,7 @@ export default function Dashboard() {
   // };
 
   const handleFileChange = async (
-    event: React.ChangeEvent<HTMLInputElement>,
+    event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const file = event.target.files?.[0]
     if (!file) return

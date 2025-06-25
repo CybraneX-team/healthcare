@@ -1,66 +1,66 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
-import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from 'react'
+import Image from 'next/image'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface OrganInfo {
-  id: string;
-  name: string;
-  position: { x: number; y: number };
-  dotPosition: { x: number; y: number };
-  imagePath: string;
+  id: string
+  name: string
+  position: { x: number; y: number }
+  dotPosition: { x: number; y: number }
+  imagePath: string
 }
 
 interface EnhancedAnatomyProps {
-  selectedOrgan: string;
-  onOrganSelect: (organId: string) => void;
+  selectedOrgan: string
+  onOrganSelect: (organId: string) => void
 }
 
 const organData: OrganInfo[] = [
   {
-    id: "liver",
-    name: "Liver",
+    id: 'liver',
+    name: 'Liver',
     position: { x: 85, y: 45 },
     dotPosition: { x: 45, y: 41 },
-    imagePath: "/liver_light.svg",
+    imagePath: '/liver_light.svg',
   },
   {
-    id: "heart",
-    name: "Heart",
+    id: 'heart',
+    name: 'Heart',
     position: { x: 0, y: 25 },
     dotPosition: { x: 53, y: 37 },
-    imagePath: "/heart_light.svg",
+    imagePath: '/heart_light.svg',
   },
   {
-    id: "lungs",
-    name: "Lungs",
+    id: 'lungs',
+    name: 'Lungs',
     position: { x: 80, y: 30 },
     dotPosition: { x: 50, y: 35 },
-    imagePath: "/lungs_light.svg",
+    imagePath: '/lungs_light.svg',
   },
   {
-    id: "brain",
-    name: "Brain",
+    id: 'brain',
+    name: 'Brain',
     position: { x: 20, y: 8 },
     dotPosition: { x: 50, y: 17 },
-    imagePath: "/brain_light.svg",
+    imagePath: '/brain_light.svg',
   },
   {
-    id: "kidney",
-    name: "Kidney",
+    id: 'kidney',
+    name: 'Kidney',
     position: { x: -10, y: 50 },
     dotPosition: { x: 45, y: 55 },
-    imagePath: "/kidneys_light.svg",
+    imagePath: '/kidneys_light.svg',
   },
   {
-    id: "reproductive",
-    name: "Reproductive",
+    id: 'reproductive',
+    name: 'Reproductive',
     position: { x: 80, y: 65 },
     dotPosition: { x: 48, y: 60 },
-    imagePath: "/mr_light.svg",
+    imagePath: '/mr_light.svg',
   },
-];
+]
 
 const lineVariants = {
   hidden: { pathLength: 0, opacity: 0 },
@@ -69,10 +69,10 @@ const lineVariants = {
     opacity: 1,
     transition: {
       duration: 0.8,
-      ease: "easeInOut",
+      ease: 'easeInOut',
     },
   },
-};
+}
 
 const labelVariants = {
   hidden: { opacity: 0, scale: 0.8, y: 10 },
@@ -83,57 +83,62 @@ const labelVariants = {
     transition: {
       duration: 0.6,
       delay: 0.8,
-      ease: "easeOut",
+      ease: 'easeOut',
     },
   },
-};
+}
 
-export default function EnhancedAnatomy({ selectedOrgan, onOrganSelect }: EnhancedAnatomyProps) {
-  const [isLoaded, setIsLoaded] = useState(true);
-  const [currentImagePath, setCurrentImagePath] = useState("/liver_light.png");
+export default function EnhancedAnatomy({
+  selectedOrgan,
+  onOrganSelect,
+}: EnhancedAnatomyProps) {
+  const [isLoaded, setIsLoaded] = useState(true)
+  const [currentImagePath, setCurrentImagePath] = useState('/liver_light.png')
 
   useEffect(() => {
-    const selectedOrganData = organData.find((organ) => organ.id === selectedOrgan);
+    const selectedOrganData = organData.find(
+      (organ) => organ.id === selectedOrgan,
+    )
     if (selectedOrganData) {
-      setCurrentImagePath(selectedOrganData.imagePath);
+      setCurrentImagePath(selectedOrganData.imagePath)
     }
-  }, [selectedOrgan]);
+  }, [selectedOrgan])
 
   useEffect(() => {
     const preloadImages = () => {
       organData.forEach((organ) => {
-        const img = document.createElement("img");
-        img.src = organ.imagePath;
-      });
-    };
-    preloadImages();
-    setIsLoaded(true);
-  }, []);
+        const img = document.createElement('img')
+        img.src = organ.imagePath
+      })
+    }
+    preloadImages()
+    setIsLoaded(true)
+  }, [])
 
   const getOrganOpacity = (organId: string) => {
-    return selectedOrgan === organId ? 1 : 0.3;
-  };
+    return selectedOrgan === organId ? 1 : 0.3
+  }
 
   const getLineColor = (organId: string) => {
     const colors = {
-      liver: "#f59e0b",
-      heart: "#ef4444",
-      lungs: "#3b82f6",
-      brain: "#8b5cf6",
-      kidney: "#8b5cf6",
-      reproductive: "#ec4899",
-    };
-    return colors[organId as keyof typeof colors] || "#6b7280";
-  };
+      liver: '#f59e0b',
+      heart: '#ef4444',
+      lungs: '#3b82f6',
+      brain: '#8b5cf6',
+      kidney: '#8b5cf6',
+      reproductive: '#ec4899',
+    }
+    return colors[organId as keyof typeof colors] || '#6b7280'
+  }
 
   const calculateArrowEndpoint = (organ: OrganInfo) => {
-    const { position } = organ;
-    return { x: position.x, y: position.y };
-  };
+    const { position } = organ
+    return { x: position.x, y: position.y }
+  }
 
   return (
     <div className="relative w-full max-w-sm mx-auto">
-      <div className="relative w-full" style={{ height: "750px" }}>
+      <div className="relative w-full" style={{ height: '750px' }}>
         {/* Image Container for Crossfade */}
         <div className="absolute inset-0 flex items-start justify-center pt-2">
           {/* Background anatomy image */}
@@ -144,11 +149,16 @@ export default function EnhancedAnatomy({ selectedOrgan, onOrganSelect }: Enhanc
               width={550}
               height={700}
               className="object-contain"
-              style={{ width: "550px", height: "700px", objectFit: "contain", zIndex: 0 }}
+              style={{
+                width: '550px',
+                height: '700px',
+                objectFit: 'contain',
+                zIndex: 0,
+              }}
               priority
             />
           </div>
-          
+
           {/* Organ images with crossfade */}
           {organData.map((organ, index) => (
             <motion.div
@@ -156,8 +166,10 @@ export default function EnhancedAnatomy({ selectedOrgan, onOrganSelect }: Enhanc
               className="absolute inset-0 flex items-start justify-center pt-2"
               style={{ zIndex: 1 }}
               initial={{ opacity: 0 }}
-              animate={{ opacity: currentImagePath === organ.imagePath ? 1 : 0 }}
-              transition={{ duration: 0.5, ease: "easeInOut" }}
+              animate={{
+                opacity: currentImagePath === organ.imagePath ? 1 : 0,
+              }}
+              transition={{ duration: 0.5, ease: 'easeInOut' }}
             >
               <Image
                 src={organ.imagePath}
@@ -165,7 +177,11 @@ export default function EnhancedAnatomy({ selectedOrgan, onOrganSelect }: Enhanc
                 width={550}
                 height={700}
                 className="object-contain"
-                style={{ width: "550px", height: "700px", objectFit: "contain" }}
+                style={{
+                  width: '550px',
+                  height: '700px',
+                  objectFit: 'contain',
+                }}
                 onLoad={() => setIsLoaded(true)}
                 priority
               />
@@ -202,10 +218,10 @@ export default function EnhancedAnatomy({ selectedOrgan, onOrganSelect }: Enhanc
             </defs>
 
             {organData.map((organ) => {
-              const arrowEndpoint = calculateArrowEndpoint(organ);
-              const dx = arrowEndpoint.x - organ.dotPosition.x;
-              const dy = arrowEndpoint.y - organ.dotPosition.y;
-              const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
+              const arrowEndpoint = calculateArrowEndpoint(organ)
+              const dx = arrowEndpoint.x - organ.dotPosition.x
+              const dy = arrowEndpoint.y - organ.dotPosition.y
+              const angle = (Math.atan2(dy, dx) * 180) / Math.PI
 
               return (
                 <g key={organ.id} opacity={getOrganOpacity(organ.id)}>
@@ -241,7 +257,9 @@ export default function EnhancedAnatomy({ selectedOrgan, onOrganSelect }: Enhanc
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ delay: 0.5, duration: 0.3 }}
-                    style={{ filter: "drop-shadow(0px 2px 4px rgba(0,0,0,0.3))" }}
+                    style={{
+                      filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.3))',
+                    }}
                   />
                   {selectedOrgan === organ.id && (
                     <motion.circle
@@ -259,13 +277,12 @@ export default function EnhancedAnatomy({ selectedOrgan, onOrganSelect }: Enhanc
                       transition={{
                         duration: 2,
                         repeat: Infinity,
-                        ease: "easeInOut",
+                        ease: 'easeInOut',
                       }}
-
                     />
                   )}
                 </g>
-              );
+              )
             })}
           </svg>
         )}
@@ -279,7 +296,7 @@ export default function EnhancedAnatomy({ selectedOrgan, onOrganSelect }: Enhanc
               style={{
                 left: `${organ.position.x}%`,
                 top: `${organ.position.y}%`,
-                transform: "translate(-50%, -50%)",
+                transform: 'translate(-50%, -50%)',
                 opacity: getOrganOpacity(organ.id),
                 zIndex: 3,
               }}
@@ -292,13 +309,17 @@ export default function EnhancedAnatomy({ selectedOrgan, onOrganSelect }: Enhanc
                 bg-white/98 backdrop-blur-md rounded-xl px-3 py-2 shadow-sm border-1
                 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-xl
                 min-w-[50px] text-center relative
-                ${selectedOrgan === organ.id ? "border-2 shadow-2xl transform scale-105" : "border-white/50"}
+                ${selectedOrgan === organ.id ? 'border-2 shadow-2xl transform scale-105' : 'border-white/50'}
               `}
                 style={{
-                  borderColor: selectedOrgan === organ.id ? getLineColor(organ.id) : undefined,
-                  boxShadow: selectedOrgan === organ.id
-                    ? `0 8px 32px ${getLineColor(organ.id)}30, 0 0 0 1px ${getLineColor(organ.id)}20`
-                    : "0 4px 16px rgba(0,0,0,0.1)",
+                  borderColor:
+                    selectedOrgan === organ.id
+                      ? getLineColor(organ.id)
+                      : undefined,
+                  boxShadow:
+                    selectedOrgan === organ.id
+                      ? `0 8px 32px ${getLineColor(organ.id)}30, 0 0 0 1px ${getLineColor(organ.id)}20`
+                      : '0 4px 16px rgba(0,0,0,0.1)',
                 }}
                 onClick={() => onOrganSelect(organ.id)}
               >
@@ -311,10 +332,13 @@ export default function EnhancedAnatomy({ selectedOrgan, onOrganSelect }: Enhanc
                 <span
                   className={`
                   text-xs font-medium transition-colors duration-300 block
-                  ${selectedOrgan === organ.id ? "text-gray-900" : "text-gray-700"}
+                  ${selectedOrgan === organ.id ? 'text-gray-900' : 'text-gray-700'}
                 `}
                   style={{
-                    color: selectedOrgan === organ.id ? getLineColor(organ.id) : undefined,
+                    color:
+                      selectedOrgan === organ.id
+                        ? getLineColor(organ.id)
+                        : undefined,
                   }}
                 >
                   {organ.name}
@@ -330,5 +354,5 @@ export default function EnhancedAnatomy({ selectedOrgan, onOrganSelect }: Enhanc
           ))}
       </div>
     </div>
-  );
+  )
 }

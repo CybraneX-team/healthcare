@@ -1,8 +1,8 @@
-"use client";
+'use client'
 
-import Image from "next/image";
-import { motion } from "framer-motion";
-import { Card, CardContent } from "@/components/ui/card";
+import Image from 'next/image'
+import { motion } from 'framer-motion'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   LineChart,
   Line,
@@ -12,61 +12,61 @@ import {
   Tooltip,
   ResponsiveContainer,
   Area,
-} from "recharts";
-import { useState } from "react";
-import FoodIntakeModal from "./FoodIntakeModal";
+} from 'recharts'
+import { useState } from 'react'
+import FoodIntakeModal from './FoodIntakeModal'
 
 // Interface for medical data (only for dynamic data support)
 interface Test {
-  test_name: string;
-  value?: number;
-  unit?: string;
+  test_name: string
+  value?: number
+  unit?: string
   reference_range?: {
-    low: number;
-    high: number;
-    unit: string;
-  };
-  date?: string;
-  sample_type?: string;
-  notes?: string;
-  metrics?: Record<string, any>;
+    low: number
+    high: number
+    unit: string
+  }
+  date?: string
+  sample_type?: string
+  notes?: string
+  metrics?: Record<string, any>
 }
 
 interface System {
-  name: string;
-  tests: Test[];
+  name: string
+  tests: Test[]
 }
 
 interface PatientData {
   patient: {
-    id: string;
-    name: string;
-    date_of_birth: string;
-    sex: string;
-    report_date: string;
+    id: string
+    name: string
+    date_of_birth: string
+    sex: string
+    report_date: string
     source_file: {
-      filename: string;
-      page: number;
-      section_heading: string;
-    };
-  };
-  systems: System[];
+      filename: string
+      page: number
+      section_heading: string
+    }
+  }
+  systems: System[]
 }
 
 interface OverviewComponentProps {
-  data?: PatientData;
+  data?: PatientData
 }
 
 // Function to generate weight trend data
 const generateWeightTrendData = () => {
   // Sample data points for the weight trend
   return [
-    { name: "Week 1", value: 5, change: +5 }, // Week 1, starting point
-    { name: "Week 3", value: -8, change: -10 }, // Week 3, dip
-    { name: "Week 4", value: 7, change: +5 }, // Week 4, peak
-    { name: "Week 5", value: 3, change: -2 }, // Week 5, end point
-  ];
-};
+    { name: 'Week 1', value: 5, change: +5 }, // Week 1, starting point
+    { name: 'Week 3', value: -8, change: -10 }, // Week 3, dip
+    { name: 'Week 4', value: 7, change: +5 }, // Week 4, peak
+    { name: 'Week 5', value: 3, change: -2 }, // Week 5, end point
+  ]
+}
 
 // Function to calculate BMI indicator position
 const calculateBmiPosition = (bmi: number): number => {
@@ -78,29 +78,29 @@ const calculateBmiPosition = (bmi: number): number => {
 
   if (bmi < 18.5) {
     // Position in the underweight range (0-25%)
-    return (bmi / 18.5) * 25;
+    return (bmi / 18.5) * 25
   } else if (bmi < 25) {
     // Position in the normal range (25-50%)
-    return 25 + ((bmi - 18.5) / 6.5) * 25;
+    return 25 + ((bmi - 18.5) / 6.5) * 25
   } else if (bmi < 30) {
     // Position in the overweight range (50-75%)
-    return 50 + ((bmi - 25) / 5) * 25;
+    return 50 + ((bmi - 25) / 5) * 25
   } else {
     // Position in the obese range (75-100%)
     // Cap at 100%
-    return Math.min(75 + ((bmi - 30) / 10) * 25, 100);
+    return Math.min(75 + ((bmi - 30) / 10) * 25, 100)
   }
-};
+}
 
 // Custom tooltip component for the weight trend chart
 interface TooltipProps {
-  active?: boolean;
+  active?: boolean
   payload?: Array<{
     payload: {
-      change: number;
-    };
-  }>;
-  label?: string;
+      change: number
+    }
+  }>
+  label?: string
 }
 
 const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
@@ -108,82 +108,86 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
     const change =
       payload[0].payload.change > 0
         ? `+${payload[0].payload.change}`
-        : payload[0].payload.change;
+        : payload[0].payload.change
     return (
       <div className="bg-white p-2 rounded-xl shadow-sm border border-gray-100">
         <p className="text-xs font-medium text-blue-500">{`${label}: ${change} kg`}</p>
       </div>
-    );
+    )
   }
-  return null;
-};
+  return null
+}
 
 // Animation variants
 const containerVariants = {
   hidden: { opacity: 0 },
-  visible: { 
+  visible: {
     opacity: 1,
-    transition: { 
+    transition: {
       duration: 0.4,
-      when: "beforeChildren",
-      staggerChildren: 0.1
-    }
+      when: 'beforeChildren',
+      staggerChildren: 0.1,
+    },
   },
   exit: {
     opacity: 0,
     transition: {
       duration: 0.3,
-      when: "afterChildren",
+      when: 'afterChildren',
       staggerChildren: 0.05,
-      staggerDirection: -1
-    }
-  }
-};
+      staggerDirection: -1,
+    },
+  },
+}
 
 const itemVariants = {
   hidden: { y: 15, opacity: 0 },
-  visible: { 
-    y: 0, 
+  visible: {
+    y: 0,
     opacity: 1,
-    transition: { duration: 0.35, ease: "easeOut" }
+    transition: { duration: 0.35, ease: 'easeOut' },
   },
   exit: {
-    y: -15, 
+    y: -15,
     opacity: 0,
-    transition: { duration: 0.25, ease: "easeIn" }
-  }
-};
+    transition: { duration: 0.25, ease: 'easeIn' },
+  },
+}
 
 export const OverviewComponent = ({ data }: OverviewComponentProps) => {
-  const weightTrendData = generateWeightTrendData();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const weightTrendData = generateWeightTrendData()
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   // Extract dynamic data from JSON if available
-  const cardiovascularSystem = data?.systems.find(system => system.name === "Cardiovascular");
-  const neurologicalSystem = data?.systems.find(system => system.name === "Neurological / Autonomic");
-  
+  const cardiovascularSystem = data?.systems.find(
+    (system) => system.name === 'Cardiovascular',
+  )
+  const neurologicalSystem = data?.systems.find(
+    (system) => system.name === 'Neurological / Autonomic',
+  )
+
   // Helper function to find a test by name
   const findTest = (testName: string, system?: System): Test | undefined => {
-    return system?.tests.find(test => test.test_name === testName);
-  };
+    return system?.tests.find((test) => test.test_name === testName)
+  }
 
   // Get dynamic VO2max if available, otherwise use original value
-  const vo2maxTest = findTest("VO2max", cardiovascularSystem);
-  const vo2max = vo2maxTest?.value || 63; // Original value: 63
-  
+  const vo2maxTest = findTest('VO2max', cardiovascularSystem)
+  const vo2max = vo2maxTest?.value || 63 // Original value: 63
+
   // Determine VO2max rating
   const getVO2MaxRating = (value: number): string => {
-    if (value >= 60) return "Excellent";
-    if (value >= 50) return "Good";
-    if (value >= 40) return "Average";
-    if (value >= 30) return "Below Average";
-    return "Poor";
-  };
+    if (value >= 60) return 'Excellent'
+    if (value >= 50) return 'Good'
+    if (value >= 40) return 'Average'
+    if (value >= 30) return 'Below Average'
+    return 'Poor'
+  }
 
   // Get dynamic sleep data if available
-  const sleepTest = findTest("Sleep", neurologicalSystem);
-  const sleepDuration = sleepTest?.metrics?.duration || "7:00"; // Default: 7 Hours
-  const sleepMinutes = sleepTest?.metrics?.minutes || "40 Minutes"; // Default: 40 Minutes
+  const sleepTest = findTest('Sleep', neurologicalSystem)
+  const sleepDuration = sleepTest?.metrics?.duration || '7:00' // Default: 7 Hours
+  const sleepMinutes = sleepTest?.metrics?.minutes || '40 Minutes' // Default: 40 Minutes
 
   return (
     <motion.div
@@ -194,9 +198,9 @@ export const OverviewComponent = ({ data }: OverviewComponentProps) => {
       className="h-full lg:overflow-y-hidden overflow-y-auto"
     >
       {/* Food Intake Modal */}
-      <FoodIntakeModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+      <FoodIntakeModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
       />
 
       {/* Organ Image is now handled in dashboard.tsx */}
@@ -253,14 +257,14 @@ export const OverviewComponent = ({ data }: OverviewComponentProps) => {
                         dataKey="name"
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fontSize: 10, fill: "#9ca3af" }}
+                        tick={{ fontSize: 10, fill: '#9ca3af' }}
                       />
                       <YAxis
                         domain={[-10, 10]}
                         ticks={[-10, 0, 10]}
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fontSize: 10, fill: "#9ca3af" }}
+                        tick={{ fontSize: 10, fill: '#9ca3af' }}
                         tickFormatter={(value) =>
                           value > 0 ? `+${value}` : value
                         }
@@ -274,7 +278,7 @@ export const OverviewComponent = ({ data }: OverviewComponentProps) => {
                         activeDot={{
                           r: 6,
                           strokeWidth: 2,
-                          stroke: "white",
+                          stroke: 'white',
                         }}
                       />
                     </LineChart>
@@ -298,7 +302,6 @@ export const OverviewComponent = ({ data }: OverviewComponentProps) => {
                     <div className="bg-gray-100 px-3 py-1 rounded-full text-xs text-gray-500">
                       Average
                     </div>
-                    
                   </div>
 
                   {/* Strength Score */}
@@ -349,9 +352,9 @@ export const OverviewComponent = ({ data }: OverviewComponentProps) => {
                   <span className="text-sm">Normal</span>
                   <div className="text-4xl font-bold">20.5</div>
                 </div>
-                
+
                 <div className="mt-20">
-                  <button 
+                  <button
                     className="w-[70%] bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-4 rounded-full transition-colors duration-300"
                     onClick={() => setIsModalOpen(true)}
                   >
@@ -381,7 +384,9 @@ export const OverviewComponent = ({ data }: OverviewComponentProps) => {
                     <div className="text-5xl font-bold text-gray-900 mb-1">
                       {vo2max}
                     </div>
-                    <div className="text-xl text-gray-600">{getVO2MaxRating(vo2max)}</div>
+                    <div className="text-xl text-gray-600">
+                      {getVO2MaxRating(vo2max)}
+                    </div>
                   </div>
                 </div>
 
@@ -453,7 +458,7 @@ export const OverviewComponent = ({ data }: OverviewComponentProps) => {
         </div>
       </div>
     </motion.div>
-  );
-};
+  )
+}
 
-export default OverviewComponent;
+export default OverviewComponent

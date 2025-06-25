@@ -1,4 +1,4 @@
-declare module "pdf-parse/lib/pdf-parse" {
-  const pdf: any;
-  export default pdf;
+declare module 'pdf-parse/lib/pdf-parse' {
+  const pdf: any
+  export default pdf
 }

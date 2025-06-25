@@ -1,6 +1,6 @@
-"use client";
+'use client'
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from 'react'
 import {
   Search,
   Plus,
@@ -8,7 +8,7 @@ import {
   ChevronRight,
   ArrowRight,
   UploadCloud,
-} from "lucide-react";
+} from 'lucide-react'
 import {
   ResponsiveContainer,
   LineChart,
@@ -18,95 +18,95 @@ import {
   CartesianGrid,
   Tooltip,
   Area,
-} from "recharts";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Progress } from "@/components/ui/progress";
-import Course from "@/components/courseManage";
-import { ProfileDropdown } from "@/components/ui/profile-dropdown";
-import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
-import { useRouter, useSearchParams } from "next/navigation";
+} from 'recharts'
+import { Card, CardContent } from '@/components/ui/card'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Progress } from '@/components/ui/progress'
+import Course from '@/components/courseManage'
+import { ProfileDropdown } from '@/components/ui/profile-dropdown'
+import Image from 'next/image'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useRouter, useSearchParams } from 'next/navigation'
 
-import HeartComponent from "@/components/heart-component";
-import LiverComponent from "@/components/liver-component";
-import PancreasComponent from "@/components/pancreas-component";
-import Upload from "@/components/upload";
-import EnhancedAnatomy from "@/components/enhanced-anatomy";
-import ReproductiveHealth from "@/components/reproductive-health";
-import WeightTrackingComponent from "./WeightTracker";
-import FoodIntakeModal from "@/components/FoodIntakeModal";
+import HeartComponent from '@/components/heart-component'
+import LiverComponent from '@/components/liver-component'
+import PancreasComponent from '@/components/pancreas-component'
+import Upload from '@/components/upload'
+import EnhancedAnatomy from '@/components/enhanced-anatomy'
+import ReproductiveHealth from '@/components/reproductive-health'
+import WeightTrackingComponent from './WeightTracker'
+import FoodIntakeModal from '@/components/FoodIntakeModal'
 
-import { PatientSection } from "./PatientSection";
-import Neurology from "@/components/neurology";
-import { CombinedLabsSection } from "./Lab-Services";
-import Link from "next/link";
-import { getAuth } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "@/utils/firebase";
-import Cardiology from "./cardiology";
-import Kidney from "./kidney";
+import { PatientSection } from './PatientSection'
+import Neurology from '@/components/neurology'
+import { CombinedLabsSection } from './Lab-Services'
+import Link from 'next/link'
+import { getAuth } from 'firebase/auth'
+import { doc, getDoc } from 'firebase/firestore'
+import { db } from '@/utils/firebase'
+import Cardiology from './cardiology'
+import Kidney from './kidney'
 
 // Other organ components will be imported here as they are created
 
 // Define types for weight trend data
 interface WeightTrendData {
-  name: string;
-  value: number;
-  change: number;
+  name: string
+  value: number
+  change: number
 }
 
 // Function to generate weight trend data
 const generateWeightTrendData = (): WeightTrendData[] => {
   // Sample data points for the weight trend
   return [
-    { name: "Week 1", value: 5, change: +5 }, // Week 1, starting point
-    { name: "Week 3", value: -8, change: -10 }, // Week 3, dip
-    { name: "Week 4", value: 7, change: +5 }, // Week 4, peak
-    { name: "Week 5", value: 3, change: -2 }, // Week 5, end point
-  ];
-};
+    { name: 'Week 1', value: 5, change: +5 }, // Week 1, starting point
+    { name: 'Week 3', value: -8, change: -10 }, // Week 3, dip
+    { name: 'Week 4', value: 7, change: +5 }, // Week 4, peak
+    { name: 'Week 5', value: 3, change: -2 }, // Week 5, end point
+  ]
+}
 
 // Function to generate SVG path from data points
 const generatePath = (data: WeightTrendData[]): string => {
   // Map data to coordinates
   const points = data.map((point: WeightTrendData, index: number) => {
     // Calculate x position based on index
-    const x = index * (270 / (data.length - 1));
+    const x = index * (270 / (data.length - 1))
     // Calculate y position (invert the value since SVG y-axis is inverted)
-    const y = point.value;
-    return { x, y };
-  });
+    const y = point.value
+    return { x, y }
+  })
 
   // Generate the SVG path string
-  let pathD = `M${points[0].x},${points[0].y}`;
+  let pathD = `M${points[0].x},${points[0].y}`
 
   // Create a smooth curve through the points
   for (let i = 0; i < points.length - 1; i++) {
-    const x1 = points[i].x;
-    const y1 = points[i].y;
-    const x2 = points[i + 1].x;
-    const y2 = points[i + 1].y;
+    const x1 = points[i].x
+    const y1 = points[i].y
+    const x2 = points[i + 1].x
+    const y2 = points[i + 1].y
 
     // Control points for the curve
-    const cpx1 = x1 + (x2 - x1) / 3;
-    const cpy1 = y1;
-    const cpx2 = x2 - (x2 - x1) / 3;
-    const cpy2 = y2;
+    const cpx1 = x1 + (x2 - x1) / 3
+    const cpy1 = y1
+    const cpx2 = x2 - (x2 - x1) / 3
+    const cpy2 = y2
 
-    pathD += ` C${cpx1},${cpy1} ${cpx2},${cpy2} ${x2},${y2}`;
+    pathD += ` C${cpx1},${cpy1} ${cpx2},${cpy2} ${x2},${y2}`
   }
 
-  return pathD;
-};
+  return pathD
+}
 
 // Function to create tooltip content
 const createTooltipContent = (point: WeightTrendData): string => {
-  const change = point.change > 0 ? `+${point.change}` : point.change;
-  return `${point.name}: ${change} kg`;
-};
+  const change = point.change > 0 ? `+${point.change}` : point.change
+  return `${point.name}: ${change} kg`
+}
 
 // Function to calculate BMI indicator position
 const calculateBmiPosition = (bmi: number): number => {
@@ -118,19 +118,19 @@ const calculateBmiPosition = (bmi: number): number => {
 
   if (bmi < 18.5) {
     // Position in the underweight range (0-25%)
-    return (bmi / 18.5) * 25;
+    return (bmi / 18.5) * 25
   } else if (bmi < 25) {
     // Position in the normal range (25-50%)
-    return 25 + ((bmi - 18.5) / 6.5) * 25;
+    return 25 + ((bmi - 18.5) / 6.5) * 25
   } else if (bmi < 30) {
     // Position in the overweight range (50-75%)
-    return 50 + ((bmi - 25) / 5) * 25;
+    return 50 + ((bmi - 25) / 5) * 25
   } else {
     // Position in the obese range (75-100%)
     // Cap at 100%
-    return Math.min(75 + ((bmi - 30) / 10) * 25, 100);
+    return Math.min(75 + ((bmi - 30) / 10) * 25, 100)
   }
-};
+}
 
 // Custom tooltip component for the weight trend chart
 const CustomTooltip = ({
@@ -138,23 +138,23 @@ const CustomTooltip = ({
   payload,
   label,
 }: {
-  active?: boolean;
-  payload?: any[];
-  label?: string;
+  active?: boolean
+  payload?: any[]
+  label?: string
 }) => {
   if (active && payload && payload.length) {
     const change =
       payload[0].payload.change > 0
         ? `+${payload[0].payload.change}`
-        : payload[0].payload.change;
+        : payload[0].payload.change
     return (
       <div className="bg-white p-2 rounded-xl shadow-sm border border-gray-100">
         <p className="text-xs font-medium text-blue-500">{`${label}: ${change} kg`}</p>
       </div>
-    );
+    )
   }
-  return null;
-};
+  return null
+}
 
 // Define animation variants for organ images
 const mainOrganVariants = {
@@ -167,7 +167,7 @@ const mainOrganVariants = {
     scale: 1,
     transition: {
       duration: 0.4,
-      ease: "easeOut",
+      ease: 'easeOut',
     },
   },
   exit: {
@@ -175,10 +175,10 @@ const mainOrganVariants = {
     scale: 0.9,
     transition: {
       duration: 0.3,
-      ease: "easeIn",
+      ease: 'easeIn',
     },
   },
-};
+}
 
 const switcherVariants = {
   hidden: { y: 20, opacity: 0 },
@@ -187,11 +187,11 @@ const switcherVariants = {
     opacity: 1,
     transition: {
       duration: 0.3,
-      ease: "easeOut",
+      ease: 'easeOut',
       staggerChildren: 0.05,
     },
   },
-};
+}
 
 const switcherItemVariants = {
   hidden: { scale: 0.9, opacity: 0 },
@@ -200,20 +200,20 @@ const switcherItemVariants = {
     opacity: 1,
     transition: { duration: 0.2 },
   },
-};
+}
 
 export default function Dashboard() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState("overview");
-  const [animationComplete, setAnimationComplete] = useState(false);
-  const [selectedOrgan, setSelectedOrgan] = useState("heart");
-  const weightTrendData = generateWeightTrendData();
-  const [files, setFiles] = useState<any[]>([]);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isLoading, setIsLoading] = useState(false); // Add loading state
-  const [extractedText, setExtractedText] = useState(""); // Optional: show result
-  const [isFoodModalOpen, setIsFoodModalOpen] = useState(false);
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const [activeTab, setActiveTab] = useState('overview')
+  const [animationComplete, setAnimationComplete] = useState(false)
+  const [selectedOrgan, setSelectedOrgan] = useState('heart')
+  const weightTrendData = generateWeightTrendData()
+  const [files, setFiles] = useState<any[]>([])
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [isLoading, setIsLoading] = useState(false) // Add loading state
+  const [extractedText, setExtractedText] = useState('') // Optional: show result
+  const [isFoodModalOpen, setIsFoodModalOpen] = useState(false)
   // const fileInputRef = useRef<HTMLInputElement>(null);
 
   // const handleUploadClick = () => {
@@ -221,98 +221,98 @@ export default function Dashboard() {
   // };
 
   const handleFileChange = async (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+    const file = event.target.files?.[0]
+    if (!file) return
 
     try {
-      setIsLoading(true); // Start loading
-      const formData = new FormData();
-      formData.append("file", file);
+      setIsLoading(true) // Start loading
+      const formData = new FormData()
+      formData.append('file', file)
 
-      const res = await fetch("/api/extract-text", {
-        method: "POST",
+      const res = await fetch('/api/extract-text', {
+        method: 'POST',
         body: formData,
-      });
+      })
 
       if (!res.ok) {
-        console.error("Failed to extract text");
-        return;
+        console.error('Failed to extract text')
+        return
       }
 
-      const data = await res.json();
-      setExtractedText(data.extractedText);
+      const data = await res.json()
+      setExtractedText(data.extractedText)
     } catch (err) {
-      console.error("Error:", err);
+      console.error('Error:', err)
     } finally {
-      setIsLoading(false); // End loading
+      setIsLoading(false) // End loading
     }
-  };
+  }
 
   useEffect(() => {
-    const tabParam = searchParams.get("tab");
+    const tabParam = searchParams.get('tab')
     if (
       tabParam &&
       [
-        "overview",
-        "progress",
-        "courses",
-        "labs",
-        "services",
-        "admin",
-        "upload",
+        'overview',
+        'progress',
+        'courses',
+        'labs',
+        'services',
+        'admin',
+        'upload',
       ].includes(tabParam)
     ) {
-      setActiveTab(tabParam);
+      setActiveTab(tabParam)
     }
-  }, [searchParams]);
+  }, [searchParams])
 
   useEffect(() => {
     const fetchRole = async () => {
-      const auth = getAuth();
-      const user = auth.currentUser;
+      const auth = getAuth()
+      const user = auth.currentUser
 
       if (!user) {
         // User not logged in
-        setIsAdmin(false);
-        return;
+        setIsAdmin(false)
+        return
       }
 
       try {
-        const userRef = doc(db, "users", user.uid);
-        const userSnap = await getDoc(userRef);
+        const userRef = doc(db, 'users', user.uid)
+        const userSnap = await getDoc(userRef)
 
-        if (userSnap.exists() && userSnap.data().role === "admin") {
-          setIsAdmin(true);
+        if (userSnap.exists() && userSnap.data().role === 'admin') {
+          setIsAdmin(true)
         }
       } catch (error) {
-        console.error("Error fetching role:", error);
+        console.error('Error fetching role:', error)
       }
-    };
+    }
 
-    fetchRole();
-  }, []);
+    fetchRole()
+  }, [])
   // Restore selected organ from localStorage on component mount
   useEffect(() => {
-    const savedOrgan = localStorage.getItem("selectedOrgan");
+    const savedOrgan = localStorage.getItem('selectedOrgan')
     if (savedOrgan) {
-      setSelectedOrgan(savedOrgan);
+      setSelectedOrgan(savedOrgan)
     }
-  }, []);
+  }, [])
 
   // Save selected organ to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem("selectedOrgan", selectedOrgan);
-  }, [selectedOrgan]);
+    localStorage.setItem('selectedOrgan', selectedOrgan)
+  }, [selectedOrgan])
 
   // Trigger animation when component mounts
   useEffect(() => {
     const timer = setTimeout(() => {
-      setAnimationComplete(true);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);
+      setAnimationComplete(true)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [])
 
   // CSS for organ switcher circles
   const organSwitcherStyle = `
@@ -382,23 +382,23 @@ export default function Dashboard() {
     .organ-component-wrapper .gap-6 {
       gap: 0.5rem !important;
     }
-  `;
+  `
 
   // Function to handle tab changes
   const handleTabChange = (tab: string) => {
-    setActiveTab(tab);
+    setActiveTab(tab)
     // Update URL without causing a page refresh
-    const url = new URL(window.location.href);
-    url.searchParams.set("tab", tab);
-    router.push(url.pathname + url.search);
-  };
+    const url = new URL(window.location.href)
+    url.searchParams.set('tab', tab)
+    router.push(url.pathname + url.search)
+  }
 
   return (
     <div className="h-screen bg-gray-200">
       <style jsx>{organSwitcherStyle}</style>
       <style jsx global>{`
         body {
-          overflow: ${activeTab === "overview" ? "hidden" : "auto"};
+          overflow: ${activeTab === 'overview' ? 'hidden' : 'auto'};
         }
       `}</style>
       <div className="h-full flex flex-col">
@@ -407,26 +407,25 @@ export default function Dashboard() {
           <div className="px-6 py-4 flex-shrink-0">
             <div className="flex justify-center items-center w-full mb-2 relative">
               <div className="flex bg-gray-100 rounded-full p-1 overflow-hidden">
-                
                 <Button
                   variant="ghost"
                   className={`rounded-full px-6 py-2 ${
-                    activeTab === "overview"
-                      ? "bg-blue-500 text-white"
-                      : "text-gray-700"
+                    activeTab === 'overview'
+                      ? 'bg-blue-500 text-white'
+                      : 'text-gray-700'
                   } text-sm`}
-                  onClick={() => setActiveTab("overview")}
+                  onClick={() => setActiveTab('overview')}
                 >
                   Digital Twin
                 </Button>
                 <Button
                   variant="ghost"
                   className={`rounded-full px-6 py-2 ${
-                    activeTab === "courses"
-                      ? "bg-blue-500 text-white"
-                      : "text-gray-700"
+                    activeTab === 'courses'
+                      ? 'bg-blue-500 text-white'
+                      : 'text-gray-700'
                   } text-sm`}
-                  onClick={() => setActiveTab("courses")}
+                  onClick={() => setActiveTab('courses')}
                 >
                   Courses
                 </Button>
@@ -434,16 +433,16 @@ export default function Dashboard() {
                 <Button
                   variant="ghost"
                   className={`rounded-full px-6 py-2 ${
-                    activeTab === "labs"
-                      ? "bg-blue-500 text-white"
-                      : "text-gray-700"
+                    activeTab === 'labs'
+                      ? 'bg-blue-500 text-white'
+                      : 'text-gray-700'
                   } text-sm`}
-                  onClick={() => setActiveTab("labs")}
+                  onClick={() => setActiveTab('labs')}
                 >
                   Directories
                 </Button>
               </div>
-              
+
               {/* Calorie Tracker Button */}
               <Button
                 variant="ghost"
@@ -452,7 +451,7 @@ export default function Dashboard() {
               >
                 Calorie Tracker
               </Button>
-              
+
               {isAdmin && (
                 <Link href="/admin">
                   <Button
@@ -469,7 +468,7 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-          {activeTab === "overview" ? (
+          {activeTab === 'overview' ? (
             <div className="digital-twin flex-1 px-6 bg-gradient-to-b from-gray-200 to-white overflow-hidden">
               {/* Main Content */}
               <div className="h-full grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -485,32 +484,32 @@ export default function Dashboard() {
 
                 {/* Right column - Dynamic content based on selected organ */}
                 <div className="lg:col-span-8 flex flex-col overflow-hidden md:mt-6 2xl:mt-20">
-                  {selectedOrgan === "heart" && (
+                  {selectedOrgan === 'heart' && (
                     <div className="h-full overflow-y-auto pr-2 organ-component-wrapper">
                       <HeartComponent />
                     </div>
                   )}
-                  {selectedOrgan === "lungs" && (
+                  {selectedOrgan === 'lungs' && (
                     <div className="h-full overflow-y-auto pr-2 organ-component-wrapper">
                       <LiverComponent />
                     </div>
                   )}
-                  {selectedOrgan === "liver" && (
+                  {selectedOrgan === 'liver' && (
                     <div className="h-full overflow-y-auto pr-2 organ-component-wrapper">
                       <Neurology />
                     </div>
                   )}
-                  {selectedOrgan === "brain" && (
+                  {selectedOrgan === 'brain' && (
                     <div className="h-full overflow-y-hidden pr-2 organ-component-wrapper">
                       <Cardiology />
                     </div>
                   )}
-                  {selectedOrgan === "kidney" && (
+                  {selectedOrgan === 'kidney' && (
                     <div className="h-full overflow-y-hidden pr-2 organ-component-wrapper">
                       <Kidney />
                     </div>
                   )}
-                  {selectedOrgan === "reproductive" && (
+                  {selectedOrgan === 'reproductive' && (
                     <div className="h-full overflow-y-auto pr-2 organ-component-wrapper">
                       <ReproductiveHealth />
                     </div>
@@ -518,16 +517,16 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-          ) : activeTab === "courses" ? (
+          ) : activeTab === 'courses' ? (
             <div className="bg-gradient-to-b from-gray-200 to-white min-h-screen">
               <Course />
             </div>
-          ) : activeTab === "labs" ? (
+          ) : activeTab === 'labs' ? (
             // <LabsSection />
             <CombinedLabsSection />
-          ) : activeTab === "upload" ? (
+          ) : activeTab === 'upload' ? (
             <Upload />
-          ) : activeTab === "progress" ? (
+          ) : activeTab === 'progress' ? (
             <div className="px-6 bg-gradient-to-b from-gray-200 to-white min-h-screen">
               {/* <div className="p-8 bg-white rounded-3xl shadow-sm mt-4">
                 <h2 className="text-2xl font-semibold mb-4">
@@ -547,7 +546,7 @@ export default function Dashboard() {
               </div> */}
               {/* <WeightTrackingComponent /> */}
             </div>
-          ) : activeTab === "admin" ? (
+          ) : activeTab === 'admin' ? (
             <PatientSection />
           ) : (
             <div className="flex items-center justify-center h-64 bg-gradient-to-b from-gray-200 to-white min-h-screen">
@@ -556,12 +555,12 @@ export default function Dashboard() {
           )}
         </main>
       </div>
-      
+
       {/* Food Intake Modal */}
-      <FoodIntakeModal 
-        isOpen={isFoodModalOpen} 
-        onClose={() => setIsFoodModalOpen(false)} 
+      <FoodIntakeModal
+        isOpen={isFoodModalOpen}
+        onClose={() => setIsFoodModalOpen(false)}
       />
     </div>
-  );
+  )
 }

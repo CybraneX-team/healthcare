@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { motion } from "framer-motion";
-import { Card, CardContent } from "@/components/ui/card";
+import React, { useState } from 'react'
+import { motion } from 'framer-motion'
+import { Card, CardContent } from '@/components/ui/card'
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -8,7 +8,7 @@ const containerVariants = {
     opacity: 1,
     transition: {
       duration: 0.4,
-      when: "beforeChildren",
+      when: 'beforeChildren',
       staggerChildren: 0.1,
     },
   },
@@ -16,26 +16,26 @@ const containerVariants = {
     opacity: 0,
     transition: {
       duration: 0.3,
-      when: "afterChildren",
+      when: 'afterChildren',
       staggerChildren: 0.05,
       staggerDirection: -1,
     },
   },
-};
+}
 
 const itemVariants = {
   hidden: { y: 15, opacity: 0 },
   visible: {
     y: 0,
     opacity: 1,
-    transition: { duration: 0.35, ease: "easeOut" },
+    transition: { duration: 0.35, ease: 'easeOut' },
   },
   exit: {
     y: -15,
     opacity: 0,
-    transition: { duration: 0.25, ease: "easeIn" },
+    transition: { duration: 0.25, ease: 'easeIn' },
   },
-};
+}
 
 export const PancreasComponent = () => {
   return (
@@ -74,7 +74,7 @@ export const PancreasComponent = () => {
                     <div className="text-lg lg:text-xl text-gray-500">5.5%</div>
                   </div>
                 </div>
-                
+
                 {/* Progress Bar - Moved to the right */}
                 <div className="flex flex-col items-center ml-auto">
                   <div className="w-12 lg:w-14 xl:w-16 h-44 lg:h-48 xl:h-56 bg-gray-100 rounded-[100px] flex items-end overflow-hidden">
@@ -113,7 +113,9 @@ export const PancreasComponent = () => {
                     <div className="mb-2"></div>
                     <div className="flex justify-end">
                       <div>
-                        <div className="text-lg lg:text-xl text-gray-500">Hemoglobin</div>
+                        <div className="text-lg lg:text-xl text-gray-500">
+                          Hemoglobin
+                        </div>
                         <div className="text-base lg:text-lg font-bold mt-1 ml-3 lg:ml-5">
                           13 μU/mL
                         </div>
@@ -132,7 +134,9 @@ export const PancreasComponent = () => {
           <motion.div variants={itemVariants} className="xl:col-span-5">
             <Card className="shadow-sm border-0 bg-white rounded-2xl lg:rounded-3xl hover:shadow-md transition-shadow duration-300 h-48 lg:h-56 xl:h-60">
               <CardContent className="p-4 lg:p-6">
-                <h3 className="font-semibold text-lg lg:text-xl xl:text-2xl mb-2">200mg/dl</h3>
+                <h3 className="font-semibold text-lg lg:text-xl xl:text-2xl mb-2">
+                  200mg/dl
+                </h3>
 
                 <div className="mb-2">
                   <div className="flex justify-between text-base lg:text-lg font-light text-gray-500">
@@ -183,7 +187,7 @@ export const PancreasComponent = () => {
         </div>
       </div>
     </motion.div>
-  );
-};
+  )
+}
 
-export default PancreasComponent;
+export default PancreasComponent

@@ -1,197 +1,207 @@
-"use client";
+'use client'
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { useRouter } from "next/navigation";
-import { 
-  signInWithEmail, 
-  signInWithApple, 
-  createUserWithEmail, 
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react'
+import { useRouter } from 'next/navigation'
+import {
+  signInWithEmail,
+  signInWithApple,
+  createUserWithEmail,
   signOut as firebaseSignOut,
   getCurrentUser,
-  signInWithGoogle ,
+  signInWithGoogle,
   auth,
   createUserProfile,
   uploadAvatar,
-  updateUserProfile
-} from "@/utils/firebase";
-import { resetPassword as firebaseResetPassword } from "@/utils/firebase";
-import { sendEmailVerification } from "firebase/auth";
-import { toast } from "react-toastify";
+  updateUserProfile,
+} from '@/utils/firebase'
+import { resetPassword as firebaseResetPassword } from '@/utils/firebase'
+import { sendEmailVerification } from 'firebase/auth'
+import { toast } from 'react-toastify'
 
 interface User {
-  id: string;
-  email: string | null;
-  fullName: string | null;
-  avatar?: string | null;
+  id: string
+  email: string | null
+  fullName: string | null
+  avatar?: string | null
 }
 
 interface AuthContextType {
-  user: User | null;
-  loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  loginWithApple: () => Promise<void>;
-  signup: (email: string, password: string, userData?: any) => Promise<void>;
-  logout: () => Promise<void>;
-  isAuthenticated: boolean;
-  resetPassword: (email: string) => Promise<void>;
-   loginWithGoogle: () => Promise<void>;
+  user: User | null
+  loading: boolean
+  login: (email: string, password: string) => Promise<void>
+  loginWithApple: () => Promise<void>
+  signup: (email: string, password: string, userData?: any) => Promise<void>
+  logout: () => Promise<void>
+  isAuthenticated: boolean
+  resetPassword: (email: string) => Promise<void>
+  loginWithGoogle: () => Promise<void>
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+  const router = useRouter()
 
   // Check if user is logged in when the app loads and listen for auth state changes
-useEffect(() => {
-  const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
-    const currentPath = window.location.pathname;
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
+      const currentPath = window.location.pathname
 
-    if (firebaseUser) {
-      const userData: User = {
-        id: firebaseUser.uid,
-        email: firebaseUser.email,
-        fullName: firebaseUser.displayName,
-        avatar: firebaseUser.photoURL
-      };
-      setUser(userData);
+      if (firebaseUser) {
+        const userData: User = {
+          id: firebaseUser.uid,
+          email: firebaseUser.email,
+          fullName: firebaseUser.displayName,
+          avatar: firebaseUser.photoURL,
+        }
+        setUser(userData)
 
-      const isAuthPage = currentPath.startsWith("/auth/login") ||
-                         currentPath.startsWith("/auth/signup");
+        const isAuthPage =
+          currentPath.startsWith('/auth/login') ||
+          currentPath.startsWith('/auth/signup')
 
-      if (isAuthPage) {
-        // toast.info("You are already logged in!");
-        router.replace("/dashboard");
-      } else if (currentPath.startsWith("/dashboard")) {
-        // Check if this is a reload (not a fresh login)
-        const navEntry = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming;
-        if (navEntry.type !== "reload") {
-          // toast.success("Logged in successfully");
+        if (isAuthPage) {
+          // toast.info("You are already logged in!");
+          router.replace('/dashboard')
+        } else if (currentPath.startsWith('/dashboard')) {
+          // Check if this is a reload (not a fresh login)
+          const navEntry = performance.getEntriesByType(
+            'navigation',
+          )[0] as PerformanceNavigationTiming
+          if (navEntry.type !== 'reload') {
+            // toast.success("Logged in successfully");
+          }
+        }
+      } else {
+        setUser(null)
+
+        if (currentPath.startsWith('/dashboard')) {
+          router.replace('/auth')
+        } else if (currentPath.startsWith('/auth/logout')) {
+          router.replace('/auth')
+        } else {
+          router.replace('/auth')
         }
       }
-    } else {
-      setUser(null);
 
-      if (currentPath.startsWith("/dashboard")) {
-        router.replace("/auth");
-      } else if (currentPath.startsWith("/auth/logout")) {
-        router.replace("/auth");
-      } else {
-        router.replace("/auth");
-      }
-    }
+      setLoading(false)
+    })
 
-    setLoading(false);
-  });
-
-  return () => unsubscribe();
-}, [router]);
+    return () => unsubscribe()
+  }, [router])
 
   const login = async (email: string, password: string) => {
-    setLoading(true);
-    
+    setLoading(true)
+
     try {
       // Check if email is in valid format
       if (!email || !email.includes('@') || !email.includes('.')) {
-        throw new Error("Invalid email format. Please enter a valid email address.");
+        throw new Error(
+          'Invalid email format. Please enter a valid email address.',
+        )
       }
-      
-      const userCredential = await signInWithEmail(email, password);
+
+      const userCredential = await signInWithEmail(email, password)
       // Auth state listener will update the user state
     } catch (error) {
-      console.error("Login failed:", error);
-      throw error;
+      console.error('Login failed:', error)
+      throw error
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const resetPassword = async (email: string) => {
-  try {
-    await firebaseResetPassword(email);
-  } catch (error) {
-    console.error("Password reset failed:", error);
-    throw error;
+    try {
+      await firebaseResetPassword(email)
+    } catch (error) {
+      console.error('Password reset failed:', error)
+      throw error
+    }
   }
-};
 
-const loginWithGoogle = async () => {
-  setLoading(true);
-  try {
-    await signInWithGoogle();
-  } catch (error) {
-    console.error("Google login failed:", error);
-    throw error;
-  } finally {
-    setLoading(false);
+  const loginWithGoogle = async () => {
+    setLoading(true)
+    try {
+      await signInWithGoogle()
+    } catch (error) {
+      console.error('Google login failed:', error)
+      throw error
+    } finally {
+      setLoading(false)
+    }
   }
-};
 
   const loginWithApple = async () => {
-    setLoading(true);
-    
+    setLoading(true)
+
     try {
-      const userCredential = await signInWithApple();
+      const userCredential = await signInWithApple()
       // Auth state listener will update the user state
     } catch (error) {
-      console.error("Apple login failed:", error);
-      throw error;
+      console.error('Apple login failed:', error)
+      throw error
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
- const signup = async (email: string, password: string, userData?: any) => {
-  setLoading(true);
+  const signup = async (email: string, password: string, userData?: any) => {
+    setLoading(true)
 
-  try {
-    const userCredential = await createUserWithEmail(email, password);
-    const user = userCredential.user;
+    try {
+      const userCredential = await createUserWithEmail(email, password)
+      const user = userCredential.user
 
-    // Send email verification
-    await sendEmailVerification(user);
+      // Send email verification
+      await sendEmailVerification(user)
 
-    // Save profile (excluding avatar initially)
-    if (userData) {
-      const { avatar, ...userDataWithoutAvatar } = userData;
+      // Save profile (excluding avatar initially)
+      if (userData) {
+        const { avatar, ...userDataWithoutAvatar } = userData
 
-      await createUserProfile(user.uid, {
-        email: user.email,
-        displayName: userData.displayName || '',
-        phoneNumber: userData.phoneNumber || '',
-        ...userDataWithoutAvatar,
-        emailVerified: false, // Initially false
-      });
+        await createUserProfile(user.uid, {
+          email: user.email,
+          displayName: userData.displayName || '',
+          phoneNumber: userData.phoneNumber || '',
+          ...userDataWithoutAvatar,
+          emailVerified: false, // Initially false
+        })
 
-      if (avatar && avatar instanceof File) {
-        try {
-          const avatarUrl = await uploadAvatar(user.uid, avatar);
-          await updateUserProfile(user.uid, { avatarUrl });
-        } catch (uploadError) {
-          console.error("Avatar upload failed:", uploadError);
+        if (avatar && avatar instanceof File) {
+          try {
+            const avatarUrl = await uploadAvatar(user.uid, avatar)
+            await updateUserProfile(user.uid, { avatarUrl })
+          } catch (uploadError) {
+            console.error('Avatar upload failed:', uploadError)
+          }
         }
       }
+    } catch (error) {
+      console.error('Signup failed:', error)
+      throw error
+    } finally {
+      setLoading(false)
     }
-  } catch (error) {
-    console.error("Signup failed:", error);
-    throw error;
-  } finally {
-    setLoading(false);
   }
-};
-
 
   const logout = async () => {
     try {
-      await firebaseSignOut();
+      await firebaseSignOut()
       // Auth state listener will update the user state
-      router.push("/auth");
+      router.push('/auth')
     } catch (error) {
-      console.error("Logout failed:", error);
+      console.error('Logout failed:', error)
     }
-  };
+  }
 
   return (
     <AuthContext.Provider
@@ -203,21 +213,21 @@ const loginWithGoogle = async () => {
         signup,
         logout,
         resetPassword,
-         loginWithGoogle,
-        isAuthenticated: !!user
+        loginWithGoogle,
+        isAuthenticated: !!user,
       }}
     >
       {children}
     </AuthContext.Provider>
-  );
+  )
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext);
-  
+  const context = useContext(AuthContext)
+
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider')
   }
-  
-  return context;
+
+  return context
 }

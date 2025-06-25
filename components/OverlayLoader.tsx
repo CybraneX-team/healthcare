@@ -1,4 +1,4 @@
-import { Loader2 } from "lucide-react";
+import { Loader2 } from 'lucide-react'
 
 export default function OverlayLoader({ message }: { message: string }) {
   return (
@@ -8,5 +8,5 @@ export default function OverlayLoader({ message }: { message: string }) {
         <span className="text-blue-800 text-lg font-semibold">{message}</span>
       </div>
     </div>
-  );
+  )
 }

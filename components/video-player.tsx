@@ -1,13 +1,13 @@
-"use client";
+'use client'
 
-import type React from "react";
+import type React from 'react'
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from 'react'
 
 interface VideoPlayerProps {
-  videoId: string;
-  onComplete?: () => void;
-  onProgressUpdate?: (progress: number) => void;
+  videoId: string
+  onComplete?: () => void
+  onProgressUpdate?: (progress: number) => void
 }
 
 export function VideoPlayer({
@@ -15,125 +15,125 @@ export function VideoPlayer({
   onComplete,
   onProgressUpdate,
 }: VideoPlayerProps) {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(1);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const progressRef = useRef<HTMLDivElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [duration, setDuration] = useState(0)
+  const [volume, setVolume] = useState(1)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const progressRef = useRef<HTMLDivElement>(null)
 
   // For demonstration purposes, we'll use a sample video
   // In a real implementation, you would use the videoId to fetch the correct video
   const videoUrl =
-    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4";
+    'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4'
 
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
+    const video = videoRef.current
+    if (!video) return
 
     const handleTimeUpdate = () => {
-      setCurrentTime(video.currentTime);
+      setCurrentTime(video.currentTime)
 
       // Calculate progress percentage
       const progressPercentage = Math.round(
-        (video.currentTime / video.duration) * 100
-      );
+        (video.currentTime / video.duration) * 100,
+      )
       if (onProgressUpdate) {
-        onProgressUpdate(progressPercentage);
+        onProgressUpdate(progressPercentage)
       }
 
       // Check if video is complete (within 2 seconds of the end)
       if (video.duration > 0 && video.currentTime >= video.duration - 2) {
         if (onComplete) {
-          onComplete();
+          onComplete()
         }
       }
-    };
+    }
 
     const handleLoadedMetadata = () => {
-      setDuration(video.duration);
-    };
+      setDuration(video.duration)
+    }
 
     const handlePlay = () => {
-      setIsPlaying(true);
-    };
+      setIsPlaying(true)
+    }
 
     const handlePause = () => {
-      setIsPlaying(false);
-    };
+      setIsPlaying(false)
+    }
 
-    video.addEventListener("timeupdate", handleTimeUpdate);
-    video.addEventListener("loadedmetadata", handleLoadedMetadata);
-    video.addEventListener("play", handlePlay);
-    video.addEventListener("pause", handlePause);
+    video.addEventListener('timeupdate', handleTimeUpdate)
+    video.addEventListener('loadedmetadata', handleLoadedMetadata)
+    video.addEventListener('play', handlePlay)
+    video.addEventListener('pause', handlePause)
 
     return () => {
-      video.removeEventListener("timeupdate", handleTimeUpdate);
-      video.removeEventListener("loadedmetadata", handleLoadedMetadata);
-      video.removeEventListener("play", handlePlay);
-      video.removeEventListener("pause", handlePause);
-    };
-  }, [onComplete, onProgressUpdate]);
+      video.removeEventListener('timeupdate', handleTimeUpdate)
+      video.removeEventListener('loadedmetadata', handleLoadedMetadata)
+      video.removeEventListener('play', handlePlay)
+      video.removeEventListener('pause', handlePause)
+    }
+  }, [onComplete, onProgressUpdate])
 
   const togglePlay = () => {
-    const video = videoRef.current;
-    if (!video) return;
+    const video = videoRef.current
+    if (!video) return
 
     if (isPlaying) {
-      video.pause();
+      video.pause()
     } else {
-      video.play();
+      video.play()
     }
-  };
+  }
 
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const progressBar = progressRef.current;
-    if (!progressBar || !videoRef.current) return;
+    const progressBar = progressRef.current
+    if (!progressBar || !videoRef.current) return
 
-    const rect = progressBar.getBoundingClientRect();
-    const pos = (e.clientX - rect.left) / rect.width;
-    videoRef.current.currentTime = pos * duration;
-  };
+    const rect = progressBar.getBoundingClientRect()
+    const pos = (e.clientX - rect.left) / rect.width
+    videoRef.current.currentTime = pos * duration
+  }
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = Number.parseFloat(e.target.value);
-    setVolume(value);
+    const value = Number.parseFloat(e.target.value)
+    setVolume(value)
     if (videoRef.current) {
-      videoRef.current.volume = value;
+      videoRef.current.volume = value
     }
-  };
+  }
 
   const toggleFullscreen = () => {
-    if (!containerRef.current) return;
+    if (!containerRef.current) return
 
     if (!document.fullscreenElement) {
       containerRef.current.requestFullscreen().catch((err) => {
-        console.error(`Error attempting to enable fullscreen: ${err.message}`);
-      });
+        console.error(`Error attempting to enable fullscreen: ${err.message}`)
+      })
     } else {
-      document.exitFullscreen();
+      document.exitFullscreen()
     }
-  };
+  }
 
   useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
+      setIsFullscreen(!!document.fullscreenElement)
+    }
 
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
     return () => {
-      document.removeEventListener("fullscreenchange", handleFullscreenChange);
-    };
-  }, []);
+      document.removeEventListener('fullscreenchange', handleFullscreenChange)
+    }
+  }, [])
 
   // Format time in MM:SS
   const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
-  };
+    const minutes = Math.floor(time / 60)
+    const seconds = Math.floor(time % 60)
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`
+  }
 
   return (
     <div ref={containerRef} className="relative w-full h-full bg-black group">
@@ -315,5 +315,5 @@ export function VideoPlayer({
         </div>
       )}
     </div>
-  );
+  )
 }

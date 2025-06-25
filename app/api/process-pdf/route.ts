@@ -1,47 +1,47 @@
 // app/api/process-pdf-batch/route.ts
-import { samplePdfData } from "@/sameple-text-json";
-import { NextRequest, NextResponse } from "next/server";
-import pdf from "pdf-parse";
+import { samplePdfData } from '@/sameple-text-json'
+import { NextRequest, NextResponse } from 'next/server'
+import pdf from 'pdf-parse'
 
 async function extractTextFromPDF(buffer: Buffer): Promise<string> {
   try {
-    const parsed = await pdf(buffer);
+    const parsed = await pdf(buffer)
     // console.log("📄 Raw extracted text length:", parsed.text?.length);
-    return parsed.text?.trim() ?? "";
+    return parsed.text?.trim() ?? ''
   } catch (err) {
-    console.error("❌ PDF parse error:", err);
-    return "";
+    console.error('❌ PDF parse error:', err)
+    return ''
   }
 }
 
 const extractUnifiedJson = (groqRawOutput: string) => {
   const arrays = groqRawOutput
     .split(/\n\s*\n/) // split by double newlines (most likely between arrays)
-    .map(str => str.trim())
+    .map((str) => str.trim())
     .filter(Boolean)
-    .map(str => {
+    .map((str) => {
       try {
-        return JSON.parse(str);
+        return JSON.parse(str)
       } catch {
-        return null;
+        return null
       }
     })
     .filter(Boolean) // remove failed parses
-    .flat(); // flatten multiple arrays into one big array of objects
+    .flat() // flatten multiple arrays into one big array of objects
 
   // Merge all objects into one
   const unifiedJson = arrays.reduce((acc, curr) => {
     return {
       ...acc,
       ...curr,
-    };
-  }, {});
+    }
+  }, {})
 
-  return unifiedJson;
-};
+  return unifiedJson
+}
 
 async function sendToGroqLLM(allText: string): Promise<any> {
-const prompt = `
+  const prompt = `
 You are a medical report parser.
 
 Your job is to extract structured data from multiple medical reports. Below is the combined raw text.
@@ -67,68 +67,65 @@ ${JSON.stringify(samplePdfData, null, 2)}
 
 Combined Reports:
 ${allText}
-`;
-
-;
+`
 
   // console.log("🧠 Prompt sent to Groq:\n", prompt.slice(0, 1000), "...[truncated]");
 
-  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
     headers: {
       Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: "meta-llama/llama-4-scout-17b-16e-instruct",
-      messages: [{ role: "user", content: prompt }],
+      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+      messages: [{ role: 'user', content: prompt }],
       temperature: 0.1,
     }),
-  });
+  })
 
   if (!res.ok) {
-    const errText = await res.text();
-    console.error("❌ Groq error response:", errText);
-    return null;
+    const errText = await res.text()
+    console.error('❌ Groq error response:', errText)
+    return null
   }
 
-  const result = await res.json();
-  const content = result.choices?.[0]?.message?.content;
+  const result = await res.json()
+  const content = result.choices?.[0]?.message?.content
 
   // console.log("📬 Raw Groq reply:\n", content);
-  return content;
+  return content
 }
 
 // app/api/process-pdf/route.ts
 
 export async function POST(req: NextRequest) {
-  const formData = await req.formData();
-  const files = formData.getAll("files") as File[];
+  const formData = await req.formData()
+  const files = formData.getAll('files') as File[]
 
   if (!files.length) {
-    return NextResponse.json({ error: "No files uploaded." }, { status: 400 });
+    return NextResponse.json({ error: 'No files uploaded.' }, { status: 400 })
   }
 
-  let combinedText = "";
-  const extractedTexts: string[] = [];
+  let combinedText = ''
+  const extractedTexts: string[] = []
 
   for (const file of files) {
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const text = await extractTextFromPDF(buffer);
-    extractedTexts.push(`--- FILE: ${file.name} ---\n${text}`);
+    const buffer = Buffer.from(await file.arrayBuffer())
+    const text = await extractTextFromPDF(buffer)
+    extractedTexts.push(`--- FILE: ${file.name} ---\n${text}`)
   }
 
-  combinedText = extractedTexts.join("\n\n");
+  combinedText = extractedTexts.join('\n\n')
 
-  const rawReply = await sendToGroqLLM(combinedText);
+  const rawReply = await sendToGroqLLM(combinedText)
 
   try {
-    const cleaned = rawReply.replace(/```json|```/gi, "").trim();
-    const finalData = extractUnifiedJson(cleaned);
-    return NextResponse.json({ extractedJsonArray: finalData });
+    const cleaned = rawReply.replace(/```json|```/gi, '').trim()
+    const finalData = extractUnifiedJson(cleaned)
+    return NextResponse.json({ extractedJsonArray: finalData })
   } catch (err) {
-    console.error("❌ Failed to parse JSON from Groq:", err, rawReply);
-    return NextResponse.json({ extractedJsonArray: [] });
+    console.error('❌ Failed to parse JSON from Groq:', err, rawReply)
+    return NextResponse.json({ extractedJsonArray: [] })
   }
 }
-

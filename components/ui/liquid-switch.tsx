@@ -1,7 +1,8 @@
-import * as React from "react"
-import { cn } from "@/lib/utils"
+import * as React from 'react'
+import { cn } from '@/lib/utils'
 
-export interface LiquidSwitchProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> {
+export interface LiquidSwitchProps
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'> {
   onCheckedChange?: (checked: boolean) => void
 }
 
@@ -17,7 +18,7 @@ const LiquidSwitch = React.forwardRef<HTMLInputElement, LiquidSwitchProps>(
       <input
         type="checkbox"
         role="switch"
-        className={cn("liquid-switch", className)}
+        className={cn('liquid-switch', className)}
         ref={ref}
         checked={checked}
         defaultChecked={defaultChecked}
@@ -25,9 +26,9 @@ const LiquidSwitch = React.forwardRef<HTMLInputElement, LiquidSwitchProps>(
         {...props}
       />
     )
-  }
+  },
 )
 
-LiquidSwitch.displayName = "LiquidSwitch"
+LiquidSwitch.displayName = 'LiquidSwitch'
 
-export { LiquidSwitch } 
+export { LiquidSwitch }

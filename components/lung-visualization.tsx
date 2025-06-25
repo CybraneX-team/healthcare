@@ -1,5 +1,5 @@
-"use client"
-import Image from "next/image"
+'use client'
+import Image from 'next/image'
 
 export function LungVisualization() {
   return (
@@ -23,7 +23,13 @@ export function LungVisualization() {
 
         {/* Lung visualization overlay elements */}
         <div className="absolute inset-0 pointer-events-none">
-          <svg width="100%" height="100%" viewBox="0 0 400 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg
+            width="100%"
+            height="100%"
+            viewBox="0 0 400 500"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
             <path
               d="M200,100 Q240,150 240,200 Q240,300 200,350 Q160,300 160,200 Q160,150 200,100"
               stroke="#3b82f6"

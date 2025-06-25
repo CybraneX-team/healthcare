@@ -1,6 +1,6 @@
-"use client"
+'use client'
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef } from 'react'
 
 export function RespiratoryChart() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -9,7 +9,7 @@ export function RespiratoryChart() {
     const canvas = canvasRef.current
     if (!canvas) return
 
-    const ctx = canvas.getContext("2d")
+    const ctx = canvas.getContext('2d')
     if (!ctx) return
 
     // Set canvas dimensions
@@ -28,7 +28,7 @@ export function RespiratoryChart() {
       const height = Math.random() * maxBarHeight * 0.7 + maxBarHeight * 0.3
       const x = i * (barWidth + barGap)
 
-      ctx.fillStyle = "#e5e7eb"
+      ctx.fillStyle = '#e5e7eb'
       ctx.fillRect(x, canvas.height - height, barWidth, height)
     }
 
@@ -37,8 +37,13 @@ export function RespiratoryChart() {
     const blueBarHeight = maxBarHeight
     const blueBarX = blueBarIndex * (barWidth + barGap)
 
-    ctx.fillStyle = "#3b82f6"
-    ctx.fillRect(blueBarX, canvas.height - blueBarHeight, barWidth, blueBarHeight)
+    ctx.fillStyle = '#3b82f6'
+    ctx.fillRect(
+      blueBarX,
+      canvas.height - blueBarHeight,
+      barWidth,
+      blueBarHeight,
+    )
   }, [])
 
   return <canvas ref={canvasRef} className="w-full h-full" />

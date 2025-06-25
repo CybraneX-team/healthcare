@@ -1,33 +1,37 @@
-"use client";
+'use client'
 
-import { useState, ChangeEvent } from "react";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, UploadCloud, Menu, X } from "lucide-react";
-import Image from "next/image";
-import Lottie from 'lottie-react';
-import * as animationData from './Vector.json';
-import { useAuth } from "@/hooks/useAuth";
-import { db } from "@/utils/firebase";
-import { collection, addDoc, doc, setDoc } from "firebase/firestore";
-import { useToast } from "@/hooks/use-toast";
+import { useState, ChangeEvent } from 'react'
+import { Button } from '@/components/ui/button'
+import { ChevronLeft, UploadCloud, Menu, X } from 'lucide-react'
+import Image from 'next/image'
+import Lottie from 'lottie-react'
+import * as animationData from './Vector.json'
+import { useAuth } from '@/hooks/useAuth'
+import { db } from '@/utils/firebase'
+import { collection, addDoc, doc, setDoc } from 'firebase/firestore'
+import { useToast } from '@/hooks/use-toast'
 
 interface FoodIntakeModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen: boolean
+  onClose: () => void
 }
 
-export default function FoodIntakeModal({ isOpen, onClose }: FoodIntakeModalProps) {
-  const { user } = useAuth();
-  const { toast } = useToast();  const [selectedTab, setSelectedTab] = useState("Meal Intake");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [savingMeal, setSavingMeal] = useState(false);
-  const [selectedMealType, setSelectedMealType] = useState("Breakfast");
+export default function FoodIntakeModal({
+  isOpen,
+  onClose,
+}: FoodIntakeModalProps) {
+  const { user } = useAuth()
+  const { toast } = useToast()
+  const [selectedTab, setSelectedTab] = useState('Meal Intake')
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [savingMeal, setSavingMeal] = useState(false)
+  const [selectedMealType, setSelectedMealType] = useState('Breakfast')
   const [manualEntries, setManualEntries] = useState({
     carbohydrates: 0,
     fats: 0,
     protein: 0,
-    total: 0
-  });
+    total: 0,
+  })
 
   // State for habits
   const [habits, setHabits] = useState({
@@ -35,68 +39,82 @@ export default function FoodIntakeModal({ isOpen, onClose }: FoodIntakeModalProp
       enabled: true,
       skipBreakfast: false,
       skipLunch: true,
-      skipDinner: true
+      skipDinner: true,
     },
     sleepSchedule: {
       enabled: false,
-      wakeUpTime: "07:15",
-      sleepTime: "21:45"
+      wakeUpTime: '07:15',
+      sleepTime: '21:45',
     },
     exercise: {
       enabled: true,
-      daysPerWeek: 5
-    }
-  });
-
+      daysPerWeek: 5,
+    },
+  })
 
   type FoodItem = {
-    item: string;
-    quantity: string; 
-    calories: number;
-    protein: number;
-    carbs: number;
-    fats: number;
+    item: string
+    quantity: string
+    calories: number
+    protein: number
+    carbs: number
+    fats: number
     _originalMacros?: {
-      calories: number;
-      protein: number;
-      carbs: number;
-      fats: number;
-      quantity: number;
-      unit: string;
-    };
-    _quantityNum?: number; 
-    _unit?: string;
-    checked?: boolean;
-    isManual?: boolean;
-  };  const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [apiDebug, setApiDebug] = useState<string>("");
-  const [uploadedMealImage, setUploadedMealImage] = useState<File | null>(null);
-  // Body transformation state
-  const [transformationImage, setTransformationImage] = useState<File | null>(null);
-  const [currentWeight, setCurrentWeight] = useState<string>("");
-  const [targetWeight, setTargetWeight] = useState<string>("");
-  const [transformationResult, setTransformationResult] = useState<any | null>(null);
-  const [transformationLoading, setTransformationLoading] = useState(false);
-  const [transformationError, setTransformationError] = useState<string | null>(null);
-
-  const tabs = ["Meal Intake", "Water Intake", "Body Transformation", "Sleep Periods", "Cardio", "Weight", "Habits"];
-
-  function parseQuantity(qty: string): {num: number, unit: string} {
-    // Match leading number (int or float)
-    const match = qty.match(/^(\d+(?:\.\d+)?)/);
-    if (match) {
-      const num = parseFloat(match[1]);
-      const unit = qty.slice(match[1].length).trim();
-      return { num, unit };
+      calories: number
+      protein: number
+      carbs: number
+      fats: number
+      quantity: number
+      unit: string
     }
-    return { num: 1, unit: qty };
+    _quantityNum?: number
+    _unit?: string
+    checked?: boolean
+    isManual?: boolean
+  }
+  const [foodItems, setFoodItems] = useState<FoodItem[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [apiDebug, setApiDebug] = useState<string>('')
+  const [uploadedMealImage, setUploadedMealImage] = useState<File | null>(null)
+  // Body transformation state
+  const [transformationImage, setTransformationImage] = useState<File | null>(
+    null,
+  )
+  const [currentWeight, setCurrentWeight] = useState<string>('')
+  const [targetWeight, setTargetWeight] = useState<string>('')
+  const [transformationResult, setTransformationResult] = useState<any | null>(
+    null,
+  )
+  const [transformationLoading, setTransformationLoading] = useState(false)
+  const [transformationError, setTransformationError] = useState<string | null>(
+    null,
+  )
+
+  const tabs = [
+    'Meal Intake',
+    'Water Intake',
+    'Body Transformation',
+    'Sleep Periods',
+    'Cardio',
+    'Weight',
+    'Habits',
+  ]
+
+  function parseQuantity(qty: string): { num: number; unit: string } {
+    // Match leading number (int or float)
+    const match = qty.match(/^(\d+(?:\.\d+)?)/)
+    if (match) {
+      const num = parseFloat(match[1])
+      const unit = qty.slice(match[1].length).trim()
+      return { num, unit }
+    }
+    return { num: 1, unit: qty }
   }
 
   function processApiItems(items: any[]): FoodItem[] {
     return items.map((item) => {
-      const { num, unit } = parseQuantity(item.quantity);
+      const { num, unit } = parseQuantity(item.quantity)
       return {
         ...item,
         _originalMacros: {
@@ -110,99 +128,109 @@ export default function FoodIntakeModal({ isOpen, onClose }: FoodIntakeModalProp
         _quantityNum: num,
         _unit: unit,
         checked: true,
-      };
-    });
+      }
+    })
   }
   const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
+    const file = e.target.files?.[0]
+    if (!file) return
+
     // Store the uploaded image for preview
-    setUploadedMealImage(file);
-    
-    setLoading(true);
-    setError(null);
-    setApiDebug("");
+    setUploadedMealImage(file)
+
+    setLoading(true)
+    setError(null)
+    setApiDebug('')
     try {
-      const formData = new FormData();
-      formData.append("image", file);
-      const res = await fetch("/api/calories-tracker", {
-        method: "POST",
+      const formData = new FormData()
+      formData.append('image', file)
+      const res = await fetch('/api/calories-tracker', {
+        method: 'POST',
         body: formData,
-      });
-      const text = await res.text();
-      setApiDebug(text);
-      let data;
+      })
+      const text = await res.text()
+      setApiDebug(text)
+      let data
       try {
-        data = JSON.parse(text);
+        data = JSON.parse(text)
       } catch (e) {
-        setError("Invalid JSON response from API");
-        setLoading(false);
-        return;
+        setError('Invalid JSON response from API')
+        setLoading(false)
+        return
       }
       if (!res.ok) {
-        setError(data.error || "Failed to analyze image");
-        setLoading(false);
-        return;
+        setError(data.error || 'Failed to analyze image')
+        setLoading(false)
+        return
       }
-      let arr = Array.isArray(data) ? data : data.items;
-      setFoodItems(processApiItems(arr || []));
+      let arr = Array.isArray(data) ? data : data.items
+      setFoodItems(processApiItems(arr || []))
     } catch (err) {
-      setError("Failed to analyze image");
+      setError('Failed to analyze image')
     } finally {
-      setLoading(false);    }
-  };
+      setLoading(false)
+    }
+  }
 
   // Handle transformation image upload
-  const handleTransformationImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setTransformationImage(file);
-    setTransformationResult(null);
-    setTransformationError(null);
-  };
+  const handleTransformationImageUpload = async (
+    e: ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setTransformationImage(file)
+    setTransformationResult(null)
+    setTransformationError(null)
+  }
 
   // Submit transformation request
   const handleTransformationSubmit = async () => {
     if (!transformationImage || !currentWeight || !targetWeight) {
-      setTransformationError("Please provide an image, current weight, and target weight");
-      return;
+      setTransformationError(
+        'Please provide an image, current weight, and target weight',
+      )
+      return
     }
 
-    setTransformationLoading(true);
-    setTransformationError(null);
-    setTransformationResult(null);
+    setTransformationLoading(true)
+    setTransformationError(null)
+    setTransformationResult(null)
 
     try {
-      const formData = new FormData();
-      formData.append("image", transformationImage);
-      formData.append("currentWeight", currentWeight);
-      formData.append("targetWeight", targetWeight);
+      const formData = new FormData()
+      formData.append('image', transformationImage)
+      formData.append('currentWeight', currentWeight)
+      formData.append('targetWeight', targetWeight)
 
-      const res = await fetch("/api/transformation", {
-        method: "POST",
+      const res = await fetch('/api/transformation', {
+        method: 'POST',
         body: formData,
-      });
+      })
 
-      const data = await res.json();      if (!res.ok) {
-        const errorMessage = data.error || `Analysis failed (${res.status})`;
-        setTransformationError(errorMessage);
-        console.error("Transformation API error:", data);
-        return;
+      const data = await res.json()
+      if (!res.ok) {
+        const errorMessage = data.error || `Analysis failed (${res.status})`
+        setTransformationError(errorMessage)
+        console.error('Transformation API error:', data)
+        return
       }
 
       if (data.description || data.timeline || data.key_changes) {
-        setTransformationResult(data);
+        setTransformationResult(data)
       } else {
-        setTransformationError("No transformation analysis received. Please try again with a clearer image.");
+        setTransformationError(
+          'No transformation analysis received. Please try again with a clearer image.',
+        )
       }
     } catch (err) {
-      console.error("Transformation request error:", err);
-      setTransformationError("Network error. Please check your connection and try again.");
+      console.error('Transformation request error:', err)
+      setTransformationError(
+        'Network error. Please check your connection and try again.',
+      )
     } finally {
-      setTransformationLoading(false);
+      setTransformationLoading(false)
     }
-  };
+  }
 
   // Update manual entries
   // const updateManualEntry = (field: keyof typeof manualEntries, value: number) => {
@@ -212,63 +240,66 @@ export default function FoodIntakeModal({ isOpen, onClose }: FoodIntakeModalProp
   // };
 
   const toggleFasting = () => {
-    setHabits(prev => ({
+    setHabits((prev) => ({
       ...prev,
       fasting: {
         ...prev.fasting,
-        enabled: !prev.fasting.enabled
-      }
-    }));
-  };
+        enabled: !prev.fasting.enabled,
+      },
+    }))
+  }
 
   const toggleFastingOption = (option: string) => {
-    setHabits(prev => ({
+    setHabits((prev) => ({
       ...prev,
       fasting: {
         ...prev.fasting,
-        [option]: !prev.fasting[option as keyof typeof prev.fasting]
-      }
-    }));
-  };
+        [option]: !prev.fasting[option as keyof typeof prev.fasting],
+      },
+    }))
+  }
 
   const toggleSleepSchedule = () => {
-    setHabits(prev => ({
+    setHabits((prev) => ({
       ...prev,
       sleepSchedule: {
         ...prev.sleepSchedule,
-        enabled: !prev.sleepSchedule.enabled
-      }
-    }));
-  };
+        enabled: !prev.sleepSchedule.enabled,
+      },
+    }))
+  }
 
-  const updateSleepTime = (field: 'wakeUpTime' | 'sleepTime', value: string) => {
-    setHabits(prev => ({
+  const updateSleepTime = (
+    field: 'wakeUpTime' | 'sleepTime',
+    value: string,
+  ) => {
+    setHabits((prev) => ({
       ...prev,
       sleepSchedule: {
         ...prev.sleepSchedule,
-        [field]: value
-      }
-    }));
-  };
+        [field]: value,
+      },
+    }))
+  }
 
   const toggleExercise = () => {
-    setHabits(prev => ({
+    setHabits((prev) => ({
       ...prev,
       exercise: {
         ...prev.exercise,
-        enabled: !prev.exercise.enabled
-      }
-    }));
-  };
+        enabled: !prev.exercise.enabled,
+      },
+    }))
+  }
 
   // Only allow editing the numeric quantity
   const handleQuantityChange = (idx: number, newNum: string) => {
     setFoodItems((prev) =>
       prev.map((item, i) => {
-        if (i !== idx) return item;
-        const num = parseFloat(newNum);
-        const safeNum = isNaN(num) || num <= 0 ? 1 : num;
-        const orig = item._originalMacros!;
+        if (i !== idx) return item
+        const num = parseFloat(newNum)
+        const safeNum = isNaN(num) || num <= 0 ? 1 : num
+        const orig = item._originalMacros!
         return {
           ...item,
           _quantityNum: safeNum,
@@ -276,23 +307,23 @@ export default function FoodIntakeModal({ isOpen, onClose }: FoodIntakeModalProp
           protein: Math.round(orig.protein * safeNum),
           carbs: Math.round(orig.carbs * safeNum),
           fats: Math.round(orig.fats * safeNum),
-        };
-      })
-    );
-  };
+        }
+      }),
+    )
+  }
 
   // Remove a food item
   const handleRemoveItem = (idx: number) => {
-    setFoodItems((prev) => prev.filter((_, i) => i !== idx));
-  };
+    setFoodItems((prev) => prev.filter((_, i) => i !== idx))
+  }
 
   // Add a manual item
   const handleAddManualItem = () => {
     setFoodItems((prev) => [
       ...prev,
       {
-        item: "",
-        quantity: "1 unit",
+        item: '',
+        quantity: '1 unit',
         calories: 0,
         protein: 0,
         carbs: 0,
@@ -303,47 +334,50 @@ export default function FoodIntakeModal({ isOpen, onClose }: FoodIntakeModalProp
           carbs: 0,
           fats: 0,
           quantity: 1,
-          unit: "unit",
+          unit: 'unit',
         },
         _quantityNum: 1,
-        _unit: "unit",
+        _unit: 'unit',
         checked: true,
         isManual: true,
       },
-    ]);
-  };  // Save/log meal intake to Firebase
+    ])
+  } // Save/log meal intake to Firebase
   const handleSaveMeal = async () => {
     if (!user) {
       toast({
-        title: "Authentication Required",
-        description: "Please log in to save your meal intake.",
-        variant: "destructive",
-      });
-      return;
+        title: 'Authentication Required',
+        description: 'Please log in to save your meal intake.',
+        variant: 'destructive',
+      })
+      return
     }
 
     // Filter only checked items
-    const checkedItems = foodItems.filter(item => item.checked);
-    
+    const checkedItems = foodItems.filter((item) => item.checked)
+
     if (checkedItems.length === 0) {
       toast({
-        title: "No Items Selected",
-        description: "Please select at least one food item to save.",
-        variant: "destructive",
-      });
-      return;
+        title: 'No Items Selected',
+        description: 'Please select at least one food item to save.',
+        variant: 'destructive',
+      })
+      return
     }
 
-    setSavingMeal(true);
+    setSavingMeal(true)
 
     try {
       // Calculate total macros from checked items
-      const totalMacros = checkedItems.reduce((totals, item) => ({
-        calories: totals.calories + (item.calories || 0),
-        protein: totals.protein + (item.protein || 0),
-        carbs: totals.carbs + (item.carbs || 0),
-        fats: totals.fats + (item.fats || 0)
-      }), { calories: 0, protein: 0, carbs: 0, fats: 0 });
+      const totalMacros = checkedItems.reduce(
+        (totals, item) => ({
+          calories: totals.calories + (item.calories || 0),
+          protein: totals.protein + (item.protein || 0),
+          carbs: totals.carbs + (item.carbs || 0),
+          fats: totals.fats + (item.fats || 0),
+        }),
+        { calories: 0, protein: 0, carbs: 0, fats: 0 },
+      )
 
       // Prepare meal data
       const mealData = {
@@ -351,67 +385,82 @@ export default function FoodIntakeModal({ isOpen, onClose }: FoodIntakeModalProp
         timestamp: new Date(),
         date: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
         mealType: selectedMealType, // Use the selected meal type
-        foodItems: checkedItems.map(item => ({
+        foodItems: checkedItems.map((item) => ({
           name: item.item,
-          quantity: item.isManual ? `${item._quantityNum} ${item._unit}` : item.quantity,
+          quantity: item.isManual
+            ? `${item._quantityNum} ${item._unit}`
+            : item.quantity,
           calories: item.calories,
           protein: item.protein,
           carbs: item.carbs,
           fats: item.fats,
-          isManual: item.isManual || false
+          isManual: item.isManual || false,
         })),
         totalMacros,
         habits: {
           fasting: habits.fasting,
           sleepSchedule: habits.sleepSchedule,
-          exercise: habits.exercise
-        }
-      };
-      const mealsCollection = collection(db, 'mealIntakes');
-      const docRef = await addDoc(mealsCollection, mealData);      
-      const dailySummaryRef = doc(db, 'users', user.id, 'dailySummaries', mealData.date);
-      
-      const { getDoc } = await import('firebase/firestore');
-      const existingSummary = await getDoc(dailySummaryRef);
-      const existingData = existingSummary.exists() ? existingSummary.data() : {};
-      
-      await setDoc(dailySummaryRef, {
-        date: mealData.date,
-        totalCalories: (existingData.totalCalories || 0) + totalMacros.calories,
-        totalProtein: (existingData.totalProtein || 0) + totalMacros.protein,
-        totalCarbs: (existingData.totalCarbs || 0) + totalMacros.carbs,
-        totalFats: (existingData.totalFats || 0) + totalMacros.fats,
-        mealCount: (existingData.mealCount || 0) + 1,
-        lastUpdated: new Date()
-      }, { merge: true });      toast({
+          exercise: habits.exercise,
+        },
+      }
+      const mealsCollection = collection(db, 'mealIntakes')
+      const docRef = await addDoc(mealsCollection, mealData)
+      const dailySummaryRef = doc(
+        db,
+        'users',
+        user.id,
+        'dailySummaries',
+        mealData.date,
+      )
+
+      const { getDoc } = await import('firebase/firestore')
+      const existingSummary = await getDoc(dailySummaryRef)
+      const existingData = existingSummary.exists()
+        ? existingSummary.data()
+        : {}
+
+      await setDoc(
+        dailySummaryRef,
+        {
+          date: mealData.date,
+          totalCalories:
+            (existingData.totalCalories || 0) + totalMacros.calories,
+          totalProtein: (existingData.totalProtein || 0) + totalMacros.protein,
+          totalCarbs: (existingData.totalCarbs || 0) + totalMacros.carbs,
+          totalFats: (existingData.totalFats || 0) + totalMacros.fats,
+          mealCount: (existingData.mealCount || 0) + 1,
+          lastUpdated: new Date(),
+        },
+        { merge: true },
+      )
+      toast({
         title: `${selectedMealType} Logged Successfully! 🍽️`,
         description: `Saved ${checkedItems.length} food items with ${totalMacros.calories} calories total.`,
-      });
-        // Reset form
-      setFoodItems([]);
-      setUploadedMealImage(null);
-      onClose();
-      
+      })
+      // Reset form
+      setFoodItems([])
+      setUploadedMealImage(null)
+      onClose()
     } catch (error) {
-      console.error("Error saving meal intake:", error);
+      console.error('Error saving meal intake:', error)
       toast({
-        title: "Save Failed",
-        description: "Failed to save meal intake. Please try again.",
-        variant: "destructive",
-      });
+        title: 'Save Failed',
+        description: 'Failed to save meal intake. Please try again.',
+        variant: 'destructive',
+      })
     } finally {
-      setSavingMeal(false);
+      setSavingMeal(false)
     }
-  };
+  }
 
   // Toggle checklist
   const handleToggleCheck = (idx: number) => {
     setFoodItems((prev) =>
       prev.map((item, i) =>
-        i === idx ? { ...item, checked: !item.checked } : item
-      )
-    );
-  };
+        i === idx ? { ...item, checked: !item.checked } : item,
+      ),
+    )
+  }
 
   const renderHabitsContent = () => (
     <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 h-full">
@@ -427,92 +476,171 @@ export default function FoodIntakeModal({ isOpen, onClose }: FoodIntakeModalProp
           <div className="bg-gray-50 rounded-xl p-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold">Fasting</h3>
-              <button 
+              <button
                 onClick={toggleFasting}
                 className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                  habits.fasting.enabled 
-                    ? 'bg-blue-600 border-blue-600 text-white' 
+                  habits.fasting.enabled
+                    ? 'bg-blue-600 border-blue-600 text-white'
                     : 'border-gray-300 hover:border-gray-400'
                 }`}
               >
                 {habits.fasting.enabled && (
-                  <svg width="12" height="9" viewBox="0 0 12 9" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M1 4.5L4.5 8L11 1.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <svg
+                    width="12"
+                    height="9"
+                    viewBox="0 0 12 9"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M1 4.5L4.5 8L11 1.5"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 )}
               </button>
             </div>
-            
+
             <div className="space-y-3">
-              <label className={`flex items-center gap-3 ${habits.fasting.enabled ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
-                <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                  habits.fasting.enabled && habits.fasting.skipBreakfast 
-                    ? 'bg-blue-600 border-blue-600' 
-                    : habits.fasting.enabled 
-                      ? 'border-gray-300' 
-                      : 'border-gray-200'
-                }`}>
+              <label
+                className={`flex items-center gap-3 ${habits.fasting.enabled ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+              >
+                <div
+                  className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                    habits.fasting.enabled && habits.fasting.skipBreakfast
+                      ? 'bg-blue-600 border-blue-600'
+                      : habits.fasting.enabled
+                        ? 'border-gray-300'
+                        : 'border-gray-200'
+                  }`}
+                >
                   {habits.fasting.enabled && habits.fasting.skipBreakfast && (
-                    <svg width="12" height="9" viewBox="0 0 12 9" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M1 4.5L4.5 8L11 1.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <svg
+                      width="12"
+                      height="9"
+                      viewBox="0 0 12 9"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M1 4.5L4.5 8L11 1.5"
+                        stroke="white"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
                     </svg>
                   )}
                 </div>
-                <span className={`${habits.fasting.enabled ? 'text-gray-700' : 'text-gray-400'}`}>Skip Breakfast</span>
+                <span
+                  className={`${habits.fasting.enabled ? 'text-gray-700' : 'text-gray-400'}`}
+                >
+                  Skip Breakfast
+                </span>
                 <input
                   type="checkbox"
                   className="hidden"
                   checked={habits.fasting.skipBreakfast}
                   disabled={!habits.fasting.enabled}
-                  onChange={() => habits.fasting.enabled && toggleFastingOption('skipBreakfast')}
+                  onChange={() =>
+                    habits.fasting.enabled &&
+                    toggleFastingOption('skipBreakfast')
+                  }
                 />
               </label>
-              
-              <label className={`flex items-center gap-3 ${habits.fasting.enabled ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
-                <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                  habits.fasting.enabled && habits.fasting.skipLunch 
-                    ? 'bg-blue-600 border-blue-600' 
-                    : habits.fasting.enabled 
-                      ? 'border-gray-300' 
-                      : 'border-gray-200'
-                }`}>
+
+              <label
+                className={`flex items-center gap-3 ${habits.fasting.enabled ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+              >
+                <div
+                  className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                    habits.fasting.enabled && habits.fasting.skipLunch
+                      ? 'bg-blue-600 border-blue-600'
+                      : habits.fasting.enabled
+                        ? 'border-gray-300'
+                        : 'border-gray-200'
+                  }`}
+                >
                   {habits.fasting.enabled && habits.fasting.skipLunch && (
-                    <svg width="12" height="9" viewBox="0 0 12 9" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M1 4.5L4.5 8L11 1.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <svg
+                      width="12"
+                      height="9"
+                      viewBox="0 0 12 9"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M1 4.5L4.5 8L11 1.5"
+                        stroke="white"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
                     </svg>
                   )}
                 </div>
-                <span className={`${habits.fasting.enabled ? 'text-gray-700' : 'text-gray-400'}`}>Skip Lunch</span>
+                <span
+                  className={`${habits.fasting.enabled ? 'text-gray-700' : 'text-gray-400'}`}
+                >
+                  Skip Lunch
+                </span>
                 <input
                   type="checkbox"
                   className="hidden"
                   checked={habits.fasting.skipLunch}
                   disabled={!habits.fasting.enabled}
-                  onChange={() => habits.fasting.enabled && toggleFastingOption('skipLunch')}
+                  onChange={() =>
+                    habits.fasting.enabled && toggleFastingOption('skipLunch')
+                  }
                 />
               </label>
-              
-              <label className={`flex items-center gap-3 ${habits.fasting.enabled ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
-                <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                  habits.fasting.enabled && habits.fasting.skipDinner 
-                    ? 'bg-blue-600 border-blue-600' 
-                    : habits.fasting.enabled 
-                      ? 'border-gray-300' 
-                      : 'border-gray-200'
-                }`}>
+
+              <label
+                className={`flex items-center gap-3 ${habits.fasting.enabled ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+              >
+                <div
+                  className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                    habits.fasting.enabled && habits.fasting.skipDinner
+                      ? 'bg-blue-600 border-blue-600'
+                      : habits.fasting.enabled
+                        ? 'border-gray-300'
+                        : 'border-gray-200'
+                  }`}
+                >
                   {habits.fasting.enabled && habits.fasting.skipDinner && (
-                    <svg width="12" height="9" viewBox="0 0 12 9" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M1 4.5L4.5 8L11 1.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <svg
+                      width="12"
+                      height="9"
+                      viewBox="0 0 12 9"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M1 4.5L4.5 8L11 1.5"
+                        stroke="white"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
                     </svg>
                   )}
                 </div>
-                <span className={`${habits.fasting.enabled ? 'text-gray-700' : 'text-gray-400'}`}>Skip Dinner</span>
+                <span
+                  className={`${habits.fasting.enabled ? 'text-gray-700' : 'text-gray-400'}`}
+                >
+                  Skip Dinner
+                </span>
                 <input
                   type="checkbox"
                   className="hidden"
                   checked={habits.fasting.skipDinner}
                   disabled={!habits.fasting.enabled}
-                  onChange={() => habits.fasting.enabled && toggleFastingOption('skipDinner')}
+                  onChange={() =>
+                    habits.fasting.enabled && toggleFastingOption('skipDinner')
+                  }
                 />
               </label>
             </div>
@@ -522,45 +650,67 @@ export default function FoodIntakeModal({ isOpen, onClose }: FoodIntakeModalProp
           <div className="bg-gray-50 rounded-xl p-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold">Sleep Schedule</h3>
-              <button 
+              <button
                 onClick={toggleSleepSchedule}
                 className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                  habits.sleepSchedule.enabled 
-                    ? 'bg-blue-600 border-blue-600 text-white' 
+                  habits.sleepSchedule.enabled
+                    ? 'bg-blue-600 border-blue-600 text-white'
                     : 'border-gray-300 hover:border-gray-400'
                 }`}
               >
                 {habits.sleepSchedule.enabled && (
-                  <svg width="12" height="9" viewBox="0 0 12 9" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M1 4.5L4.5 8L11 1.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <svg
+                    width="12"
+                    height="9"
+                    viewBox="0 0 12 9"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M1 4.5L4.5 8L11 1.5"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 )}
               </button>
             </div>
-            
+
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-gray-600 mb-2">Wake-up Time</label>
+                <label className="block text-sm text-gray-600 mb-2">
+                  Wake-up Time
+                </label>
                 <input
                   type="time"
                   value={habits.sleepSchedule.wakeUpTime}
-                  onChange={(e) => updateSleepTime('wakeUpTime', e.target.value)}
+                  onChange={(e) =>
+                    updateSleepTime('wakeUpTime', e.target.value)
+                  }
                   disabled={!habits.sleepSchedule.enabled}
                   className={`w-full text-2xl font-bold bg-transparent border-none outline-none focus:ring-0 p-0 ${
-                    habits.sleepSchedule.enabled ? 'text-black' : 'text-gray-400'
+                    habits.sleepSchedule.enabled
+                      ? 'text-black'
+                      : 'text-gray-400'
                   }`}
                   style={{ fontSize: '24px', fontWeight: 'bold' }}
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-2">Sleep Time</label>
+                <label className="block text-sm text-gray-600 mb-2">
+                  Sleep Time
+                </label>
                 <input
                   type="time"
                   value={habits.sleepSchedule.sleepTime}
                   onChange={(e) => updateSleepTime('sleepTime', e.target.value)}
                   disabled={!habits.sleepSchedule.enabled}
                   className={`w-full text-2xl font-bold bg-transparent border-none outline-none focus:ring-0 p-0 ${
-                    habits.sleepSchedule.enabled ? 'text-black' : 'text-gray-400'
+                    habits.sleepSchedule.enabled
+                      ? 'text-black'
+                      : 'text-gray-400'
                   }`}
                   style={{ fontSize: '24px', fontWeight: 'bold' }}
                 />
@@ -572,34 +722,47 @@ export default function FoodIntakeModal({ isOpen, onClose }: FoodIntakeModalProp
           <div className="bg-gray-50 rounded-xl p-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold">Exercise</h3>
-              <button 
+              <button
                 onClick={toggleExercise}
                 className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                  habits.exercise.enabled 
-                    ? 'bg-blue-600 border-blue-600 text-white' 
+                  habits.exercise.enabled
+                    ? 'bg-blue-600 border-blue-600 text-white'
                     : 'border-gray-300 hover:border-gray-400'
                 }`}
               >
                 {habits.exercise.enabled && (
-                  <svg width="12" height="9" viewBox="0 0 12 9" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M1 4.5L4.5 8L11 1.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <svg
+                    width="12"
+                    height="9"
+                    viewBox="0 0 12 9"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M1 4.5L4.5 8L11 1.5"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 )}
               </button>
             </div>
-            
+
             <div className="flex items-center gap-4">
-              <div className="text-4xl font-bold">{habits.exercise.daysPerWeek}</div>
+              <div className="text-4xl font-bold">
+                {habits.exercise.daysPerWeek}
+              </div>
               <div className="text-gray-600">Days a week</div>
             </div>
           </div>
         </div>
       </div>
-
       {/* Right side - Human Animation */}
       <div className="flex-1 flex items-center -mt-96  justify-center lg:min-h-[400px]">
         <div className="w-full max-w-sm lg:max-w-xs">
-          <Lottie 
+          <Lottie
             animationData={animationData}
             style={{ maxHeight: '300px', maxWidth: '100%' }}
             className="max-h-[300px] lg:max-h-[400px]"
@@ -607,20 +770,24 @@ export default function FoodIntakeModal({ isOpen, onClose }: FoodIntakeModalProp
             autoplay={true}
           />
         </div>
-      </div>    </div>
-  );
+      </div>{' '}
+    </div>
+  )
 
   const renderBodyTransformationContent = () => (
     <div className="flex-1">
       <div className="mb-6 sm:mb-8 flex-shrink-0">
         <h2 className="text-xl sm:text-2xl font-bold">Body Transformation</h2>
-        <p className="text-gray-600">Upload your image and set your weight goals</p>
+        <p className="text-gray-600">
+          Upload your image and set your weight goals
+        </p>
       </div>
-      
       {/* Weight inputs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <div className="bg-gray-50 rounded-xl p-4">
-          <label className="block text-sm text-gray-600 mb-2">Current Weight (kg)</label>
+          <label className="block text-sm text-gray-600 mb-2">
+            Current Weight (kg)
+          </label>
           <input
             type="number"
             value={currentWeight}
@@ -631,7 +798,9 @@ export default function FoodIntakeModal({ isOpen, onClose }: FoodIntakeModalProp
           />
         </div>
         <div className="bg-gray-50 rounded-xl p-4">
-          <label className="block text-sm text-gray-600 mb-2">Target Weight (kg)</label>
+          <label className="block text-sm text-gray-600 mb-2">
+            Target Weight (kg)
+          </label>
           <input
             type="number"
             value={targetWeight}
@@ -642,7 +811,6 @@ export default function FoodIntakeModal({ isOpen, onClose }: FoodIntakeModalProp
           />
         </div>
       </div>
-
       {/* Upload area */}
       <div className="flex-1 border-2 border-dashed border-blue-300 rounded-xl sm:rounded-2xl p-8 sm:p-16 lg:p-20 flex items-center justify-center relative overflow-hidden min-h-[300px] mb-6">
         {transformationImage ? (
@@ -670,45 +838,65 @@ export default function FoodIntakeModal({ isOpen, onClose }: FoodIntakeModalProp
             <div className="mb-2 sm:mb-4 text-blue-500">
               <UploadCloud size={32} className="sm:w-16 sm:h-16" />
             </div>
-            <span className="text-gray-500 text-sm sm:text-base text-center">Upload your current photo</span>
+            <span className="text-gray-500 text-sm sm:text-base text-center">
+              Upload your current photo
+            </span>
           </label>
         )}
       </div>
-
       {/* Submit button */}
       <div className="flex justify-center mb-6">
         <button
           onClick={handleTransformationSubmit}
-          disabled={transformationLoading || !transformationImage || !currentWeight || !targetWeight}
-          className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold px-8 py-3 rounded-lg shadow-sm transition"        >
-          {transformationLoading ? "Analyzing..." : "Analyze Transformation"}
+          disabled={
+            transformationLoading ||
+            !transformationImage ||
+            !currentWeight ||
+            !targetWeight
+          }
+          className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold px-8 py-3 rounded-lg shadow-sm transition"
+        >
+          {transformationLoading ? 'Analyzing...' : 'Analyze Transformation'}
         </button>
       </div>
-
       {/* Loading/Error */}
-      {transformationLoading && (        <div className="text-center text-blue-600 mb-4">
+      {transformationLoading && (
+        <div className="text-center text-blue-600 mb-4">
           <div className="inline-flex items-center gap-2">
             <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
             Analyzing your transformation potential...
           </div>
         </div>
       )}
-      {transformationError && <div className="text-center text-red-600 mb-4">{transformationError}</div>}      {/* Transformation result */}
+      {transformationError && (
+        <div className="text-center text-red-600 mb-4">
+          {transformationError}
+        </div>
+      )}{' '}
+      {/* Transformation result */}
       {transformationResult && (
         <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100">
           <h3 className="text-lg font-bold mb-4 text-blue-700 flex items-center gap-2">
             <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10" fill="#2563eb" opacity="0.1"/>
-              <path d="M8 12l2.5 2.5L16 9" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <circle cx="12" cy="12" r="10" fill="#2563eb" opacity="0.1" />
+              <path
+                d="M8 12l2.5 2.5L16 9"
+                stroke="#2563eb"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
             Your Transformation Analysis
           </h3>
-          
+
           <div className="space-y-6">
             {/* Image display */}
             <div className="flex justify-center">
               <div className="text-center">
-                <h4 className="font-semibold text-gray-700 mb-2">Current Photo ({currentWeight} kg → {targetWeight} kg)</h4>
+                <h4 className="font-semibold text-gray-700 mb-2">
+                  Current Photo ({currentWeight} kg → {targetWeight} kg)
+                </h4>
                 <img
                   src={URL.createObjectURL(transformationImage!)}
                   alt="Current"
@@ -720,43 +908,61 @@ export default function FoodIntakeModal({ isOpen, onClose }: FoodIntakeModalProp
             {/* Analysis content */}
             {transformationResult.description && (
               <div className="bg-blue-50 rounded-lg p-4">
-                <h4 className="font-semibold text-blue-800 mb-2">Transformation Overview</h4>
-                <p className="text-gray-700">{transformationResult.description}</p>
+                <h4 className="font-semibold text-blue-800 mb-2">
+                  Transformation Overview
+                </h4>
+                <p className="text-gray-700">
+                  {transformationResult.description}
+                </p>
               </div>
             )}
 
             {transformationResult.timeline && (
               <div className="bg-green-50 rounded-lg p-4">
-                <h4 className="font-semibold text-green-800 mb-2">Expected Timeline</h4>
+                <h4 className="font-semibold text-green-800 mb-2">
+                  Expected Timeline
+                </h4>
                 <p className="text-gray-700">{transformationResult.timeline}</p>
               </div>
             )}
 
-            {transformationResult.key_changes && transformationResult.key_changes.length > 0 && (
-              <div className="bg-purple-50 rounded-lg p-4">
-                <h4 className="font-semibold text-purple-800 mb-2">Key Changes Expected</h4>
-                <ul className="list-disc list-inside text-gray-700 space-y-1">
-                  {transformationResult.key_changes.map((change: string, index: number) => (
-                    <li key={index}>{change}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            {transformationResult.key_changes &&
+              transformationResult.key_changes.length > 0 && (
+                <div className="bg-purple-50 rounded-lg p-4">
+                  <h4 className="font-semibold text-purple-800 mb-2">
+                    Key Changes Expected
+                  </h4>
+                  <ul className="list-disc list-inside text-gray-700 space-y-1">
+                    {transformationResult.key_changes.map(
+                      (change: string, index: number) => (
+                        <li key={index}>{change}</li>
+                      ),
+                    )}
+                  </ul>
+                </div>
+              )}
 
-            {transformationResult.recommendations && transformationResult.recommendations.length > 0 && (
-              <div className="bg-orange-50 rounded-lg p-4">
-                <h4 className="font-semibold text-orange-800 mb-2">Recommendations</h4>
-                <ul className="list-disc list-inside text-gray-700 space-y-1">
-                  {transformationResult.recommendations.map((rec: string, index: number) => (
-                    <li key={index}>{rec}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            {transformationResult.recommendations &&
+              transformationResult.recommendations.length > 0 && (
+                <div className="bg-orange-50 rounded-lg p-4">
+                  <h4 className="font-semibold text-orange-800 mb-2">
+                    Recommendations
+                  </h4>
+                  <ul className="list-disc list-inside text-gray-700 space-y-1">
+                    {transformationResult.recommendations.map(
+                      (rec: string, index: number) => (
+                        <li key={index}>{rec}</li>
+                      ),
+                    )}
+                  </ul>
+                </div>
+              )}
 
             {transformationResult.note && (
               <div className="bg-yellow-50 rounded-lg p-4 border-l-4 border-yellow-400">
-                <h4 className="font-semibold text-yellow-800 mb-2">Important Note</h4>
+                <h4 className="font-semibold text-yellow-800 mb-2">
+                  Important Note
+                </h4>
                 <p className="text-gray-700">{transformationResult.note}</p>
               </div>
             )}
@@ -764,13 +970,19 @@ export default function FoodIntakeModal({ isOpen, onClose }: FoodIntakeModalProp
         </div>
       )}
     </div>
-  );
+  )
   const renderMealIntakeContent = () => (
-    <div className="flex-1">      <div className="mb-6 sm:mb-8 flex-shrink-0">
+    <div className="flex-1">
+      {' '}
+      <div className="mb-6 sm:mb-8 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="hidden sm:block text-xl sm:text-2xl font-bold">Upload Food Image</h2>
-            <p className="hidden sm:block text-gray-600">Click to upload or Drag and drop</p>
+            <h2 className="hidden sm:block text-xl sm:text-2xl font-bold">
+              Upload Food Image
+            </h2>
+            <p className="hidden sm:block text-gray-600">
+              Click to upload or Drag and drop
+            </p>
           </div>
           {uploadedMealImage && (
             <div className="hidden sm:flex items-center gap-2 text-green-700 bg-green-50 px-3 py-1 rounded-full text-sm">
@@ -779,18 +991,20 @@ export default function FoodIntakeModal({ isOpen, onClose }: FoodIntakeModalProp
             </div>
           )}
         </div>
-          {/* Meal Type Selector */}
+        {/* Meal Type Selector */}
         <div className="bg-gray-50 rounded-lg p-4">
-          <h3 className="text-sm font-medium text-gray-700 mb-3">Select Meal Type</h3>
+          <h3 className="text-sm font-medium text-gray-700 mb-3">
+            Select Meal Type
+          </h3>
           <div className="flex flex-wrap gap-2">
-            {["Breakfast", "Lunch", "Dinner", "Snack"].map((mealType) => (
+            {['Breakfast', 'Lunch', 'Dinner', 'Snack'].map((mealType) => (
               <button
                 key={mealType}
                 onClick={() => setSelectedMealType(mealType)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   selectedMealType === mealType
-                    ? "bg-blue-600 text-white shadow-sm"
-                    : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
                 }`}
               >
                 {mealType}
@@ -799,8 +1013,10 @@ export default function FoodIntakeModal({ isOpen, onClose }: FoodIntakeModalProp
           </div>
         </div>
       </div>
-        {/* Upload area - full height */}
-      <div className="flex-1 border-2 border-dashed border-blue-300 rounded-xl sm:rounded-2xl p-8 sm:p-16 lg:p-40 flex items-center justify-center relative overflow-hidden min-h-[300px]">        {uploadedMealImage ? (
+      {/* Upload area - full height */}
+      <div className="flex-1 border-2 border-dashed border-blue-300 rounded-xl sm:rounded-2xl p-8 sm:p-16 lg:p-40 flex items-center justify-center relative overflow-hidden min-h-[300px]">
+        {' '}
+        {uploadedMealImage ? (
           /* Show uploaded image */
           <div className="relative max-w-full max-h-full flex flex-col items-center">
             <img
@@ -820,10 +1036,10 @@ export default function FoodIntakeModal({ isOpen, onClose }: FoodIntakeModalProp
               </label>
               <button
                 onClick={() => {
-                  setUploadedMealImage(null);
-                  setFoodItems([]);
-                  setError(null);
-                  setApiDebug("");
+                  setUploadedMealImage(null)
+                  setFoodItems([])
+                  setError(null)
+                  setApiDebug('')
                 }}
                 className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition"
               >
@@ -846,7 +1062,7 @@ export default function FoodIntakeModal({ isOpen, onClose }: FoodIntakeModalProp
                 className="object-contain max-w-full max-h-full"
               />
             </div>
-            
+
             {/* Upload content */}
             <label className="cursor-pointer flex flex-col items-center relative z-10">
               <input
@@ -858,18 +1074,25 @@ export default function FoodIntakeModal({ isOpen, onClose }: FoodIntakeModalProp
               <div className="mb-2 sm:mb-4 text-blue-500">
                 <UploadCloud size={32} className="sm:w-16 sm:h-16" />
               </div>
-              <span className="text-gray-500 text-sm sm:text-base text-center">Click to upload or drag and drop</span>
+              <span className="text-gray-500 text-sm sm:text-base text-center">
+                Click to upload or drag and drop
+              </span>
             </label>
           </>
         )}
-      </div>      {/* Loading/Error */}
+      </div>{' '}
+      {/* Loading/Error */}
       {loading && (
         <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="flex items-center gap-3">
             <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
             <div>
-              <div className="text-blue-800 font-medium">Analyzing your food image...</div>
-              <div className="text-blue-600 text-sm">This may take a few seconds</div>
+              <div className="text-blue-800 font-medium">
+                Analyzing your food image...
+              </div>
+              <div className="text-blue-600 text-sm">
+                This may take a few seconds
+              </div>
             </div>
           </div>
         </div>
@@ -897,7 +1120,16 @@ export default function FoodIntakeModal({ isOpen, onClose }: FoodIntakeModalProp
         <div className="mt-8">
           <div className="bg-white rounded-2xl shadow-md p-6 border border-gray-100">
             <h3 className="text-lg font-bold mb-4 text-blue-700 flex items-center gap-2">
-              <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#2563eb" opacity="0.1"/><path d="M8 12l2.5 2.5L16 9" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <svg width="20" height="20" fill="none" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" fill="#2563eb" opacity="0.1" />
+                <path
+                  d="M8 12l2.5 2.5L16 9"
+                  stroke="#2563eb"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
               Detected Food Items
             </h3>
             <div className="overflow-x-auto">
@@ -915,7 +1147,10 @@ export default function FoodIntakeModal({ isOpen, onClose }: FoodIntakeModalProp
                 </thead>
                 <tbody>
                   {foodItems.map((item, idx) => (
-                    <tr key={idx} className={`even:bg-gray-50 ${!item.checked ? 'opacity-50' : ''}`}>
+                    <tr
+                      key={idx}
+                      className={`even:bg-gray-50 ${!item.checked ? 'opacity-50' : ''}`}
+                    >
                       <td className="px-2 py-2 text-center">
                         <input
                           type="checkbox"
@@ -929,7 +1164,15 @@ export default function FoodIntakeModal({ isOpen, onClose }: FoodIntakeModalProp
                           <input
                             type="text"
                             value={item.item}
-                            onChange={e => setFoodItems(prev => prev.map((it, i) => i === idx ? { ...it, item: e.target.value } : it))}
+                            onChange={(e) =>
+                              setFoodItems((prev) =>
+                                prev.map((it, i) =>
+                                  i === idx
+                                    ? { ...it, item: e.target.value }
+                                    : it,
+                                ),
+                              )
+                            }
                             className="border border-gray-300 rounded-lg px-2 py-1 w-28 focus:outline-none focus:ring-2 focus:ring-blue-200 transition"
                             placeholder="Name"
                           />
@@ -944,13 +1187,23 @@ export default function FoodIntakeModal({ isOpen, onClose }: FoodIntakeModalProp
                               type="number"
                               min={1}
                               value={item._quantityNum ?? 1}
-                              onChange={e => handleQuantityChange(idx, e.target.value)}
+                              onChange={(e) =>
+                                handleQuantityChange(idx, e.target.value)
+                              }
                               className="border border-gray-300 rounded-lg px-2 py-1 w-14 focus:outline-none focus:ring-2 focus:ring-blue-200 transition text-center"
                             />
                             <input
                               type="text"
                               value={item._unit}
-                              onChange={e => setFoodItems(prev => prev.map((it, i) => i === idx ? { ...it, _unit: e.target.value } : it))}
+                              onChange={(e) =>
+                                setFoodItems((prev) =>
+                                  prev.map((it, i) =>
+                                    i === idx
+                                      ? { ...it, _unit: e.target.value }
+                                      : it,
+                                  ),
+                                )
+                              }
                               className="border border-gray-300 rounded-lg px-2 py-1 w-20 focus:outline-none focus:ring-2 focus:ring-blue-200 transition text-center"
                               placeholder="unit"
                             />
@@ -961,10 +1214,14 @@ export default function FoodIntakeModal({ isOpen, onClose }: FoodIntakeModalProp
                               type="number"
                               min={1}
                               value={item._quantityNum ?? 1}
-                              onChange={e => handleQuantityChange(idx, e.target.value)}
+                              onChange={(e) =>
+                                handleQuantityChange(idx, e.target.value)
+                              }
                               className="border border-gray-300 rounded-lg px-3 py-1 w-16 focus:outline-none focus:ring-2 focus:ring-blue-200 transition text-center"
                             />
-                            <span className="text-gray-500 text-xs ml-1">× {item.isManual ? 'unit' : item._unit}</span>
+                            <span className="text-gray-500 text-xs ml-1">
+                              × {item.isManual ? 'unit' : item._unit}
+                            </span>
                           </>
                         )}
                       </td>
@@ -974,10 +1231,23 @@ export default function FoodIntakeModal({ isOpen, onClose }: FoodIntakeModalProp
                             type="number"
                             value={item.calories}
                             min={0}
-                            onChange={e => setFoodItems(prev => prev.map((it, i) => i === idx ? { ...it, calories: Number(e.target.value) } : it))}
+                            onChange={(e) =>
+                              setFoodItems((prev) =>
+                                prev.map((it, i) =>
+                                  i === idx
+                                    ? {
+                                        ...it,
+                                        calories: Number(e.target.value),
+                                      }
+                                    : it,
+                                ),
+                              )
+                            }
                             className="border border-gray-300 rounded-lg px-2 py-1 w-16 focus:outline-none focus:ring-2 focus:ring-blue-200 transition text-center"
                           />
-                        ) : item.calories}
+                        ) : (
+                          item.calories
+                        )}
                       </td>
                       <td className="px-4 py-2 text-center">
                         {item.isManual ? (
@@ -985,10 +1255,20 @@ export default function FoodIntakeModal({ isOpen, onClose }: FoodIntakeModalProp
                             type="number"
                             value={item.protein}
                             min={0}
-                            onChange={e => setFoodItems(prev => prev.map((it, i) => i === idx ? { ...it, protein: Number(e.target.value) } : it))}
+                            onChange={(e) =>
+                              setFoodItems((prev) =>
+                                prev.map((it, i) =>
+                                  i === idx
+                                    ? { ...it, protein: Number(e.target.value) }
+                                    : it,
+                                ),
+                              )
+                            }
                             className="border border-gray-300 rounded-lg px-2 py-1 w-14 focus:outline-none focus:ring-2 focus:ring-blue-200 transition text-center"
                           />
-                        ) : item.protein}
+                        ) : (
+                          item.protein
+                        )}
                       </td>
                       <td className="px-4 py-2 text-center">
                         {item.isManual ? (
@@ -996,10 +1276,20 @@ export default function FoodIntakeModal({ isOpen, onClose }: FoodIntakeModalProp
                             type="number"
                             value={item.carbs}
                             min={0}
-                            onChange={e => setFoodItems(prev => prev.map((it, i) => i === idx ? { ...it, carbs: Number(e.target.value) } : it))}
+                            onChange={(e) =>
+                              setFoodItems((prev) =>
+                                prev.map((it, i) =>
+                                  i === idx
+                                    ? { ...it, carbs: Number(e.target.value) }
+                                    : it,
+                                ),
+                              )
+                            }
                             className="border border-gray-300 rounded-lg px-2 py-1 w-14 focus:outline-none focus:ring-2 focus:ring-blue-200 transition text-center"
                           />
-                        ) : item.carbs}
+                        ) : (
+                          item.carbs
+                        )}
                       </td>
                       <td className="px-4 py-2 text-center">
                         {item.isManual ? (
@@ -1007,139 +1297,179 @@ export default function FoodIntakeModal({ isOpen, onClose }: FoodIntakeModalProp
                             type="number"
                             value={item.fats}
                             min={0}
-                            onChange={e => setFoodItems(prev => prev.map((it, i) => i === idx ? { ...it, fats: Number(e.target.value) } : it))}
+                            onChange={(e) =>
+                              setFoodItems((prev) =>
+                                prev.map((it, i) =>
+                                  i === idx
+                                    ? { ...it, fats: Number(e.target.value) }
+                                    : it,
+                                ),
+                              )
+                            }
                             className="border border-gray-300 rounded-lg px-2 py-1 w-14 focus:outline-none focus:ring-2 focus:ring-blue-200 transition text-center"
                           />
-                        ) : item.fats}
+                        ) : (
+                          item.fats
+                        )}
                       </td>
                     </tr>
                   ))}
                 </tbody>
-              </table>            </div>
-            
+              </table>{' '}
+            </div>
+
             {/* Macro Summary */}
-            {foodItems.some(item => item.checked) && (
+            {foodItems.some((item) => item.checked) && (
               <div className="mt-6 bg-gradient-to-r from-blue-50 to-green-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-800 mb-3">Selected Items Summary</h4>
+                <h4 className="font-semibold text-gray-800 mb-3">
+                  Selected Items Summary
+                </h4>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
                   <div className="bg-white rounded-lg p-3 shadow-sm">
                     <div className="text-2xl font-bold text-blue-600">
-                      {foodItems.filter(item => item.checked).reduce((sum, item) => sum + (item.calories || 0), 0)}
+                      {foodItems
+                        .filter((item) => item.checked)
+                        .reduce((sum, item) => sum + (item.calories || 0), 0)}
                     </div>
                     <div className="text-xs text-gray-600">Calories</div>
                   </div>
                   <div className="bg-white rounded-lg p-3 shadow-sm">
                     <div className="text-2xl font-bold text-green-600">
-                      {foodItems.filter(item => item.checked).reduce((sum, item) => sum + (item.protein || 0), 0)}g
+                      {foodItems
+                        .filter((item) => item.checked)
+                        .reduce((sum, item) => sum + (item.protein || 0), 0)}
+                      g
                     </div>
                     <div className="text-xs text-gray-600">Protein</div>
                   </div>
                   <div className="bg-white rounded-lg p-3 shadow-sm">
                     <div className="text-2xl font-bold text-yellow-600">
-                      {foodItems.filter(item => item.checked).reduce((sum, item) => sum + (item.carbs || 0), 0)}g
+                      {foodItems
+                        .filter((item) => item.checked)
+                        .reduce((sum, item) => sum + (item.carbs || 0), 0)}
+                      g
                     </div>
                     <div className="text-xs text-gray-600">Carbs</div>
                   </div>
                   <div className="bg-white rounded-lg p-3 shadow-sm">
                     <div className="text-2xl font-bold text-purple-600">
-                      {foodItems.filter(item => item.checked).reduce((sum, item) => sum + (item.fats || 0), 0)}g
+                      {foodItems
+                        .filter((item) => item.checked)
+                        .reduce((sum, item) => sum + (item.fats || 0), 0)}
+                      g
                     </div>
                     <div className="text-xs text-gray-600">Fats</div>
                   </div>
                 </div>
               </div>
             )}
-            
+
             <div className="flex flex-col sm:flex-row gap-3 mt-6 justify-between items-center">
               <button
                 onClick={handleAddManualItem}
                 className="bg-gray-100 hover:bg-blue-50 text-blue-700 font-medium px-4 py-2 rounded-lg border border-gray-200 transition"
               >
                 + Add Item Manually
-              </button>              <button
+              </button>{' '}
+              <button
                 onClick={handleSaveMeal}
-                disabled={savingMeal || foodItems.filter(item => item.checked).length === 0}
+                disabled={
+                  savingMeal ||
+                  foodItems.filter((item) => item.checked).length === 0
+                }
                 className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold px-6 py-2 rounded-lg shadow-sm transition"
               >
-                {savingMeal ? "Saving..." : `Log ${selectedMealType}`}
+                {savingMeal ? 'Saving...' : `Log ${selectedMealType}`}
               </button>
             </div>
           </div>
-        </div>      ) : (!loading && !error && uploadedMealImage && (
-        <div className="mt-8 bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
-          <div className="mb-3">
-            <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <span className="text-yellow-600 text-xl">🔍</span>
-            </div>
-          </div>
-          <h3 className="text-yellow-800 font-medium text-lg mb-2">No food items detected</h3>
-          <p className="text-yellow-600 text-sm mb-4">
-            The AI couldn't identify any food items in this image. Try uploading a clearer image with visible food items, or add items manually below.
-          </p>
-          <button
-            onClick={handleAddManualItem}
-            className="bg-yellow-600 hover:bg-yellow-700 text-white font-medium px-4 py-2 rounded-lg transition"
-          >
-            + Add Item Manually
-          </button>
         </div>
-      ))}
+      ) : (
+        !loading &&
+        !error &&
+        uploadedMealImage && (
+          <div className="mt-8 bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+            <div className="mb-3">
+              <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <span className="text-yellow-600 text-xl">🔍</span>
+              </div>
+            </div>
+            <h3 className="text-yellow-800 font-medium text-lg mb-2">
+              No food items detected
+            </h3>
+            <p className="text-yellow-600 text-sm mb-4">
+              The AI couldn't identify any food items in this image. Try
+              uploading a clearer image with visible food items, or add items
+              manually below.
+            </p>
+            <button
+              onClick={handleAddManualItem}
+              className="bg-yellow-600 hover:bg-yellow-700 text-white font-medium px-4 py-2 rounded-lg transition"
+            >
+              + Add Item Manually
+            </button>
+          </div>
+        )
+      )}
     </div>
-  );
+  )
 
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-2 sm:p-4">
       <div className="bg-white rounded-2xl sm:rounded-3xl w-full h-full sm:w-[95vw] sm:h-[95vh] max-w-7xl flex flex-col sm:flex-row overflow-hidden">
         {/* Mobile header with menu button */}
         <div className="sm:hidden flex items-center justify-between p-4 border-b border-gray-100">
-          <button 
-            onClick={onClose}
-            className="flex items-center text-gray-600"
-          >
+          <button onClick={onClose} className="flex items-center text-gray-600">
             <ChevronLeft className="h-5 w-5 mr-1" />
             <span>Back</span>
           </button>
-          
+
           <h2 className="text-lg font-bold">{selectedTab}</h2>
-          
-          <button 
+
+          <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             className="p-2 text-gray-600"
           >
-            {isSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {isSidebarOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
           </button>
         </div>
 
         {/* Sidebar - hidden on mobile unless toggled */}
-        <div className={`
+        <div
+          className={`
           ${isSidebarOpen ? 'block' : 'hidden'} sm:block
           w-full sm:w-64 bg-gray-50 p-4 sm:rounded-l-3xl border-r border-gray-100
           absolute sm:relative z-10 sm:z-auto h-full sm:h-auto
-        `}>
+        `}
+        >
           {/* Desktop back button */}
-          <button 
+          <button
             onClick={onClose}
             className="hidden sm:flex items-center text-gray-600 mb-8"
           >
             <ChevronLeft className="h-4 w-4 mr-1" />
             <span>Back</span>
           </button>
-          
+
           {/* Navigation tabs */}
           <div className="space-y-2">
             {tabs.map((tab) => (
               <button
                 key={tab}
                 onClick={() => {
-                  setSelectedTab(tab);
-                  setIsSidebarOpen(false); // Close sidebar on mobile after selection
+                  setSelectedTab(tab)
+                  setIsSidebarOpen(false) // Close sidebar on mobile after selection
                 }}
                 className={`w-full text-left py-3 px-4 rounded-lg transition-colors text-sm sm:text-base ${
-                  selectedTab === tab 
-                    ? "bg-blue-600 text-white" 
-                    : "text-gray-700 hover:bg-gray-100"
+                  selectedTab === tab
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-700 hover:bg-gray-100'
                 }`}
               >
                 {tab}
@@ -1147,21 +1477,23 @@ export default function FoodIntakeModal({ isOpen, onClose }: FoodIntakeModalProp
             ))}
           </div>
         </div>
-        
+
         {/* Overlay for mobile sidebar */}
         {isSidebarOpen && (
-          <div 
+          <div
             className="sm:hidden fixed inset-0 bg-black/20 z-5"
             onClick={() => setIsSidebarOpen(false)}
           />
         )}
-          {/* Main content */}
+        {/* Main content */}
         <div className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto flex flex-col">
-          {selectedTab === "Habits" ? renderHabitsContent() : 
-           selectedTab === "Body Transformation" ? renderBodyTransformationContent() : 
-           renderMealIntakeContent()}
+          {selectedTab === 'Habits'
+            ? renderHabitsContent()
+            : selectedTab === 'Body Transformation'
+              ? renderBodyTransformationContent()
+              : renderMealIntakeContent()}
         </div>
       </div>
     </div>
-  );
+  )
 }

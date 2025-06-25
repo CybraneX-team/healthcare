@@ -1,10 +1,10 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { getAuth } from "firebase/auth";
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { motion } from 'framer-motion'
+import { Button } from '@/components/ui/button'
+import { getAuth } from 'firebase/auth'
 
 const Inputbox = ({
   id,
@@ -12,14 +12,14 @@ const Inputbox = ({
   label,
   value,
   onChange,
-  autoFocus
+  autoFocus,
 }: {
-  id: string;
-  type: string;
-  label: string;
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  autoFocus?: boolean;
+  id: string
+  type: string
+  label: string
+  value: string
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  autoFocus?: boolean
 }) => (
   <div className="space-y-1">
     <label htmlFor={id} className="text-sm font-medium text-gray-700">
@@ -34,62 +34,62 @@ const Inputbox = ({
       className="w-full border-b border-gray-300 focus:border-blue-400 focus:outline-none py-1 transition-colors duration-200 text-gray-800"
     />
   </div>
-);
+)
 
 export default function PromoteToAdminPage() {
-  const [email, setEmail] = useState("");
-  const [superuserPass, setSuperuserPass] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState('')
+  const [superuserPass, setSuperuserPass] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
-  const router = useRouter();
-  
+  const router = useRouter()
+
   const handlePromote = async () => {
     if (!email.trim() || !superuserPass.trim()) {
-      setError("Please fill in all fields");
-      return;
+      setError('Please fill in all fields')
+      return
     }
 
-    setLoading(true);
-    setError(null);
+    setLoading(true)
+    setError(null)
 
     try {
       // ✅ Get current user's UID (logged-in user)
-      const auth = getAuth();
-      const currentUser = auth.currentUser;
+      const auth = getAuth()
+      const currentUser = auth.currentUser
       if (!currentUser) {
-        setError("You must be logged in to promote yourself.");
-        setLoading(false);
-        return;
+        setError('You must be logged in to promote yourself.')
+        setLoading(false)
+        return
       }
 
-      const uid = currentUser.uid;
+      const uid = currentUser.uid
 
       // ✅ Call API route
-      const res = await fetch("/api/promote-to-admin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/promote-to-admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           superuserPass,
           email, // pass the email (API will find the UID using email, if needed)
-          uid    // pass UID of current user (who is self-promoting)
+          uid, // pass UID of current user (who is self-promoting)
         }),
-      });
+      })
 
-      const data = await res.json();
+      const data = await res.json()
       if (res.ok) {
-        alert("You are now an admin!");
-        router.push("/dashboard");
+        alert('You are now an admin!')
+        router.push('/dashboard')
       } else {
-        setError(data.error || "An unexpected error occurred.");
+        setError(data.error || 'An unexpected error occurred.')
       }
     } catch (err) {
-      console.error(err);
-      setError("An unexpected error occurred.");
+      console.error(err)
+      setError('An unexpected error occurred.')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <motion.div
@@ -168,9 +168,9 @@ export default function PromoteToAdminPage() {
           className="w-full bg-blue-500 hover:bg-blue-600"
           disabled={loading}
         >
-          {loading ? "AUTHENTICATING..." : "Grant Access"}
+          {loading ? 'AUTHENTICATING...' : 'Grant Access'}
         </Button>
       </div>
     </motion.div>
-  );
+  )
 }

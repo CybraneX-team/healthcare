@@ -3,12 +3,12 @@ declare global {
   interface Window {
     google: {
       maps: {
-        Map: any;
-        Marker: any;
-        Geocoder: any;
-      };
-    };
+        Map: any
+        Marker: any
+        Geocoder: any
+      }
+    }
   }
 }
 
-export {};
+export {}

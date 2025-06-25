@@ -1,12 +1,12 @@
-import React from "react";
-import { motion } from "framer-motion";
-import { Droplet } from "lucide-react";
+import React from 'react'
+import { motion } from 'framer-motion'
+import { Droplet } from 'lucide-react'
 
-const Card = ({ children, className = "" }) => (
+const Card = ({ children, className = '' }) => (
   <div className={`bg-white border border-gray-200 ${className}`}>
     {children}
   </div>
-);
+)
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -14,7 +14,7 @@ const containerVariants = {
     opacity: 1,
     transition: {
       duration: 0.4,
-      when: "beforeChildren",
+      when: 'beforeChildren',
       staggerChildren: 0.1,
     },
   },
@@ -22,26 +22,26 @@ const containerVariants = {
     opacity: 0,
     transition: {
       duration: 0.3,
-      when: "afterChildren",
+      when: 'afterChildren',
       staggerChildren: 0.05,
       staggerDirection: -1,
     },
   },
-};
+}
 
 const itemVariants = {
   hidden: { y: 15, opacity: 0 },
   visible: {
     y: 0,
     opacity: 1,
-    transition: { duration: 0.35, ease: "easeOut" },
+    transition: { duration: 0.35, ease: 'easeOut' },
   },
   exit: {
     y: -15,
     opacity: 0,
-    transition: { duration: 0.25, ease: "easeIn" },
+    transition: { duration: 0.25, ease: 'easeIn' },
   },
-};
+}
 
 const Cardiology = () => {
   return (
@@ -57,7 +57,7 @@ const Cardiology = () => {
         <div className="block lg:hidden space-y-4">
           {/* Card 1: Scan Cardiology */}
           <motion.div variants={itemVariants}>
-            <Card className="rounded-3xl shadow-sm p-6">
+            <Card className="rounded-3xl shadow-sm p-4 md:p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-6">
                 Scan Cardiology
               </h2>
@@ -80,7 +80,7 @@ const Cardiology = () => {
 
           {/* Card 2: Lipids and Cholesterol */}
           <motion.div variants={itemVariants}>
-            <Card className="rounded-3xl shadow-sm p-6">
+            <Card className="rounded-3xl shadow-sm p-4 md:p-6">
               <div className="flex items-center gap-2 mb-4">
                 <div className="bg-gray-100 p-4 rounded-3xl">
                   <Droplet size={20} className="text-blue-500" />
@@ -117,7 +117,7 @@ const Cardiology = () => {
 
           {/* Card 3: Troponin Levels */}
           <motion.div variants={itemVariants}>
-            <Card className="rounded-3xl shadow-sm p-6">
+            <Card className="rounded-3xl shadow-sm p-4 md:p-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-gray-500">Troponin Levels</p>
@@ -141,7 +141,7 @@ const Cardiology = () => {
 
           {/* Card 4: Vessels and Performance */}
           <motion.div variants={itemVariants}>
-            <Card className="rounded-3xl shadow-sm p-6">
+            <Card className="rounded-3xl shadow-sm p-4 md:p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">
                 Vessels and Performance
               </h2>
@@ -204,7 +204,10 @@ const Cardiology = () => {
           </motion.div>
 
           {/* Card 2: Combined Lipids, Cholesterol and Blood Pressure */}
-          <motion.div variants={itemVariants} className="col-span-7 col-start-6">
+          <motion.div
+            variants={itemVariants}
+            className="col-span-7 col-start-6"
+          >
             <Card className="rounded-3xl shadow-sm h-full p-8">
               <div className="flex flex-col md:flex-row justify-between items-start">
                 <div>
@@ -250,7 +253,10 @@ const Cardiology = () => {
           </motion.div>
 
           {/* Card 3: Troponin Levels */}
-          <motion.div variants={itemVariants} className="col-span-6 col-start-1">
+          <motion.div
+            variants={itemVariants}
+            className="col-span-6 col-start-1"
+          >
             <Card className="rounded-3xl shadow-sm h-full p-8">
               <div>
                 <p className="text-gray-500">Troponin Levels</p>
@@ -277,15 +283,24 @@ const Cardiology = () => {
           </motion.div>
 
           {/* Card 4: Vessels and Performance */}
-          <motion.div variants={itemVariants} className="col-span-6 col-start-7">
+          <motion.div
+            variants={itemVariants}
+            className="col-span-6 col-start-7"
+          >
             <Card className="rounded-3xl shadow-sm h-full p-3">
               <div className="flex flex-col md:flex-row w-full items-center mb-4">
                 <h2 className="text-xl font-semibold text-gray-900 ">
                   Vessels and Performance
                 </h2>
                 <div className="flex justify-between w-full items-center bg-gray-100 px-5 py-4 rounded-3xl ml-2">
-                  <p className="text-gray-500 text-sm">Stroke<br/> Volume</p>
-                  <p className="text-xs font-semibold">70<br/> sv/ml</p>
+                  <p className="text-gray-500 text-sm">
+                    Stroke
+                    <br /> Volume
+                  </p>
+                  <p className="text-xs font-semibold">
+                    70
+                    <br /> sv/ml
+                  </p>
                 </div>
 
                 <div className="flex justify-between w-full items-center bg-gray-100 px-5 py-4 mt-4 md:mt-0 ml-2 rounded-3xl">
@@ -328,7 +343,7 @@ const Cardiology = () => {
         </div>
       </motion.div>
     </div>
-  );
-};
+  )
+}
 
-export default Cardiology;
+export default Cardiology

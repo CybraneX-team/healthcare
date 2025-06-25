@@ -1,35 +1,35 @@
-import React from "react";
-import { motion } from "framer-motion";
+import React from 'react'
+import { motion } from 'framer-motion'
 
 interface LoadingAnimationProps {
-  title: string;
-  description?: string;
-  variant?: "blue" | "green";
-  showSpinner?: boolean;
+  title: string
+  description?: string
+  variant?: 'blue' | 'green'
+  showSpinner?: boolean
 }
 
 export function LoadingAnimation({
   title,
   description,
-  variant = "blue",
+  variant = 'blue',
   showSpinner = true,
 }: LoadingAnimationProps) {
   const colors = {
     blue: {
-      bg: "bg-blue-50",
-      border: "border-blue-300 border-t-blue-600",
-      title: "text-blue-900",
-      description: "text-blue-600",
+      bg: 'bg-blue-50',
+      border: 'border-blue-300 border-t-blue-600',
+      title: 'text-blue-900',
+      description: 'text-blue-600',
     },
     green: {
-      bg: "bg-green-50",
-      border: "border-green-300 border-t-green-600",
-      title: "text-green-900",
-      description: "text-green-600",
+      bg: 'bg-green-50',
+      border: 'border-green-300 border-t-green-600',
+      title: 'text-green-900',
+      description: 'text-green-600',
     },
-  };
+  }
 
-  const currentColors = colors[variant];
+  const currentColors = colors[variant]
 
   return (
     <motion.div
@@ -40,7 +40,7 @@ export function LoadingAnimation({
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: "spring", duration: 0.5 }}
+        transition={{ type: 'spring', duration: 0.5 }}
         className={`${currentColors.bg} rounded-2xl p-10 text-center flex flex-col items-center max-w-md`}
       >
         {showSpinner && (
@@ -58,7 +58,7 @@ export function LoadingAnimation({
               transition={{
                 repeat: Infinity,
                 duration: 2,
-                ease: "easeInOut",
+                ease: 'easeInOut',
               }}
               className={`h-16 w-16 rounded-full border-4 ${currentColors.border}`}
             />
@@ -84,5 +84,5 @@ export function LoadingAnimation({
         )}
       </motion.div>
     </motion.div>
-  );
-} 
+  )
+}

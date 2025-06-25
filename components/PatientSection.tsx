@@ -1,6 +1,6 @@
-"use client";
+'use client'
 
-import { useState } from "react";
+import { useState } from 'react'
 import {
   Search,
   Calendar,
@@ -12,805 +12,805 @@ import {
   Phone,
   Mail,
   MapPin,
-} from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 const patients = [
   {
-    id: "patient-001",
-    name: "Santiago Zuleta",
-    address: "1531 Sunset Dr. Winter Park, FL 32789",
-    dob: "2/8/1983",
-    phone: "(813) 376-6305",
-    email: "santiagoz@qualisconcrete.com",
+    id: 'patient-001',
+    name: 'Santiago Zuleta',
+    address: '1531 Sunset Dr. Winter Park, FL 32789',
+    dob: '2/8/1983',
+    phone: '(813) 376-6305',
+    email: 'santiagoz@qualisconcrete.com',
     tests: [
-      { name: "Inside Tracker", status: "Completed", date: "2025-05-06" },
+      { name: 'Inside Tracker', status: 'Completed', date: '2025-05-06' },
       {
-        name: "MRI Brain w/o Contrast",
-        status: "Completed",
-        date: "2025-05-03",
+        name: 'MRI Brain w/o Contrast',
+        status: 'Completed',
+        date: '2025-05-03',
       },
       {
-        name: "MRI Pelvis w/o Contrast",
-        status: "Completed",
-        date: "2025-05-01",
+        name: 'MRI Pelvis w/o Contrast',
+        status: 'Completed',
+        date: '2025-05-01',
       },
       {
-        name: "MRI Abdomen w/o Contrast",
-        status: "Completed",
-        date: "2025-04-28",
+        name: 'MRI Abdomen w/o Contrast',
+        status: 'Completed',
+        date: '2025-04-28',
       },
       {
-        name: "CT Abdomen and Pelvis",
-        status: "Scheduled",
-        date: "2025-05-15",
+        name: 'CT Abdomen and Pelvis',
+        status: 'Scheduled',
+        date: '2025-05-15',
       },
       {
-        name: "Calcium Score",
-        status: "Scheduled",
-        date: "2025-05-15",
+        name: 'Calcium Score',
+        status: 'Scheduled',
+        date: '2025-05-15',
       },
       {
-        name: "Total Body Composition Scan (TBC)",
-        status: "Scheduled",
-        date: "2025-05-15",
+        name: 'Total Body Composition Scan (TBC)',
+        status: 'Scheduled',
+        date: '2025-05-15',
       },
       {
-        name: "Coronary Angiogram (CTA)",
-        status: "Scheduled",
-        date: "2025-05-15",
+        name: 'Coronary Angiogram (CTA)',
+        status: 'Scheduled',
+        date: '2025-05-15',
       },
     ],
   },
   {
-    id: "patient-002",
-    name: "Ryan Cole",
-    address: "4324 Ciano Court, Export, PA 15632",
-    dob: "3/3/1985",
-    phone: "(724) 771-9267",
-    email: "ryan@drbillcole.com",
+    id: 'patient-002',
+    name: 'Ryan Cole',
+    address: '4324 Ciano Court, Export, PA 15632',
+    dob: '3/3/1985',
+    phone: '(724) 771-9267',
+    email: 'ryan@drbillcole.com',
     tests: [],
   },
   {
-    id: "patient-003",
-    name: "George Lemieux",
-    address: "147 Pond Meadow Road, Killingworth, CT 06419",
-    dob: "12/20/1966",
-    phone: "(203) 410-8943",
-    email: "glemieux@lemieuxassociates.com",
+    id: 'patient-003',
+    name: 'George Lemieux',
+    address: '147 Pond Meadow Road, Killingworth, CT 06419',
+    dob: '12/20/1966',
+    phone: '(203) 410-8943',
+    email: 'glemieux@lemieuxassociates.com',
     tests: [
       {
-        name: "Methyl Detox Profiling",
-        status: "Completed",
-        date: "2025-05-06",
+        name: 'Methyl Detox Profiling',
+        status: 'Completed',
+        date: '2025-05-06',
       },
       {
-        name: "Total Body Composition Scan (TBC)",
-        status: "Scheduled",
-        date: "2025-05-03",
+        name: 'Total Body Composition Scan (TBC)',
+        status: 'Scheduled',
+        date: '2025-05-03',
       },
     ],
   },
   {
-    id: "patient-004",
-    name: "Roberto Sanchez",
-    address: "75-933 Hiona St Holualoa, Hawaii 96725",
-    dob: "1/17/1979",
-    phone: "(512) 633-9170",
-    email: "robsanchez79@gmail.com",
+    id: 'patient-004',
+    name: 'Roberto Sanchez',
+    address: '75-933 Hiona St Holualoa, Hawaii 96725',
+    dob: '1/17/1979',
+    phone: '(512) 633-9170',
+    email: 'robsanchez79@gmail.com',
     tests: [],
   },
   {
-    id: "patient-005",
-    name: "Michael Clarke",
-    address: "24792 Brown Latigo Street, Malibu, CA 90265",
-    dob: "12/6/1966",
-    phone: "(310) 877-4393",
-    email: "mclarke@lemieuxassociates.com",
+    id: 'patient-005',
+    name: 'Michael Clarke',
+    address: '24792 Brown Latigo Street, Malibu, CA 90265',
+    dob: '12/6/1966',
+    phone: '(310) 877-4393',
+    email: 'mclarke@lemieuxassociates.com',
     tests: [
       {
-        name: "Function Bloodwork Part 1",
-        status: "Completed",
-        date: "2025-05-04",
+        name: 'Function Bloodwork Part 1',
+        status: 'Completed',
+        date: '2025-05-04',
       },
     ],
   },
   {
-    id: "patient-006",
-    name: "Rick Valentine",
-    address: "890 Antilla Way, San Marcos, CA 92078",
-    dob: "12/28/1976",
-    phone: "(619) 743-6000",
-    email: "rick@rickvalentine.com",
+    id: 'patient-006',
+    name: 'Rick Valentine',
+    address: '890 Antilla Way, San Marcos, CA 92078',
+    dob: '12/28/1976',
+    phone: '(619) 743-6000',
+    email: 'rick@rickvalentine.com',
     tests: [
       {
-        name: "Function Bloodwork Part 1",
-        status: "Completed",
-        date: "2025-05-03",
+        name: 'Function Bloodwork Part 1',
+        status: 'Completed',
+        date: '2025-05-03',
       },
       {
-        name: "Function Bloodwork Part 2",
-        status: "Completed",
-        date: "2025-04-30",
+        name: 'Function Bloodwork Part 2',
+        status: 'Completed',
+        date: '2025-04-30',
       },
       {
-        name: "Function Bloodwork Follow-Up",
-        status: "Completed",
-        date: "2025-05-10",
+        name: 'Function Bloodwork Follow-Up',
+        status: 'Completed',
+        date: '2025-05-10',
       },
       {
-        name: "CT Chest",
-        status: "Scheduled",
-        date: "2025-05-15",
+        name: 'CT Chest',
+        status: 'Scheduled',
+        date: '2025-05-15',
       },
       {
-        name: "Grail Test",
-        status: "Scheduled",
-        date: "2025-05-15",
+        name: 'Grail Test',
+        status: 'Scheduled',
+        date: '2025-05-15',
       },
       {
-        name: "VO2 Max Testing",
-        status: "Scheduled",
-        date: "2025-05-15",
+        name: 'VO2 Max Testing',
+        status: 'Scheduled',
+        date: '2025-05-15',
       },
       {
         name: "Men's Health Lab Panel",
-        status: "Scheduled",
-        date: "2025-05-15",
+        status: 'Scheduled',
+        date: '2025-05-15',
       },
     ],
   },
   {
-    id: "patient-007",
-    name: "Maria Amparo Zuleta",
-    address: "2201 Via Esmarca, Oceanside, CA 92054",
-    dob: "4/14/1950",
-    phone: "(251) 391-5361",
-    email: "amparodezuleta@gmail.com",
+    id: 'patient-007',
+    name: 'Maria Amparo Zuleta',
+    address: '2201 Via Esmarca, Oceanside, CA 92054',
+    dob: '4/14/1950',
+    phone: '(251) 391-5361',
+    email: 'amparodezuleta@gmail.com',
     tests: [
-      { name: "Inside Tracker", status: "Completed", date: "2025-05-02" },
+      { name: 'Inside Tracker', status: 'Completed', date: '2025-05-02' },
       {
-        name: "Methyl Detox Profiling",
-        status: "Completed",
-        date: "2025-04-29",
+        name: 'Methyl Detox Profiling',
+        status: 'Completed',
+        date: '2025-04-29',
       },
       {
-        name: "MRI Brain w/o Contrast",
-        status: "Scheduled",
-        date: "2025-05-12",
+        name: 'MRI Brain w/o Contrast',
+        status: 'Scheduled',
+        date: '2025-05-12',
       },
       {
-        name: "MRI Lumbar w/o Contrast",
-        status: "Scheduled",
-        date: "2025-05-12",
+        name: 'MRI Lumbar w/o Contrast',
+        status: 'Scheduled',
+        date: '2025-05-12',
       },
       {
-        name: "MRI Pelvis w/o Contrast",
-        status: "Scheduled",
-        date: "2025-05-12",
+        name: 'MRI Pelvis w/o Contrast',
+        status: 'Scheduled',
+        date: '2025-05-12',
       },
       {
-        name: "MRI Abdomen w/o Contrast",
-        status: "Scheduled",
-        date: "2025-05-12",
+        name: 'MRI Abdomen w/o Contrast',
+        status: 'Scheduled',
+        date: '2025-05-12',
       },
       {
-        name: "MRI Thoracic w/o Contrast",
-        status: "Scheduled",
-        date: "2025-05-12",
+        name: 'MRI Thoracic w/o Contrast',
+        status: 'Scheduled',
+        date: '2025-05-12',
       },
       {
-        name: "CT Chest",
-        status: "Scheduled",
-        date: "2025-05-15",
+        name: 'CT Chest',
+        status: 'Scheduled',
+        date: '2025-05-15',
       },
       {
-        name: "Calcium Score",
-        status: "Scheduled",
-        date: "2025-05-15",
+        name: 'Calcium Score',
+        status: 'Scheduled',
+        date: '2025-05-15',
       },
       {
-        name: "Total Body Composition Scan (TBC)",
-        status: "Scheduled",
-        date: "2025-05-15",
+        name: 'Total Body Composition Scan (TBC)',
+        status: 'Scheduled',
+        date: '2025-05-15',
       },
       {
-        name: "Grail Test",
-        status: "Scheduled",
-        date: "2025-05-15",
+        name: 'Grail Test',
+        status: 'Scheduled',
+        date: '2025-05-15',
       },
     ],
   },
   {
-    id: "patient-008",
-    name: "MaryAlexandra Zuleta",
-    address: "7009 El fuerte, Carlsbad CA 92009",
-    dob: "5/15/1983",
-    phone: "(646) 565-0976",
-    email: "maryalexandra25@gmail.com",
+    id: 'patient-008',
+    name: 'MaryAlexandra Zuleta',
+    address: '7009 El fuerte, Carlsbad CA 92009',
+    dob: '5/15/1983',
+    phone: '(646) 565-0976',
+    email: 'maryalexandra25@gmail.com',
     tests: [
       {
-        name: "Function Bloodwork Part 1",
-        status: "Completed",
-        date: "2025-05-03",
+        name: 'Function Bloodwork Part 1',
+        status: 'Completed',
+        date: '2025-05-03',
       },
       {
-        name: "Function Bloodwork Part 2",
-        status: "Completed",
-        date: "2025-04-30",
+        name: 'Function Bloodwork Part 2',
+        status: 'Completed',
+        date: '2025-04-30',
       },
       {
-        name: "MRI Brain w/o Contrast",
-        status: "Scheduled",
-        date: "2025-05-12",
+        name: 'MRI Brain w/o Contrast',
+        status: 'Scheduled',
+        date: '2025-05-12',
       },
       {
-        name: "MRI Pelvis w/o Contrast",
-        status: "Scheduled",
-        date: "2025-05-12",
+        name: 'MRI Pelvis w/o Contrast',
+        status: 'Scheduled',
+        date: '2025-05-12',
       },
       {
-        name: "MRI Abdomen w/o Contrast",
-        status: "Scheduled",
-        date: "2025-05-12",
+        name: 'MRI Abdomen w/o Contrast',
+        status: 'Scheduled',
+        date: '2025-05-12',
       },
       {
-        name: "MRI Pelvis w & w/o Contrast",
-        status: "Scheduled",
-        date: "2025-05-12",
+        name: 'MRI Pelvis w & w/o Contrast',
+        status: 'Scheduled',
+        date: '2025-05-12',
       },
       {
-        name: "MRI Abdomen w & w/o Contrast",
-        status: "Scheduled",
-        date: "2025-05-12",
+        name: 'MRI Abdomen w & w/o Contrast',
+        status: 'Scheduled',
+        date: '2025-05-12',
       },
-      { name: "CT Chest", status: "Completed", date: "2025-05-01" },
-      { name: "Ct Cardiac", status: "Completed", date: "2025-04-28" },
-      { name: "Grail Test", status: "Scheduled", date: "2025-05-10" },
+      { name: 'CT Chest', status: 'Completed', date: '2025-05-01' },
+      { name: 'Ct Cardiac', status: 'Completed', date: '2025-04-28' },
+      { name: 'Grail Test', status: 'Scheduled', date: '2025-05-10' },
     ],
   },
   {
-    id: "patient-009",
-    name: "Raphael Akobundu",
-    address: "3524 Corte Delfinio Carlsbad CA 92009",
-    dob: "9/10/1988",
-    phone: "(646) 463-4847",
-    email: "Uzoma51@gmail.com",
+    id: 'patient-009',
+    name: 'Raphael Akobundu',
+    address: '3524 Corte Delfinio Carlsbad CA 92009',
+    dob: '9/10/1988',
+    phone: '(646) 463-4847',
+    email: 'Uzoma51@gmail.com',
     tests: [
       {
-        name: "Function Bloodwork Part 1",
-        status: "Completed",
-        date: "2025-05-03",
+        name: 'Function Bloodwork Part 1',
+        status: 'Completed',
+        date: '2025-05-03',
       },
       {
-        name: "Function Bloodwork Part 2",
-        status: "Completed",
-        date: "2025-04-30",
+        name: 'Function Bloodwork Part 2',
+        status: 'Completed',
+        date: '2025-04-30',
       },
       {
-        name: "MRI Brain w/o Contrast",
-        status: "Scheduled",
-        date: "2025-05-12",
+        name: 'MRI Brain w/o Contrast',
+        status: 'Scheduled',
+        date: '2025-05-12',
       },
       {
-        name: "MRI Pelvis w/o Contrast",
-        status: "Scheduled",
-        date: "2025-05-12",
+        name: 'MRI Pelvis w/o Contrast',
+        status: 'Scheduled',
+        date: '2025-05-12',
       },
       {
-        name: "MRI Abdomen w/o Contrast",
-        status: "Scheduled",
-        date: "2025-05-12",
+        name: 'MRI Abdomen w/o Contrast',
+        status: 'Scheduled',
+        date: '2025-05-12',
       },
-      { name: "CT Chest", status: "Completed", date: "2025-04-30" },
+      { name: 'CT Chest', status: 'Completed', date: '2025-04-30' },
       {
-        name: "Total Body Composition Scan (TBC)",
-        status: "Completed",
-        date: "2025-04-27",
-      },
-      {
-        name: "Calcium Score",
-        status: "Scheduled",
-        date: "2025-05-15",
+        name: 'Total Body Composition Scan (TBC)',
+        status: 'Completed',
+        date: '2025-04-27',
       },
       {
-        name: "Coronary Angiogram (CTA)",
-        status: "Scheduled",
-        date: "2025-05-15",
-      },
-    ],
-  },
-  {
-    id: "patient-010",
-    name: "Liza Zuleta",
-    address: "1531 Sunset Dr. Winter Park, FL 32789",
-    dob: "5/19/1986",
-    phone: "(305) 766-7811",
-    email: "larangoh1986@gmail.com",
-    tests: [
-      {
-        name: "Function Bloodwork Part 1",
-        status: "Completed",
-        date: "2025-05-03",
+        name: 'Calcium Score',
+        status: 'Scheduled',
+        date: '2025-05-15',
       },
       {
-        name: "Function Bloodwork Part 2",
-        status: "Completed",
-        date: "2025-04-30",
-      },
-      {
-        name: "Function Bloodwork Follow-Up",
-        status: "Completed",
-        date: "2025-04-29",
+        name: 'Coronary Angiogram (CTA)',
+        status: 'Scheduled',
+        date: '2025-05-15',
       },
     ],
   },
   {
-    id: "patient-011",
-    name: "Justin Paxton",
-    address: "18235 Hartland Street, Reseda, CA 91335",
-    dob: "9/14/1988",
-    phone: "(434) 249-9921",
-    email: "justin@rogershollow.com",
+    id: 'patient-010',
+    name: 'Liza Zuleta',
+    address: '1531 Sunset Dr. Winter Park, FL 32789',
+    dob: '5/19/1986',
+    phone: '(305) 766-7811',
+    email: 'larangoh1986@gmail.com',
     tests: [
       {
-        name: "Function Bloodwork Part 1",
-        status: "Completed",
-        date: "2025-05-03",
+        name: 'Function Bloodwork Part 1',
+        status: 'Completed',
+        date: '2025-05-03',
       },
       {
-        name: "Function Bloodwork Part 2",
-        status: "Completed",
-        date: "2025-04-30",
+        name: 'Function Bloodwork Part 2',
+        status: 'Completed',
+        date: '2025-04-30',
+      },
+      {
+        name: 'Function Bloodwork Follow-Up',
+        status: 'Completed',
+        date: '2025-04-29',
       },
     ],
   },
   {
-    id: "patient-012",
-    name: "Jeffrey Everage",
-    address: "906 Elmview Dr, Encinitas, CA 92024",
-    dob: "5/14/1969",
-    phone: "(619) 254-9571",
-    email: "Jeff@Tridentproposals.com",
+    id: 'patient-011',
+    name: 'Justin Paxton',
+    address: '18235 Hartland Street, Reseda, CA 91335',
+    dob: '9/14/1988',
+    phone: '(434) 249-9921',
+    email: 'justin@rogershollow.com',
     tests: [
       {
-        name: "Function Bloodwork Part 1",
-        status: "Completed",
-        date: "2025-05-03",
+        name: 'Function Bloodwork Part 1',
+        status: 'Completed',
+        date: '2025-05-03',
       },
       {
-        name: "Function Bloodwork Part 2",
-        status: "Completed",
-        date: "2025-04-30",
-      },
-      {
-        name: "Function Bloodwork Follow-Up",
-        status: "Scheduled",
-        date: "2025-05-12",
-      },
-      {
-        name: "MRI Brain w/o Contrast",
-        status: "Scheduled",
-        date: "2025-05-15",
-      },
-      {
-        name: "MRI Pelvis w/o Contrast",
-        status: "Scheduled",
-        date: "2025-05-12",
-      },
-      {
-        name: "MRI Abdomen w/o Contrast",
-        status: "Scheduled",
-        date: "2025-05-12",
-      },
-      {
-        name: "MRI Pelvis w & w/o Contrast",
-        status: "Scheduled",
-        date: "2025-05-12",
-      },
-      {
-        name: "Methyl Detox Profiling",
-        status: "Completed",
-        date: "2025-04-24",
-      },
-      { name: "CT Chest", status: "Completed", date: "2025-04-27" },
-      { name: "CT Cardiac", status: "Completed", date: "2025-04-27" },
-      {
-        name: "Total Body Composition Scan (TBC)",
-        status: "Completed",
-        date: "2025-04-27",
-      },
-      {
-        name: "Coronary Angiogram (CTA)",
-        status: "Completed",
-        date: "2025-04-27",
+        name: 'Function Bloodwork Part 2',
+        status: 'Completed',
+        date: '2025-04-30',
       },
     ],
   },
   {
-    id: "patient-013",
-    name: "Dr Punit Patel",
-    address: "11828 Glenhope Rd, San Diego, CA 92128",
-    dob: "7/9/1989",
-    phone: "(408) 889-3145",
-    email: "patelp07@gmail.com",
+    id: 'patient-012',
+    name: 'Jeffrey Everage',
+    address: '906 Elmview Dr, Encinitas, CA 92024',
+    dob: '5/14/1969',
+    phone: '(619) 254-9571',
+    email: 'Jeff@Tridentproposals.com',
     tests: [
       {
-        name: "Function Bloodwork Part 1",
-        status: "Completed",
-        date: "2025-05-03",
+        name: 'Function Bloodwork Part 1',
+        status: 'Completed',
+        date: '2025-05-03',
       },
       {
-        name: "Function Bloodwork Part 2",
-        status: "Completed",
-        date: "2025-04-30",
+        name: 'Function Bloodwork Part 2',
+        status: 'Completed',
+        date: '2025-04-30',
       },
       {
-        name: "MRI Brain w/o Contrast",
-        status: "Scheduled",
-        date: "2025-05-15",
+        name: 'Function Bloodwork Follow-Up',
+        status: 'Scheduled',
+        date: '2025-05-12',
       },
       {
-        name: "MRI Pelvis w/o Contrast",
-        status: "Scheduled",
-        date: "2025-05-12",
+        name: 'MRI Brain w/o Contrast',
+        status: 'Scheduled',
+        date: '2025-05-15',
       },
       {
-        name: "MRI Abdomen w/o Contrast",
-        status: "Scheduled",
-        date: "2025-05-12",
+        name: 'MRI Pelvis w/o Contrast',
+        status: 'Scheduled',
+        date: '2025-05-12',
       },
-      { name: "CT Cardiac", status: "Completed", date: "2025-04-27" },
       {
-        name: "Total Body Composition Scan (TBC)",
-        status: "Completed",
-        date: "2025-04-27",
+        name: 'MRI Abdomen w/o Contrast',
+        status: 'Scheduled',
+        date: '2025-05-12',
       },
-      { name: "Grail Test", status: "Completed", date: "2025-04-27" },
+      {
+        name: 'MRI Pelvis w & w/o Contrast',
+        status: 'Scheduled',
+        date: '2025-05-12',
+      },
+      {
+        name: 'Methyl Detox Profiling',
+        status: 'Completed',
+        date: '2025-04-24',
+      },
+      { name: 'CT Chest', status: 'Completed', date: '2025-04-27' },
+      { name: 'CT Cardiac', status: 'Completed', date: '2025-04-27' },
+      {
+        name: 'Total Body Composition Scan (TBC)',
+        status: 'Completed',
+        date: '2025-04-27',
+      },
+      {
+        name: 'Coronary Angiogram (CTA)',
+        status: 'Completed',
+        date: '2025-04-27',
+      },
     ],
   },
   {
-    id: "patient-014",
-    name: "Gabriel Briones",
-    address: "527 Grimsby Ave, Henderson, NV 89014",
-    dob: "7/3/1990",
-    phone: "(559) 362-7034",
-    email: "gabrielbriones1990@gmail.com",
+    id: 'patient-013',
+    name: 'Dr Punit Patel',
+    address: '11828 Glenhope Rd, San Diego, CA 92128',
+    dob: '7/9/1989',
+    phone: '(408) 889-3145',
+    email: 'patelp07@gmail.com',
     tests: [
       {
-        name: "Function Bloodwork Part 1",
-        status: "Completed",
-        date: "2025-05-03",
+        name: 'Function Bloodwork Part 1',
+        status: 'Completed',
+        date: '2025-05-03',
       },
       {
-        name: "Function Bloodwork Part 2",
-        status: "Completed",
-        date: "2025-04-30",
+        name: 'Function Bloodwork Part 2',
+        status: 'Completed',
+        date: '2025-04-30',
       },
       {
-        name: "Methyl Detox Profiling",
-        status: "Completed",
-        date: "2025-04-29",
+        name: 'MRI Brain w/o Contrast',
+        status: 'Scheduled',
+        date: '2025-05-15',
       },
       {
-        name: "MRI Brain w/o Contrast",
-        status: "Scheduled",
-        date: "2025-05-12",
+        name: 'MRI Pelvis w/o Contrast',
+        status: 'Scheduled',
+        date: '2025-05-12',
+      },
+      {
+        name: 'MRI Abdomen w/o Contrast',
+        status: 'Scheduled',
+        date: '2025-05-12',
+      },
+      { name: 'CT Cardiac', status: 'Completed', date: '2025-04-27' },
+      {
+        name: 'Total Body Composition Scan (TBC)',
+        status: 'Completed',
+        date: '2025-04-27',
+      },
+      { name: 'Grail Test', status: 'Completed', date: '2025-04-27' },
+    ],
+  },
+  {
+    id: 'patient-014',
+    name: 'Gabriel Briones',
+    address: '527 Grimsby Ave, Henderson, NV 89014',
+    dob: '7/3/1990',
+    phone: '(559) 362-7034',
+    email: 'gabrielbriones1990@gmail.com',
+    tests: [
+      {
+        name: 'Function Bloodwork Part 1',
+        status: 'Completed',
+        date: '2025-05-03',
+      },
+      {
+        name: 'Function Bloodwork Part 2',
+        status: 'Completed',
+        date: '2025-04-30',
+      },
+      {
+        name: 'Methyl Detox Profiling',
+        status: 'Completed',
+        date: '2025-04-29',
+      },
+      {
+        name: 'MRI Brain w/o Contrast',
+        status: 'Scheduled',
+        date: '2025-05-12',
       },
 
       {
-        name: "MRI Pelvis w/o Contrast",
-        status: "Scheduled",
-        date: "2025-05-12",
+        name: 'MRI Pelvis w/o Contrast',
+        status: 'Scheduled',
+        date: '2025-05-12',
       },
       {
-        name: "MRI Abdomen w/o Contrast",
-        status: "Scheduled",
-        date: "2025-05-12",
+        name: 'MRI Abdomen w/o Contrast',
+        status: 'Scheduled',
+        date: '2025-05-12',
       },
-      { name: "CT Chest", status: "Completed", date: "2025-04-27" },
-      { name: "CT Cardiac", status: "Completed", date: "2025-04-27" },
-      { name: "Calcium Score", status: "Completed", date: "2025-04-25" },
+      { name: 'CT Chest', status: 'Completed', date: '2025-04-27' },
+      { name: 'CT Cardiac', status: 'Completed', date: '2025-04-27' },
+      { name: 'Calcium Score', status: 'Completed', date: '2025-04-25' },
       {
-        name: "Total Body Composition Scan (TBC)",
-        status: "Completed",
-        date: "2025-04-27",
+        name: 'Total Body Composition Scan (TBC)',
+        status: 'Completed',
+        date: '2025-04-27',
       },
       {
-        name: "Grail Test",
-        status: "Completed",
-        date: "2025-04-22",
+        name: 'Grail Test',
+        status: 'Completed',
+        date: '2025-04-22',
       },
-      { name: "VO2 Max Testing", status: "Scheduled", date: "2025-05-10" },
+      { name: 'VO2 Max Testing', status: 'Scheduled', date: '2025-05-10' },
     ],
   },
   {
-    id: "patient-015",
-    name: "Randall Grizzle",
-    address: "2364 S Grinberg Pl Boise, ID 83642",
-    dob: "9/1/1978",
-    phone: "(208) 440-3231",
-    email: "randall@closersecrets.com",
+    id: 'patient-015',
+    name: 'Randall Grizzle',
+    address: '2364 S Grinberg Pl Boise, ID 83642',
+    dob: '9/1/1978',
+    phone: '(208) 440-3231',
+    email: 'randall@closersecrets.com',
     tests: [
       {
-        name: "Function Bloodwork Part 1",
-        status: "Completed",
-        date: "2025-05-03",
+        name: 'Function Bloodwork Part 1',
+        status: 'Completed',
+        date: '2025-05-03',
       },
       {
-        name: "Function Bloodwork Part 2",
-        status: "Completed",
-        date: "2025-04-30",
+        name: 'Function Bloodwork Part 2',
+        status: 'Completed',
+        date: '2025-04-30',
       },
       {
-        name: "MRI Brain w/o Contrast",
-        status: "Scheduled",
-        date: "2025-05-12",
+        name: 'MRI Brain w/o Contrast',
+        status: 'Scheduled',
+        date: '2025-05-12',
       },
 
       {
-        name: "MRI Pelvis w/o Contrast",
-        status: "Scheduled",
-        date: "2025-05-12",
+        name: 'MRI Pelvis w/o Contrast',
+        status: 'Scheduled',
+        date: '2025-05-12',
       },
       {
-        name: "MRI Abdomen w/o Contrast",
-        status: "Scheduled",
-        date: "2025-05-12",
+        name: 'MRI Abdomen w/o Contrast',
+        status: 'Scheduled',
+        date: '2025-05-12',
       },
-      { name: "CT Chest", status: "Completed", date: "2025-04-27" },
-      { name: "Calcium Score", status: "Completed", date: "2025-04-25" },
+      { name: 'CT Chest', status: 'Completed', date: '2025-04-27' },
+      { name: 'Calcium Score', status: 'Completed', date: '2025-04-25' },
       {
-        name: "Total Body Composition Scan (TBC)",
-        status: "Completed",
-        date: "2025-04-27",
+        name: 'Total Body Composition Scan (TBC)',
+        status: 'Completed',
+        date: '2025-04-27',
       },
       {
-        name: "Grail Test",
-        status: "Completed",
-        date: "2025-04-22",
+        name: 'Grail Test',
+        status: 'Completed',
+        date: '2025-04-22',
       },
-      { name: "VO2 Max Testing", status: "Scheduled", date: "2025-05-10" },
+      { name: 'VO2 Max Testing', status: 'Scheduled', date: '2025-05-10' },
     ],
   },
   {
-    id: "patient-016",
-    name: "Taremeredzwa Mutepfa",
-    address: "1222 NW 18th Ave Apt 519 Portland, OR 97209",
-    dob: "8/16/1987",
-    phone: "(503) 867-5472",
-    email: "tare@raramastrong.com",
+    id: 'patient-016',
+    name: 'Taremeredzwa Mutepfa',
+    address: '1222 NW 18th Ave Apt 519 Portland, OR 97209',
+    dob: '8/16/1987',
+    phone: '(503) 867-5472',
+    email: 'tare@raramastrong.com',
     tests: [
       {
-        name: "Function Bloodwork Part 1",
-        status: "Completed",
-        date: "2025-05-03",
+        name: 'Function Bloodwork Part 1',
+        status: 'Completed',
+        date: '2025-05-03',
       },
       {
-        name: "Function Bloodwork Part 2",
-        status: "Completed",
-        date: "2025-04-30",
+        name: 'Function Bloodwork Part 2',
+        status: 'Completed',
+        date: '2025-04-30',
       },
       {
-        name: "Total Body Composition Scan (TBC)",
-        status: "Completed",
-        date: "2025-04-27",
+        name: 'Total Body Composition Scan (TBC)',
+        status: 'Completed',
+        date: '2025-04-27',
       },
-      { name: "VO2 Max Testing", status: "Scheduled", date: "2025-05-10" },
+      { name: 'VO2 Max Testing', status: 'Scheduled', date: '2025-05-10' },
     ],
   },
   {
-    id: "patient-017",
-    name: "Deborah Marie Burris",
-    address: "2724 E Preston St Mesa, AZ 85213",
-    dob: "6/30/1967",
-    phone: "(480) 203-3246",
-    email: "dburris@me.com",
+    id: 'patient-017',
+    name: 'Deborah Marie Burris',
+    address: '2724 E Preston St Mesa, AZ 85213',
+    dob: '6/30/1967',
+    phone: '(480) 203-3246',
+    email: 'dburris@me.com',
     tests: [
       {
-        name: "Function Bloodwork Part 1",
-        status: "Completed",
-        date: "2025-05-03",
+        name: 'Function Bloodwork Part 1',
+        status: 'Completed',
+        date: '2025-05-03',
       },
       {
-        name: "Function Bloodwork Part 2",
-        status: "Completed",
-        date: "2025-04-30",
+        name: 'Function Bloodwork Part 2',
+        status: 'Completed',
+        date: '2025-04-30',
       },
       {
-        name: "Methyl Detox Profiling",
-        status: "Completed",
-        date: "2025-04-29",
+        name: 'Methyl Detox Profiling',
+        status: 'Completed',
+        date: '2025-04-29',
       },
       {
-        name: "MRI Brain w/o Contrast",
-        status: "Scheduled",
-        date: "2025-05-12",
+        name: 'MRI Brain w/o Contrast',
+        status: 'Scheduled',
+        date: '2025-05-12',
       },
 
       {
-        name: "MRI Pelvis w/o Contrast",
-        status: "Scheduled",
-        date: "2025-05-12",
+        name: 'MRI Pelvis w/o Contrast',
+        status: 'Scheduled',
+        date: '2025-05-12',
       },
       {
-        name: "MRI Abdomen w/o Contrast",
-        status: "Scheduled",
-        date: "2025-05-12",
+        name: 'MRI Abdomen w/o Contrast',
+        status: 'Scheduled',
+        date: '2025-05-12',
       },
       {
-        name: "MRI Pelvis w & w/o Contrast",
-        status: "Scheduled",
-        date: "2025-05-10",
+        name: 'MRI Pelvis w & w/o Contrast',
+        status: 'Scheduled',
+        date: '2025-05-10',
       },
-      { name: "CT Chest", status: "Completed", date: "2025-04-27" },
-      { name: "Calcium Score", status: "Completed", date: "2025-04-25" },
+      { name: 'CT Chest', status: 'Completed', date: '2025-04-27' },
+      { name: 'Calcium Score', status: 'Completed', date: '2025-04-25' },
       {
-        name: "Total Body Composition Scan (TBC)",
-        status: "Completed",
-        date: "2025-04-27",
+        name: 'Total Body Composition Scan (TBC)',
+        status: 'Completed',
+        date: '2025-04-27',
       },
       {
-        name: "Grail Test",
-        status: "Completed",
-        date: "2025-04-22",
+        name: 'Grail Test',
+        status: 'Completed',
+        date: '2025-04-22',
       },
-      { name: "VO2 Max Testing", status: "Scheduled", date: "2025-05-10" },
-      { name: "RMR", status: "Completed", date: "2025-04-27" },
+      { name: 'VO2 Max Testing', status: 'Scheduled', date: '2025-05-10' },
+      { name: 'RMR', status: 'Completed', date: '2025-04-27' },
     ],
   },
   {
-    id: "patient-018",
-    name: "Rohan Sheth",
-    address: "2650 143A St Surrey, BC V4P 1R6 Canada",
-    dob: "5/9/1989",
-    phone: "(778) 891-4145",
-    email: "rohan@growrev.com",
+    id: 'patient-018',
+    name: 'Rohan Sheth',
+    address: '2650 143A St Surrey, BC V4P 1R6 Canada',
+    dob: '5/9/1989',
+    phone: '(778) 891-4145',
+    email: 'rohan@growrev.com',
     tests: [
-      { name: "VO2 Max Testing", status: "Scheduled", date: "2025-05-10" },
+      { name: 'VO2 Max Testing', status: 'Scheduled', date: '2025-05-10' },
     ],
   },
   {
-    id: "patient-019",
-    name: "Paul Melville",
-    address: "12152 Creek Preserve Dr Riverview, FL 33579",
-    dob: "3/14/1972",
-    phone: "(813) 938-0227",
-    email: "gci.melville@gmail.com",
+    id: 'patient-019',
+    name: 'Paul Melville',
+    address: '12152 Creek Preserve Dr Riverview, FL 33579',
+    dob: '3/14/1972',
+    phone: '(813) 938-0227',
+    email: 'gci.melville@gmail.com',
     tests: [
       {
-        name: "Function Bloodwork Part 1",
-        status: "Completed",
-        date: "2025-05-03",
+        name: 'Function Bloodwork Part 1',
+        status: 'Completed',
+        date: '2025-05-03',
       },
       {
-        name: "Function Bloodwork Part 2",
-        status: "Completed",
-        date: "2025-04-30",
+        name: 'Function Bloodwork Part 2',
+        status: 'Completed',
+        date: '2025-04-30',
       },
-      { name: "Grail Test", status: "Scheduled", date: "2025-05-15" },
+      { name: 'Grail Test', status: 'Scheduled', date: '2025-05-15' },
       {
         name: "Men's Health Lab Panel",
-        status: "Scheduled",
-        date: "2025-05-15",
+        status: 'Scheduled',
+        date: '2025-05-15',
       },
     ],
   },
   {
-    id: "patient-020",
-    name: "Rohit Sheth",
-    address: "",
-    dob: "",
-    phone: "(778) 223-5874",
-    email: "",
+    id: 'patient-020',
+    name: 'Rohit Sheth',
+    address: '',
+    dob: '',
+    phone: '(778) 223-5874',
+    email: '',
     tests: [
-      { name: "VO2 Max Testing", status: "Scheduled", date: "2025-05-10" },
+      { name: 'VO2 Max Testing', status: 'Scheduled', date: '2025-05-10' },
     ],
   },
-];
+]
 
 // Test categories mapping
 const testCategories = {
-  "Inside Tracker": "Bloodwork",
-  "Bloodwork Function": "Bloodwork",
-  "Bloodwork Part 1": "Bloodwork",
-  "Bloodwork Part 2": "Bloodwork",
-  "Bloodwork Follow-Up": "Bloodwork",
-  "Methyl Detox Profiling": "Genetics",
-  "MRI Brain w/o Contrast": "Radiology",
-  "MRI Pelvis w/o Contrast": "Radiology",
-  "MRI Abdomen w/o Contrast": "Radiology",
-  "MRI Pelvis w & w/o Contrast": "Radiology",
-  "MRI Abdomen w & w/o Contrast": "Radiology",
-  "MRI Lumbar w/o Contrast": "Radiology",
-  "MRI Thoracic w/o Contrast": "Radiology",
-  "CT Chest": "Radiology",
-  "CT Cardiac": "Radiology",
-  "CT Abdomen and Pelvis": "Radiology",
-  "Calcium Score": "Cardiology",
-  "Total Body Composition Scan (TBC)": "Fitness",
-  "Grail Test": "Oncology",
-  "VO2 Max Testing": "Fitness",
-  RMR: "Fitness",
-  "Coronary Angiogram (CTA)": "Cardiology",
-  "2D Echo": "Cardiology",
-  "Men's Health Lab Panel": "Bloodwork",
-};
+  'Inside Tracker': 'Bloodwork',
+  'Bloodwork Function': 'Bloodwork',
+  'Bloodwork Part 1': 'Bloodwork',
+  'Bloodwork Part 2': 'Bloodwork',
+  'Bloodwork Follow-Up': 'Bloodwork',
+  'Methyl Detox Profiling': 'Genetics',
+  'MRI Brain w/o Contrast': 'Radiology',
+  'MRI Pelvis w/o Contrast': 'Radiology',
+  'MRI Abdomen w/o Contrast': 'Radiology',
+  'MRI Pelvis w & w/o Contrast': 'Radiology',
+  'MRI Abdomen w & w/o Contrast': 'Radiology',
+  'MRI Lumbar w/o Contrast': 'Radiology',
+  'MRI Thoracic w/o Contrast': 'Radiology',
+  'CT Chest': 'Radiology',
+  'CT Cardiac': 'Radiology',
+  'CT Abdomen and Pelvis': 'Radiology',
+  'Calcium Score': 'Cardiology',
+  'Total Body Composition Scan (TBC)': 'Fitness',
+  'Grail Test': 'Oncology',
+  'VO2 Max Testing': 'Fitness',
+  RMR: 'Fitness',
+  'Coronary Angiogram (CTA)': 'Cardiology',
+  '2D Echo': 'Cardiology',
+  "Men's Health Lab Panel": 'Bloodwork',
+}
 
 export function PatientSection() {
   const [expandedPatientId, setExpandedPatientId] = useState<string | null>(
-    null
-  );
-  const [activeFilter, setActiveFilter] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
+    null,
+  )
+  const [activeFilter, setActiveFilter] = useState('all')
+  const [searchQuery, setSearchQuery] = useState('')
 
   const toggleExpand = (id: string) => {
     if (expandedPatientId === id) {
-      setExpandedPatientId(null);
+      setExpandedPatientId(null)
     } else {
-      setExpandedPatientId(id);
+      setExpandedPatientId(id)
     }
-  };
+  }
 
   const filteredPatients = patients.filter((patient) => {
     // Filter by search query
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
+      const query = searchQuery.toLowerCase()
       return (
         patient.name.toLowerCase().includes(query) ||
         patient.email.toLowerCase().includes(query) ||
         patient.tests.some((test) => test.name.toLowerCase().includes(query))
-      );
+      )
     }
 
     // Filter by test category
-    if (activeFilter !== "all") {
+    if (activeFilter !== 'all') {
       return patient.tests.some(
         (test) =>
           testCategories[
             test.name as keyof typeof testCategories
-          ]?.toLowerCase() === activeFilter.toLowerCase()
-      );
+          ]?.toLowerCase() === activeFilter.toLowerCase(),
+      )
     }
 
-    return true;
-  });
+    return true
+  })
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case "completed":
-        return "bg-green-100 text-green-800";
-      case "scheduled":
-        return "bg-blue-100 text-blue-800";
-      case "pending":
-        return "bg-yellow-100 text-yellow-800";
+      case 'completed':
+        return 'bg-green-100 text-green-800'
+      case 'scheduled':
+        return 'bg-blue-100 text-blue-800'
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800'
       default:
-        return "bg-gray-100 text-gray-800";
+        return 'bg-gray-100 text-gray-800'
     }
-  };
+  }
 
   // Function to render a single patient card
   const renderPatientCard = (patient: any) => {
-    const isExpanded = expandedPatientId === patient.id;
+    const isExpanded = expandedPatientId === patient.id
     const completedTests = patient.tests.filter(
-      (test: any) => test.status.toLowerCase() === "completed"
-    ).length;
+      (test: any) => test.status.toLowerCase() === 'completed',
+    ).length
     const scheduledTests = patient.tests.filter(
-      (test: any) => test.status.toLowerCase() === "scheduled"
-    ).length;
+      (test: any) => test.status.toLowerCase() === 'scheduled',
+    ).length
 
     return (
       <div key={patient.id} className="mb-6">
         <Card
           className={`overflow-hidden transition-all duration-300 hover:shadow-md ${
-            isExpanded ? "border-blue-200" : ""
+            isExpanded ? 'border-blue-200' : ''
           }`}
         >
           <CardContent className="p-0">
-            <div className={`p-5 ${isExpanded ? "bg-blue-50" : "bg-white"}`}>
+            <div className={`p-5 ${isExpanded ? 'bg-blue-50' : 'bg-white'}`}>
               <div className="flex justify-between items-start mb-3">
                 <div>
                   <h3 className="font-semibold text-lg text-black">
@@ -887,7 +887,7 @@ export function PatientSection() {
                     const category =
                       testCategories[
                         test.name as keyof typeof testCategories
-                      ] || "Other";
+                      ] || 'Other'
                     return (
                       <div
                         key={index}
@@ -907,7 +907,7 @@ export function PatientSection() {
                           </Badge>
                         </div>
                       </div>
-                    );
+                    )
                   })}
                 </div>
                 <div className="mt-4 flex justify-end">
@@ -923,8 +923,8 @@ export function PatientSection() {
           </CardContent>
         </Card>
       </div>
-    );
-  };
+    )
+  }
 
   return (
     <div className="px-4 py-6 md:px-6 lg:px-8">
@@ -1013,7 +1013,7 @@ export function PatientSection() {
               Math.max(
                 filteredPatients.filter((_, i) => i % 3 === 0).length * 250,
                 filteredPatients.filter((_, i) => i % 3 === 1).length * 250,
-                filteredPatients.filter((_, i) => i % 3 === 2).length * 250
+                filteredPatients.filter((_, i) => i % 3 === 2).length * 250,
               ) + (expandedPatientId ? 300 : 0),
           }}
         />
@@ -1028,10 +1028,10 @@ export function PatientSection() {
           <p className="text-gray-500 max-w-md mx-auto">
             {searchQuery
               ? `No patients match your search for "${searchQuery}". Try a different search term.`
-              : "No patients found for the selected filter."}
+              : 'No patients found for the selected filter.'}
           </p>
         </div>
       )}
     </div>
-  );
+  )
 }

@@ -1,6 +1,6 @@
-"use client";
+'use client'
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from 'react'
 import {
   Search,
   ChevronDown,
@@ -13,130 +13,130 @@ import {
   Clock,
   Building,
   Printer,
-} from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { rtdb } from "@/utils/firebase";
-import { onValue, ref } from "firebase/database";
+} from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { rtdb } from '@/utils/firebase'
+import { onValue, ref } from 'firebase/database'
 
 // Google Maps component
 const GoogleMap = ({ address }: { address: string }) => {
-  const mapRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     // Load Google Maps API script
     const loadGoogleMapsScript = () => {
-      const script = document.createElement("script");
-      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyDMzgrrBr5x1-dZO6-7zFcq_AbhkdsoffM&libraries=places`;
-      script.async = true;
-      script.defer = true;
-      script.onload = initMap;
-      document.head.appendChild(script);
-    };
+      const script = document.createElement('script')
+      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyDMzgrrBr5x1-dZO6-7zFcq_AbhkdsoffM&libraries=places`
+      script.async = true
+      script.defer = true
+      script.onload = initMap
+      document.head.appendChild(script)
+    }
 
     // Initialize map
     const initMap = () => {
-      if (!window.google || !mapRef.current) return;
+      if (!window.google || !mapRef.current) return
 
-      const geocoder = new window.google.maps.Geocoder();
+      const geocoder = new window.google.maps.Geocoder()
       geocoder.geocode(
         { address } as google.maps.GeocoderRequest,
         (
           results: google.maps.GeocoderResult[] | null,
-          status: google.maps.GeocoderStatus
+          status: google.maps.GeocoderStatus,
         ) => {
-          if (status === "OK" && results && results[0]) {
+          if (status === 'OK' && results && results[0]) {
             const map = new window.google.maps.Map(
               mapRef.current as HTMLElement,
               {
                 center: results[0].geometry.location,
                 zoom: 15,
-              }
-            );
+              },
+            )
 
             new window.google.maps.Marker({
               map,
               position: results[0].geometry.location,
-            });
+            })
           }
-        }
-      );
-    };
+        },
+      )
+    }
 
     // Check if Google Maps API is already loaded
     if (window.google && window.google.maps) {
-      initMap();
+      initMap()
     } else {
-      loadGoogleMapsScript();
+      loadGoogleMapsScript()
     }
 
-    return () => {};
-  }, [address]);
+    return () => {}
+  }, [address])
 
   return (
     <div className="mt-4 rounded-lg overflow-hidden border border-gray-200">
-      <div ref={mapRef} style={{ width: "100%", height: "300px" }}></div>
+      <div ref={mapRef} style={{ width: '100%', height: '300px' }}></div>
     </div>
-  );
-};
+  )
+}
 
 export function LabsSection() {
-  const [diagnosticCenters, setDiagnosticCenters] = useState<any[]>([]);
-  const [expandedCenterId, setExpandedCenterId] = useState<string | null>(null);
-  const [activeFilter, setActiveFilter] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [loading, setLoading] = useState(false); // new
+  const [diagnosticCenters, setDiagnosticCenters] = useState<any[]>([])
+  const [expandedCenterId, setExpandedCenterId] = useState<string | null>(null)
+  const [activeFilter, setActiveFilter] = useState('all')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [loading, setLoading] = useState(false) // new
 
   const toggleExpand = (id: string) => {
     if (expandedCenterId === id) {
-      setExpandedCenterId(null);
+      setExpandedCenterId(null)
     } else {
-      setExpandedCenterId(id);
+      setExpandedCenterId(id)
     }
-  };
+  }
 
   useEffect(() => {
-    setLoading(true);
-    const centersRef = ref(rtdb, "diagnosticCenters");
+    setLoading(true)
+    const centersRef = ref(rtdb, 'diagnosticCenters')
     const unsubscribe = onValue(centersRef, (snapshot) => {
-      const data = snapshot.val();
+      const data = snapshot.val()
       if (data) {
-        const centersArray = Object.values(data);
-        setDiagnosticCenters(centersArray);
+        const centersArray = Object.values(data)
+        setDiagnosticCenters(centersArray)
       }
-      setLoading(false); // data loaded, stop loading
-    });
+      setLoading(false) // data loaded, stop loading
+    })
 
-    return () => unsubscribe();
-  }, []);
+    return () => unsubscribe()
+  }, [])
 
   const filteredCenters = diagnosticCenters.filter((center) => {
     // Filter by search query
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
+      const query = searchQuery.toLowerCase()
       return (
         center.name.toLowerCase().includes(query) ||
         center.address.toLowerCase().includes(query) ||
         center.category.toLowerCase().includes(query) ||
         center.diagnostics.toLowerCase().includes(query)
-      );
+      )
     }
 
     // Filter by diagnostic category
-    if (activeFilter !== "all") {
+    if (activeFilter !== 'all') {
       return center.diagnostics
         .toLowerCase()
-        .includes(activeFilter.toLowerCase());
+        .includes(activeFilter.toLowerCase())
     }
 
-    return true;
-  });
+    return true
+  })
 
   // Function to render a single diagnostic center card
   const renderCenterCard = (center: any, index: number) => {
-    const isExpanded = expandedCenterId === center.id;
+    const isExpanded = expandedCenterId === center.id
 
     if (loading) {
       return (
@@ -145,17 +145,17 @@ export function LabsSection() {
             Loading centers...
           </p>
         </div>
-      );
+      )
     }
     return (
       <div key={index} className="mb-6">
         <Card
           className={`overflow-hidden transition-all duration-300 hover:shadow-md ${
-            isExpanded ? "border-blue-200" : ""
+            isExpanded ? 'border-blue-200' : ''
           }`}
         >
           <CardContent className="p-0">
-            <div className={`p-5 ${isExpanded ? "bg-blue-50" : "bg-white"}`}>
+            <div className={`p-5 ${isExpanded ? 'bg-blue-50' : 'bg-white'}`}>
               <div className="flex justify-between items-start mb-3">
                 <div>
                   <h3 className="font-semibold text-lg text-black ">
@@ -179,13 +179,13 @@ export function LabsSection() {
                 <div className="flex items-center text-sm text-gray-600">
                   <Mail className="h-4 w-4 mr-2 text-gray-400" />
                   <span className="truncate">
-                    {center.email !== "N/A" ? center.email : "Not available"}
+                    {center.email !== 'N/A' ? center.email : 'Not available'}
                   </span>
                 </div>
                 <div className="flex items-center text-sm text-gray-600">
                   <Printer className="h-4 w-4 mr-2 text-gray-400" />
                   <span>
-                    {center.fax !== "N/A" ? center.fax : "Not available"}
+                    {center.fax !== 'N/A' ? center.fax : 'Not available'}
                   </span>
                 </div>
                 <div className="flex items-center text-sm text-gray-600">
@@ -263,7 +263,7 @@ export function LabsSection() {
                       {center.operatingHours}
                     </div>
                   </div>
-                  {center.fax !== "N/A" && (
+                  {center.fax !== 'N/A' && (
                     <div className="flex justify-between items-center py-2 border-b border-gray-100">
                       <div className="font-medium text-sm text-black">Fax</div>
                       <div className="text-sm text-gray-700">{center.fax}</div>
@@ -283,8 +283,8 @@ export function LabsSection() {
           </CardContent>
         </Card>
       </div>
-    );
-  };
+    )
+  }
 
   return (
     <>
@@ -355,7 +355,7 @@ export function LabsSection() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* All cards in a single responsive grid */}
             {filteredCenters.map((center, index) =>
-              renderCenterCard(center, index)
+              renderCenterCard(center, index),
             )}
           </div>
 
@@ -370,12 +370,12 @@ export function LabsSection() {
               <p className="text-gray-500 max-w-md mx-auto">
                 {searchQuery
                   ? `No centers match your search for "${searchQuery}". Try a different search term.`
-                  : "No diagnostic centers found for the selected filter."}
+                  : 'No diagnostic centers found for the selected filter.'}
               </p>
             </div>
           )}
         </div>
       )}
     </>
-  );
+  )
 }

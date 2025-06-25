@@ -1,21 +1,21 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Circle, CheckCircle, Clock, ArrowLeft, ThumbsUp } from "lucide-react";
-import { YouTubePlayer } from "./ytPlayer";
+import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Circle, CheckCircle, Clock, ArrowLeft, ThumbsUp } from 'lucide-react'
+import { YouTubePlayer } from './ytPlayer'
 
 interface VideoPlayerViewProps {
-  programId: string;
-  moduleId: string;
-  videoId: string;
-  programData: any; // 🟡 Real dynamic data
-  onBack: () => void;
+  programId: string
+  moduleId: string
+  videoId: string
+  programData: any // 🟡 Real dynamic data
+  onBack: () => void
   completedVideos: any
-  onMarkComplete: (videoId: string, moduleId: string) => void;
-  moduleProgress: Record<string, number>;
-  moduleTitle : any;
-  videoTitle  : any;
+  onMarkComplete: (videoId: string, moduleId: string) => void
+  moduleProgress: Record<string, number>
+  moduleTitle: any
+  videoTitle: any
 }
 
 export function VideoPlayerView({
@@ -30,48 +30,45 @@ export function VideoPlayerView({
   onMarkComplete,
   moduleProgress,
 }: VideoPlayerViewProps) {
-  const [currentVideoId, setCurrentVideoId] = useState(videoId);
-  const [videoProgress, setVideoProgress] = useState(0);
-  const [comments, setComments] = useState<any[]>([]);
-
+  const [currentVideoId, setCurrentVideoId] = useState(videoId)
+  const [videoProgress, setVideoProgress] = useState(0)
+  const [comments, setComments] = useState<any[]>([])
 
   // console.log( "programId",  programId , "moduleId" , moduleId, "videoId" , videoId, "video-title" ,videoTitle  ,"module-title", moduleTitle)
   // Update current video when videoId changes
   useEffect(() => {
-    setCurrentVideoId(videoId);
-  }, [videoId]);
-  
-  
+    setCurrentVideoId(videoId)
+  }, [videoId])
+
   // Get module and video data from programData
-  const moduleData = programData.modules[moduleId];
-  
-  const moduleVideos = Object.values(moduleData?.videos || {});
-  const currentVideo : any =
-    moduleVideos.find((v: any) => v.id === currentVideoId) || moduleVideos[0];
-  const currentYoutubeId = currentVideo.youtubeId;
+  const moduleData = programData.modules[moduleId]
+
+  const moduleVideos = Object.values(moduleData?.videos || {})
+  const currentVideo: any =
+    moduleVideos.find((v: any) => v.id === currentVideoId) || moduleVideos[0]
+  const currentYoutubeId = currentVideo.youtubeId
   const currentLessonNumber =
-    moduleVideos.findIndex((v: any) => v.id === currentVideoId) + 1;
+    moduleVideos.findIndex((v: any) => v.id === currentVideoId) + 1
 
   const handleVideoSelect = (id: string) => {
-    setCurrentVideoId(id);
-  };
+    setCurrentVideoId(id)
+  }
 
   const handleVideoComplete = () => {
-    onMarkComplete(currentVideoId, moduleId);
-  };
+    onMarkComplete(currentVideoId, moduleId)
+  }
 
   const handleMarkComplete = () => {
-    onMarkComplete(currentVideoId, moduleId);
-  };
+    onMarkComplete(currentVideoId, moduleId)
+  }
 
   const handleVideoProgressUpdate = (progress: number) => {
-    setVideoProgress(progress);
+    setVideoProgress(progress)
 
     if (progress > 95 && !completedVideos[currentVideoId]) {
-      handleVideoComplete();
+      handleVideoComplete()
     }
-  };
-
+  }
 
   return (
     <div className="min-h-screen">
@@ -85,27 +82,35 @@ export function VideoPlayerView({
           <ArrowLeft className="h-5 w-5 text-gray-600" />
         </Button>
         <div>
-          <h1 className="text-lg font-bold text-gray-900">{moduleData.title}</h1>
+          <h1 className="text-lg font-bold text-gray-900">
+            {moduleData.title}
+          </h1>
           <div className="text-sm text-gray-500">
-            Stage {currentLessonNumber} • {currentVideo?.title || ""}
+            Stage {currentLessonNumber} • {currentVideo?.title || ''}
           </div>
         </div>
         <div className="ml-auto px-8">
-         <Button
-  onClick={handleMarkComplete}
-  disabled={!!completedVideos?.[programId]?.[moduleId]?.includes(currentVideoId)}
-  className={`rounded-full px-4 py-2 text-sm ${
-    !!completedVideos?.[programId]?.[moduleId]?.includes(currentVideoId)
-      ? "bg-green-500 hover:bg-green-600 text-white"
-      : "bg-blue-500 hover:bg-blue-600 text-white"
-  }`}
->
-  {!!completedVideos?.[programId]?.[moduleId]?.includes(currentVideoId)
-    ? "Completed"
-    : "Mark Complete"}
-</Button>
-
-
+          <Button
+            onClick={handleMarkComplete}
+            disabled={
+              !!completedVideos?.[programId]?.[moduleId]?.includes(
+                currentVideoId,
+              )
+            }
+            className={`rounded-full px-4 py-2 text-sm ${
+              !!completedVideos?.[programId]?.[moduleId]?.includes(
+                currentVideoId,
+              )
+                ? 'bg-green-500 hover:bg-green-600 text-white'
+                : 'bg-blue-500 hover:bg-blue-600 text-white'
+            }`}
+          >
+            {!!completedVideos?.[programId]?.[moduleId]?.includes(
+              currentVideoId,
+            )
+              ? 'Completed'
+              : 'Mark Complete'}
+          </Button>
         </div>
       </div>
 
@@ -128,19 +133,19 @@ export function VideoPlayerView({
                     key={video.id}
                     className={`flex items-center p-4 cursor-pointer ${
                       currentVideoId === video.id
-                        ? "bg-blue-50"
-                        : "hover:bg-gray-50"
+                        ? 'bg-blue-50'
+                        : 'hover:bg-gray-50'
                     }`}
                     onClick={() => handleVideoSelect(video.id)}
                   >
                     <div className="flex items-center gap-3">
-                      {
-                      !!completedVideos?.[programId]?.[moduleId]?.includes(video.id) ? (
+                      {!!completedVideos?.[programId]?.[moduleId]?.includes(
+                        video.id,
+                      ) ? (
                         <CheckCircle className="h-5 w-5 text-green-500" />
                       ) : (
                         <Circle className="h-5 w-5 text-gray-300" />
-                      )
-                    }
+                      )}
                       <div>
                         <div className="text-sm font-medium text-gray-900">
                           {video.title}
@@ -179,7 +184,7 @@ export function VideoPlayerView({
                   About This Lesson
                 </h3>
                 <p className="text-gray-700 mb-6">
-                  In this lesson, you will learn about{" "}
+                  In this lesson, you will learn about{' '}
                   {currentVideo.title.toLowerCase()}. This is an important
                   concept that will help you understand the overall framework
                   and approach to health optimization.
@@ -222,41 +227,40 @@ export function VideoPlayerView({
                   </div>
                 </div>
                 {/* ... more comments */}
-              {/* </div> */}
-            {/* </div> */} 
+            {/* </div> */}
+            {/* </div> */}
 
             <div>
               <h2> ToDo's </h2>
               {moduleVideos.map((video: any, index: number) => (
-            <div key={index}>
-              {video?.todo?.length > 0 ? (
-                video.todo.map((item: any, idx: number) => (
-                  <div key={idx}>{item}</div>
-                ))
-              ) : (
-                <div>no todo available</div>
-              )}
-            </div>
-          ))}
-
+                <div key={index}>
+                  {video?.todo?.length > 0 ? (
+                    video.todo.map((item: any, idx: number) => (
+                      <div key={idx}>{item}</div>
+                    ))
+                  ) : (
+                    <div>no todo available</div>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 // Helper function to get stage number from module ID
 function getStageNumber(moduleId: string): number {
   const stageMap: Record<string, number> = {
-    "mission-control": 1,
-    "rapid-success": 2,
-    "may-religion": 3,
-    "june-meaning": 4,
-    "june-alignment": 5,
-    "july-bioenergetics": 6,
-    "august-medicine": 7,
-  };
-  return stageMap[moduleId] || 1;
+    'mission-control': 1,
+    'rapid-success': 2,
+    'may-religion': 3,
+    'june-meaning': 4,
+    'june-alignment': 5,
+    'july-bioenergetics': 6,
+    'august-medicine': 7,
+  }
+  return stageMap[moduleId] || 1
 }

@@ -11,7 +11,8 @@
     "build": "cross-env NODE_OPTIONS=--max-old-space-size=4096 next build",
     "start": "next start",
     "lint": "next lint",
-    "prepare": "echo 'Running with legacy-peer-deps' && npm config set legacy-peer-deps=true"
+    "prepare": "echo 'Running with legacy-peer-deps' && npm config set legacy-peer-deps=true",
+    "format": "prettier \"**/*.{js,jsx,ts,tsx}\" --write"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",

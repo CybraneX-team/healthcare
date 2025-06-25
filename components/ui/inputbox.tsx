@@ -1,14 +1,15 @@
-import * as React from "react"
-import { cn } from "@/lib/utils"
+import * as React from 'react'
+import { cn } from '@/lib/utils'
 
-export interface InputboxProps extends React.InputHTMLAttributes<HTMLInputElement> {
+export interface InputboxProps
+  extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string
 }
 
 const Inputbox = React.forwardRef<HTMLInputElement, InputboxProps>(
   ({ className, label, type, ...props }, ref) => {
     return (
-      <div className={cn("inputbox w-full", className)}>
+      <div className={cn('inputbox w-full', className)}>
         <input
           type={type}
           ref={ref}
@@ -20,9 +21,9 @@ const Inputbox = React.forwardRef<HTMLInputElement, InputboxProps>(
         <i></i>
       </div>
     )
-  }
+  },
 )
 
-Inputbox.displayName = "Inputbox"
+Inputbox.displayName = 'Inputbox'
 
-export { Inputbox } 
+export { Inputbox }

@@ -1,7 +1,7 @@
-"use client";
+'use client'
 
-import { motion } from "framer-motion";
-import { Card, CardContent } from "@/components/ui/card";
+import { motion } from 'framer-motion'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   BarChart,
   Bar,
@@ -10,66 +10,66 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-} from "recharts";
-import { useState } from "react";
-import { TrendingUp, Droplets, Zap, Beef, Target } from "lucide-react";
+} from 'recharts'
+import { useState } from 'react'
+import { TrendingUp, Droplets, Zap, Beef, Target } from 'lucide-react'
 
-const generateWeightData = (period: "weekly" | "monthly" | "yearly") => {
+const generateWeightData = (period: 'weekly' | 'monthly' | 'yearly') => {
   switch (period) {
-    case "weekly":
+    case 'weekly':
       return [
-        { name: "Mon", weight: 71.2, target: 70, date: "Dec 16" },
-        { name: "Tue", weight: 71.0, target: 70, date: "Dec 17" },
-        { name: "Wed", weight: 70.8, target: 70, date: "Dec 18" },
-        { name: "Thu", weight: 70.5, target: 70, date: "Dec 19" },
-        { name: "Fri", weight: 70.3, target: 70, date: "Dec 20" },
-        { name: "Sat", weight: 70.1, target: 70, date: "Dec 21" },
-        { name: "Sun", weight: 69.9, target: 70, date: "Dec 22" },
-      ];
-    case "monthly":
+        { name: 'Mon', weight: 71.2, target: 70, date: 'Dec 16' },
+        { name: 'Tue', weight: 71.0, target: 70, date: 'Dec 17' },
+        { name: 'Wed', weight: 70.8, target: 70, date: 'Dec 18' },
+        { name: 'Thu', weight: 70.5, target: 70, date: 'Dec 19' },
+        { name: 'Fri', weight: 70.3, target: 70, date: 'Dec 20' },
+        { name: 'Sat', weight: 70.1, target: 70, date: 'Dec 21' },
+        { name: 'Sun', weight: 69.9, target: 70, date: 'Dec 22' },
+      ]
+    case 'monthly':
       return [
-        { name: "Week 1", weight: 72.1, target: 70, date: "Nov W1" },
-        { name: "Week 2", weight: 71.5, target: 70, date: "Nov W2" },
-        { name: "Week 3", weight: 70.8, target: 70, date: "Nov W3" },
-        { name: "Week 4", weight: 70.2, target: 70, date: "Nov W4" },
-        { name: "Week 5", weight: 65.9, target: 70, date: "Dec W1" },
-      ];
-    case "yearly":
+        { name: 'Week 1', weight: 72.1, target: 70, date: 'Nov W1' },
+        { name: 'Week 2', weight: 71.5, target: 70, date: 'Nov W2' },
+        { name: 'Week 3', weight: 70.8, target: 70, date: 'Nov W3' },
+        { name: 'Week 4', weight: 70.2, target: 70, date: 'Nov W4' },
+        { name: 'Week 5', weight: 65.9, target: 70, date: 'Dec W1' },
+      ]
+    case 'yearly':
       return [
-        { name: "Jan", weight: 74.2, target: 70, date: "2024" },
-        { name: "Feb", weight: 73.8, target: 70, date: "2024" },
-        { name: "Mar", weight: 73.1, target: 70, date: "2024" },
-        { name: "Apr", weight: 72.5, target: 70, date: "2024" },
-        { name: "May", weight: 71.9, target: 70, date: "2024" },
-        { name: "Jun", weight: 71.2, target: 70, date: "2024" },
-        { name: "Jul", weight: 70.8, target: 70, date: "2024" },
-        { name: "Aug", weight: 70.4, target: 70, date: "2024" },
-        { name: "Sep", weight: 70.1, target: 70, date: "2024" },
-        { name: "Oct", weight: 69.8, target: 70, date: "2024" },
-        { name: "Nov", weight: 69.9, target: 70, date: "2024" },
-        { name: "Dec", weight: 70.0, target: 70, date: "2024" },
-      ];
+        { name: 'Jan', weight: 74.2, target: 70, date: '2024' },
+        { name: 'Feb', weight: 73.8, target: 70, date: '2024' },
+        { name: 'Mar', weight: 73.1, target: 70, date: '2024' },
+        { name: 'Apr', weight: 72.5, target: 70, date: '2024' },
+        { name: 'May', weight: 71.9, target: 70, date: '2024' },
+        { name: 'Jun', weight: 71.2, target: 70, date: '2024' },
+        { name: 'Jul', weight: 70.8, target: 70, date: '2024' },
+        { name: 'Aug', weight: 70.4, target: 70, date: '2024' },
+        { name: 'Sep', weight: 70.1, target: 70, date: '2024' },
+        { name: 'Oct', weight: 69.8, target: 70, date: '2024' },
+        { name: 'Nov', weight: 69.9, target: 70, date: '2024' },
+        { name: 'Dec', weight: 70.0, target: 70, date: '2024' },
+      ]
     default:
-      return [];
+      return []
   }
-};
+}
 
 interface WeightTooltipProps {
-  active?: boolean;
+  active?: boolean
   payload?: Array<{
-    value: number;
-    dataKey: string;
-  }>;
-  label?: string;
+    value: number
+    dataKey: string
+  }>
+  label?: string
 }
 
 const WeightTooltip = ({ active, payload, label }: WeightTooltipProps) => {
   if (active && payload && payload.length) {
-    const weightData = payload.find((p) => p.dataKey === "weight");
-    const targetData = payload.find((p) => p.dataKey === "target");
-    const weight = weightData?.value;
-    const target = targetData?.value;
-    const difference = weight && target ? (weight - target).toFixed(1) : "0";
+    const weightData = payload.find((p) => p.dataKey === 'weight')
+    const targetData = payload.find((p) => p.dataKey === 'target')
+    const weight = weightData?.value
+    const target = targetData?.value
+    const difference = weight && target ? (weight - target).toFixed(1) : '0'
 
     return (
       <div className="bg-white p-3 rounded-xl shadow-lg border border-gray-100">
@@ -80,21 +80,21 @@ const WeightTooltip = ({ active, payload, label }: WeightTooltipProps) => {
           <p
             className={`text-xs font-medium ${
               Number.parseFloat(difference) > 0
-                ? "text-red-500"
+                ? 'text-red-500'
                 : Number.parseFloat(difference) < 0
-                ? "text-green-500"
-                : "text-gray-500"
+                  ? 'text-green-500'
+                  : 'text-gray-500'
             }`}
           >
-            {Number.parseFloat(difference) > 0 ? `+${difference}` : difference}{" "}
+            {Number.parseFloat(difference) > 0 ? `+${difference}` : difference}{' '}
             kg from target
           </p>
         </div>
       </div>
-    );
+    )
   }
-  return null;
-};
+  return null
+}
 
 // Animation variants
 const containerVariants = {
@@ -103,31 +103,31 @@ const containerVariants = {
     opacity: 1,
     transition: {
       duration: 0.3,
-      when: "beforeChildren",
+      when: 'beforeChildren',
       staggerChildren: 0.05,
     },
   },
-};
+}
 
 const itemVariants = {
   hidden: { y: 10, opacity: 0 },
   visible: {
     y: 0,
     opacity: 1,
-    transition: { duration: 0.25, ease: "easeOut" },
+    transition: { duration: 0.25, ease: 'easeOut' },
   },
-};
+}
 
 export const WeightTrackingComponent = () => {
   const [selectedPeriod, setSelectedPeriod] = useState<
-    "weekly" | "monthly" | "yearly"
-  >("weekly");
-  const weightData = generateWeightData(selectedPeriod);
+    'weekly' | 'monthly' | 'yearly'
+  >('weekly')
+  const weightData = generateWeightData(selectedPeriod)
 
-  const currentWeight = weightData[weightData.length - 1]?.weight || 65.9;
-  const targetWeight = 70.0;
-  const startWeight = weightData[0]?.weight || 71.2;
-  const weightChange = currentWeight - startWeight;
+  const currentWeight = weightData[weightData.length - 1]?.weight || 65.9
+  const targetWeight = 70.0
+  const startWeight = weightData[0]?.weight || 71.2
+  const weightChange = currentWeight - startWeight
 
   return (
     <div className="min-h-screen md:h-screen p-4 md:overflow-hidden overflow-y-auto">
@@ -158,20 +158,20 @@ export const WeightTrackingComponent = () => {
 
                   {/* Period Selector */}
                   <div className="flex bg-gray-100 rounded-full p-1">
-                    {(["weekly", "monthly", "yearly"] as const).map(
+                    {(['weekly', 'monthly', 'yearly'] as const).map(
                       (period) => (
                         <button
                           key={period}
                           onClick={() => setSelectedPeriod(period)}
                           className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
                             selectedPeriod === period
-                              ? "bg-blue-500 text-white shadow-sm"
-                              : "text-gray-600 hover:text-gray-900"
+                              ? 'bg-blue-500 text-white shadow-sm'
+                              : 'text-gray-600 hover:text-gray-900'
                           }`}
                         >
                           {period.charAt(0).toUpperCase() + period.slice(1)}
                         </button>
-                      )
+                      ),
                     )}
                   </div>
                 </div>
@@ -219,13 +219,13 @@ export const WeightTrackingComponent = () => {
                         dataKey="name"
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fontSize: 11, fill: "#6b7280" }}
+                        tick={{ fontSize: 11, fill: '#6b7280' }}
                       />
                       <YAxis
-                        domain={["dataMin - 1", "dataMax + 1"]}
+                        domain={['dataMin - 1', 'dataMax + 1']}
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fontSize: 11, fill: "#6b7280" }}
+                        tick={{ fontSize: 11, fill: '#6b7280' }}
                         tickFormatter={(value) => `${value}kg`}
                         width={45}
                       />
@@ -264,7 +264,7 @@ export const WeightTrackingComponent = () => {
                   </h3>
                   <TrendingUp
                     className={`w-5 h-5 ${
-                      weightChange < 0 ? "text-green-500" : "text-red-500"
+                      weightChange < 0 ? 'text-green-500' : 'text-red-500'
                     }`}
                   />
                 </div>
@@ -276,10 +276,10 @@ export const WeightTrackingComponent = () => {
                   <div className="flex items-center justify-center gap-2 mb-4">
                     <span
                       className={`text-sm font-medium ${
-                        weightChange < 0 ? "text-green-600" : "text-red-600"
+                        weightChange < 0 ? 'text-green-600' : 'text-red-600'
                       }`}
                     >
-                      {weightChange > 0 ? "+" : ""}
+                      {weightChange > 0 ? '+' : ''}
                       {weightChange.toFixed(1)} kg
                     </span>
                     <span className="text-sm text-gray-500">
@@ -305,10 +305,10 @@ export const WeightTrackingComponent = () => {
                             0,
                             100 -
                               Math.abs(
-                                (currentWeight - targetWeight) / targetWeight
+                                (currentWeight - targetWeight) / targetWeight,
                               ) *
-                                100
-                          )
+                                100,
+                          ),
                         )}%`,
                       }}
                     />
@@ -371,7 +371,7 @@ export const WeightTrackingComponent = () => {
                 <div className="w-full bg-orange-200 rounded-full h-2 mt-3">
                   <div
                     className="bg-orange-500 h-2 rounded-full"
-                    style={{ width: "84%" }}
+                    style={{ width: '84%' }}
                   ></div>
                 </div>
               </CardContent>
@@ -395,7 +395,7 @@ export const WeightTrackingComponent = () => {
                 <div className="w-full bg-blue-200 rounded-full h-2 mt-3">
                   <div
                     className="bg-blue-500 h-2 rounded-full"
-                    style={{ width: "72%" }}
+                    style={{ width: '72%' }}
                   ></div>
                 </div>
               </CardContent>
@@ -419,7 +419,7 @@ export const WeightTrackingComponent = () => {
                 <div className="w-full bg-red-200 rounded-full h-2 mt-3">
                   <div
                     className="bg-red-500 h-2 rounded-full"
-                    style={{ width: "79%" }}
+                    style={{ width: '79%' }}
                   ></div>
                 </div>
               </CardContent>
@@ -428,7 +428,7 @@ export const WeightTrackingComponent = () => {
         </div>
       </motion.div>
     </div>
-  );
-};
+  )
+}
 
-export default WeightTrackingComponent;
+export default WeightTrackingComponent

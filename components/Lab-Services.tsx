@@ -1,9 +1,9 @@
-import { useState } from "react";
-import { LabsSection } from "./labSection";
-import { ServicesProductsSection } from "./ServicesSection";
+import { useState } from 'react'
+import { LabsSection } from './labSection'
+import { ServicesProductsSection } from './ServicesSection'
 
 export const CombinedLabsSection = () => {
-  const [showServices, setShowServices] = useState(false);
+  const [showServices, setShowServices] = useState(false)
 
   return (
     <div className="px-6 bg-gradient-to-b from-gray-200 to-white min-h-screen -mt-12">
@@ -12,7 +12,7 @@ export const CombinedLabsSection = () => {
         <div className="flex bg-gray-100 rounded-lg p-1 overflow-hidden">
           <button
             className={`rounded-lg px-6 py-2 ${
-              !showServices ? "bg-blue-500 text-white" : "text-gray-700"
+              !showServices ? 'bg-blue-500 text-white' : 'text-gray-700'
             } text-sm transition-colors duration-300`}
             onClick={() => setShowServices(false)}
           >
@@ -20,7 +20,7 @@ export const CombinedLabsSection = () => {
           </button>
           <button
             className={`rounded-lg px-6 py-2 ${
-              showServices ? "bg-blue-500 text-white" : "text-gray-700"
+              showServices ? 'bg-blue-500 text-white' : 'text-gray-700'
             } text-sm transition-colors duration-300`}
             onClick={() => setShowServices(true)}
           >
@@ -34,5 +34,5 @@ export const CombinedLabsSection = () => {
         {showServices ? <ServicesProductsSection /> : <LabsSection />}
       </div>
     </div>
-  );
-};
+  )
+}

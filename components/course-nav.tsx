@@ -1,32 +1,32 @@
-"use client";
+'use client'
 
-import { Home, BookOpen, Video } from "lucide-react";
+import { Home, BookOpen, Video } from 'lucide-react'
 
 interface HorizontalNavProps {
-  currentView: "programs" | "modules" | "video";
+  currentView: 'programs' | 'modules' | 'video'
 }
 
 export function HorizontalNav({ currentView }: HorizontalNavProps) {
   const steps = [
     {
-      id: "programs",
+      id: 'programs',
       icon: Home,
       active: true,
-      completed: currentView !== "programs",
+      completed: currentView !== 'programs',
     },
     {
-      id: "modules",
+      id: 'modules',
       icon: BookOpen,
-      active: currentView !== "programs",
-      completed: currentView === "video",
+      active: currentView !== 'programs',
+      completed: currentView === 'video',
     },
     {
-      id: "video",
+      id: 'video',
       icon: Video,
-      active: currentView === "video",
+      active: currentView === 'video',
       completed: false,
     },
-  ];
+  ]
 
   return (
     <div className="absolute top-28 left-1/2 transform -translate-x-1/2 w-auto z-10 flex-row items-center px-8 hidden md:flex">
@@ -41,9 +41,9 @@ export function HorizontalNav({ currentView }: HorizontalNavProps) {
               className={`w-10 h-10 rounded-full flex items-center justify-center ${
                 step.active
                   ? step.completed
-                    ? "bg-blue-500 text-white"
-                    : "bg-blue-500 text-white"
-                  : "bg-gray-200 text-gray-400"
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-blue-500 text-white'
+                  : 'bg-gray-200 text-gray-400'
               }`}
             >
               <step.icon className="w-5 h-5" />
@@ -52,5 +52,5 @@ export function HorizontalNav({ currentView }: HorizontalNavProps) {
         ))}
       </div>
     </div>
-  );
+  )
 }

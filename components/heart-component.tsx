@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { Card, CardContent } from '@/components/ui/card'
+import { sampleDataType } from '@/data/sample-data-type'
 
 // Animation variants
 const containerVariants = {
@@ -38,8 +39,53 @@ const itemVariants = {
     transition: { duration: 0.25, ease: 'easeIn' },
   },
 }
+type HeartData = {
+  homocysteine: number | null;
+  heart_rate: number | null;
+  imt: number | null;
+  nt_bnp: number | null;
+  heart_recovery_rate: number | null;
+  cholesterol: number | null;
+  hs_crp: number | null;
+  troponin: number | null;
+  heart_rate_variability: number | null;
+  blood_pressure: {
+    systolic: number | null;
+    diastolic: number | null;
+  };
+  aortic_compliance: number | null;
+};
+export const HeartComponent = ({extractedLabData}: any) => {
+  console.log("inisde comp", extractedLabData)
+  const heartData : HeartData = extractedLabData  ? extractedLabData.heart : {
+  homocysteine: null,
+  heart_rate: null,
+  imt: null,
+  nt_bnp: null,
+  heart_recovery_rate: null,
+  cholesterol: null,
+  hs_crp: null,
+  troponin: null,
+  heart_rate_variability: null,
+  blood_pressure: {
+    systolic: null,
+    diastolic: null,
+  },
+  aortic_compliance: null,
+} 
+  console.log("heartData", heartData)
 
-export const HeartComponent = () => {
+    const {
+    imt,
+    troponin,
+    aortic_compliance,
+    blood_pressure,
+    cholesterol,
+    heart_rate,
+  } = heartData || {};
+
+  const systolic = blood_pressure?.systolic;
+  const diastolic = blood_pressure?.diastolic;
   return (
     <motion.div
       variants={containerVariants}
@@ -65,7 +111,7 @@ export const HeartComponent = () => {
                   <div>
                     <div className="text-gray-400 text-sm mt-9">Heart Rate</div>
                     <div className="text-black text-lg sm:text-xl font-normal">
-                      108 BPM
+                      {heartData?.heart_rate ? heartData?.heart_rate : "null"} BPM
                     </div>
                   </div>
 
@@ -75,7 +121,7 @@ export const HeartComponent = () => {
                       Heart Recovery Rate
                     </div>
                     <div className="text-black text-lg sm:text-xl font-normal">
-                      10 bpm
+                      {heartData?.heart_recovery_rate ? heartData?.heart_recovery_rate : "null"} bpm
                     </div>
                   </div>
 
@@ -85,7 +131,7 @@ export const HeartComponent = () => {
                       Heart Rate Variability
                     </div>
                     <div className="text-black text-lg sm:text-xl font-normal mb-5">
-                      56ms
+                      {heartData?.heart_rate_variability ? heartData?.heart_rate_variability : "Null"}ms
                     </div>
                   </div>
                 </div>
@@ -132,7 +178,7 @@ export const HeartComponent = () => {
                         Ejection Fraction
                       </div>
                       <div className="text-black text-xl sm:text-2xl font-semibold">
-                        65%
+                        null
                       </div>
                     </div>
                   </div>
@@ -145,7 +191,7 @@ export const HeartComponent = () => {
                         Cholesterol
                       </div>
                       <div className="text-black text-lg sm:text-xl font-bold">
-                        145mg/dl
+                        {heartData?.cholesterol ? heartData?.cholesterol : "null" }mg/dl
                       </div>
                     </div>
 
@@ -155,7 +201,7 @@ export const HeartComponent = () => {
                         Homocysteine
                       </div>
                       <div className="text-black text-lg sm:text-xl font-bold">
-                        15 mcmol/L
+                       {heartData?.homocysteine ? heartData?.homocysteine : null  }mcmol/L
                       </div>
                     </div>
 
@@ -163,7 +209,7 @@ export const HeartComponent = () => {
                     <div className="rounded-2xl bg-gray-100 p-4 sm:p-5">
                       <div className="text-gray-400 text-sm mb-1">NT- BNP</div>
                       <div className="text-black text-lg sm:text-xl font-bold">
-                        420 pg/mL
+                        {heartData?.nt_bnp ? heartData?.nt_bnp : "null" } pg/mL
                       </div>
                     </div>
 
@@ -171,7 +217,7 @@ export const HeartComponent = () => {
                     <div className="rounded-2xl bg-gray-100 p-4 sm:p-5">
                       <div className="text-gray-400 text-sm mb-1">HS-CRP</div>
                       <div className="text-black text-lg sm:text-xl font-bold">
-                        2.95 mg/L
+                        {heartData?.hs_crp ? heartData?.hs_crp : null } mg/L
                       </div>
                     </div>
                   </div>
@@ -184,44 +230,47 @@ export const HeartComponent = () => {
         {/* Bottom Row - responsive layout */}
         <div className="grid grid-cols-1 lg:grid-cols-6 gap-4">
           {/* Troponin & Aortic compliance Card */}
-          <motion.div variants={itemVariants} className="lg:col-span-3">
-            <Card className="shadow-sm border-0 bg-white rounded-3xl h-full hover:shadow-md transition-shadow duration-300">
-              <CardContent className="p-4 md:p-6 h-auto flex flex-col justify-center space-y-4 lg:space-y-6">
-                <div>
-                  <div className="text-gray-400 text-sm mb-2">
-                    Troponin Levels
-                  </div>
-                  <div className="text-black text-xl sm:text-2xl font-bold">
-                    0.03 <span className="text-sm font-normal">ng/mL</span>
-                  </div>
-                </div>
-                <div>
-                  <div className="text-gray-400 text-sm mb-2">
-                    Aortic compliance
-                  </div>
-                  <div className="text-black text-xl sm:text-2xl font-bold">
-                    1.7 <span className="text-sm font-normal">mL/mmHg</span>
-                  </div>
-                </div>
-                <div className="flex flex-col sm:flex-row justify-between gap-4 sm:gap-2 sm:px-2">
-                  <div className="flex flex-col justify-center">
-                    <div className="text-gray-400 text-sm mb-2">
-                      Blood Pressure
-                    </div>
-                    <div className="text-black text-xl sm:text-2xl font-bold">
-                      119/70<span className="text-sm font-normal">mmHg</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col justify-center">
-                    <div className="text-gray-400 text-sm mb-2">IMT</div>
-                    <div className="text-black text-xl sm:text-2xl font-bold mb-4">
-                      0.45 mm
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+         <motion.div variants={itemVariants} className="lg:col-span-3">
+  <Card className="shadow-sm border-0 bg-white rounded-3xl h-full hover:shadow-md transition-shadow duration-300">
+    <CardContent className="p-4 md:p-6 h-auto flex flex-col justify-center space-y-4 lg:space-y-6">
+      {/* Troponin Levels */}
+      <div>
+        <div className="text-gray-400 text-sm mb-2">Troponin Levels</div>
+        <div className="text-black text-xl sm:text-2xl font-bold">
+          {troponin ?? "null"}{" "}
+          <span className="text-sm font-normal">ng/mL</span>
+        </div>
+      </div>
+
+      {/* Aortic Compliance */}
+      <div>
+        <div className="text-gray-400 text-sm mb-2">Aortic compliance</div>
+        <div className="text-black text-xl sm:text-2xl font-bold">
+          {aortic_compliance ?? "null"}{" "}
+          <span className="text-sm font-normal">mL/mmHg</span>
+        </div>
+      </div>
+
+      {/* Blood Pressure and IMT */}
+      <div className="flex flex-col sm:flex-row justify-between gap-4 sm:gap-2 sm:px-2">
+        <div className="flex flex-col justify-center">
+          <div className="text-gray-400 text-sm mb-2">Blood Pressure</div>
+          <div className="text-black text-xl sm:text-2xl font-bold">
+            {(systolic && diastolic) ? `${systolic}/${diastolic}` : "null"}
+            <span className="text-sm font-normal">mmHg</span>
+          </div>
+        </div>
+        <div className="flex flex-col justify-center">
+          <div className="text-gray-400 text-sm mb-2">IMT</div>
+          <div className="text-black text-xl sm:text-2xl font-bold mb-4">
+            {imt ?? "null"} <span className="text-sm font-normal">mm</span>
+          </div>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+</motion.div>
+
 
           {/* CT chest Card */}
           <motion.div variants={itemVariants} className="lg:col-span-3">

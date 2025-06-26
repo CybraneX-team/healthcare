@@ -38,7 +38,75 @@ const itemVariants = {
   },
 }
 
-export default function ReproductiveHealth() {
+type HormonalReproductive = {
+  general: {
+    hormones_panel: string;
+    igf_1: number | null;
+    hba1c: number | null;
+    snps: {
+      comt: any | null;
+      cyps: any | null;
+    };
+  };
+  women: {
+    vitamin_d_25oh_total: number | null;
+    progesterone: number | null;
+    ldh: number | null;
+    insulin_fasting: number | null;
+    transferrin: number | null;
+    thyroid_panel_comprehensive: string;
+    testosterone_bioavailable: {
+      total: number | null;
+      free: number | null;
+      bio_available: number | null;
+      shbg: number | null;
+    };
+    t4_total: number | null;
+    t3_total: number | null;
+    a1c: number | null;
+    ggt: number | null;
+    fsh: number | null;
+    lh: number | null;
+    estradiol_e2: number | null;
+    dhea_sulfate: number | null;
+    cortisol: number | null;
+    androstenedione: number | null;
+    igf_1: number | null;
+  };
+  men: {
+    testosterone_total: number | null;
+    testosterone_free: number | null;
+    shbg: number | null;
+    estradiol: number | null;
+    estrone: number | null;
+    dhea_s: number | null;
+    fsh: number | null;
+    lh: number | null;
+    dht: number | null;
+    prolactin: number | null;
+    progesterone: number | null;
+    psa: number | null;
+    tsh: number | null;
+    ft4: number | null;
+    ft3: number | null;
+    vitamin_d_25oh: number | null;
+    parathyroid_hormone: number | null;
+    cmp: number | null;
+    lipids: number | null;
+    insulin: number | null;
+    hba1c: number | null;
+    hs_crp: number | null;
+    homocysteine: number | null;
+    androstenedione: number | null;
+    igf_1: number | null;
+  };
+};
+
+export default function ReproductiveHealth({extractedLabData} : any) {
+  console.log("extractedLabData", extractedLabData)
+  const  hormonal_reproductive :  HormonalReproductive = extractedLabData.hormonal_reproductive ? 
+  extractedLabData.hormonal_reproductive : {} 
+
   return (
     <motion.div
       variants={containerVariants}
@@ -71,14 +139,16 @@ export default function ReproductiveHealth() {
                 <div>
                   <h2 className="text-sm text-gray-500">Transferrin</h2>
                   <div className="text-lg font-semibold text-gray-900">
-                    253 <span className="text-sm text-gray-500">mg/dL</span>
+                    {hormonal_reproductive?.women?.transferrin ? hormonal_reproductive.women.transferrin : "Null" }
+                     <span className="text-sm text-gray-500">mg/dL</span>
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row justify-between gap-2 mt-12">
                   <div>
                     <h2 className="text-sm text-gray-500">Insulin (Fasting)</h2>
                     <div className="text-lg font-semibold text-gray-900">
-                      25 <span className="text-sm text-gray-500">μIU/mL</span>
+                    {hormonal_reproductive?.men?.insulin ? hormonal_reproductive.men.insulin : "Null" }
+                    <span className="text-sm text-gray-500">μIU/mL</span>
                     </div>
                   </div>
                   <div>
@@ -86,7 +156,7 @@ export default function ReproductiveHealth() {
                       IGF-1
                     </h2>
                     <div className="text-lg font-normal text-gray-900">
-                      250 <span className="text-sm text-gray-500">ng/mL</span>
+                      Null 
                     </div>
                   </div>
                 </div>
@@ -104,7 +174,7 @@ export default function ReproductiveHealth() {
                     Cortisol
                   </h2>
                   <div className="text-xl font-bold text-gray-900">
-                    15{' '}
+                {hormonal_reproductive?.women?.cortisol ? hormonal_reproductive.women.cortisol : "Null" }
                     <span className="text-base font-normal text-gray-700">
                       µg/dL
                     </span>
@@ -139,10 +209,10 @@ export default function ReproductiveHealth() {
               {/* Parathyroid Hormone */}
               <div className="pt-20">
                 <h2 className="text-lg font-medium text-gray-500">
-                  Parathyroid Hormone
+                  Parathyroid Hormone {/* Parathyroid Hormone not in sample */}
                 </h2>
                 <div className="text-2xl font-bold text-gray-900">
-                  45
+                  Null
                   <span className="text-base font-normal text-gray-700">
                     pg/mL
                   </span>
@@ -163,10 +233,10 @@ export default function ReproductiveHealth() {
                   <div className="bg-gray-100 rounded-3xl p-4 space-y-8">
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">
-                        Estrogen
+                        Estrogen {/* Estrogen not in sample */}
                       </h3>
                       <p className="text-xl font-bold text-gray-900">
-                        47{' '}
+                        Null{' '}
                         <span className="text-sm font-normal text-gray-700">
                           pg/mL
                         </span>
@@ -177,7 +247,7 @@ export default function ReproductiveHealth() {
                         Androstenedione
                       </h3>
                       <p className="text-xl font-bold text-gray-900">
-                        2.5{' '}
+                        {hormonal_reproductive?.women?.androstenedione ? hormonal_reproductive.women.androstenedione : "Null" }
                         <span className="text-sm font-normal text-gray-700">
                           ng/mL
                         </span>
@@ -188,7 +258,7 @@ export default function ReproductiveHealth() {
                         Progesterone
                       </h3>
                       <p className="text-xl font-bold text-gray-900">
-                        1.4{' '}
+                      {hormonal_reproductive?.women?.progesterone ? hormonal_reproductive.women.progesterone : "Null" }  
                         <span className="text-sm font-normal text-gray-700">
                           ng/mL
                         </span>
@@ -203,7 +273,7 @@ export default function ReproductiveHealth() {
                           Testosterone
                         </h3>
                         <p className="text-xl font-bold text-gray-900">
-                          1070{' '}
+                          {hormonal_reproductive.men.testosterone_total ? hormonal_reproductive.men.testosterone_total  : "Null" }
                           <span className="text-sm font-normal text-gray-700">
                             ng/dL
                           </span>
@@ -213,7 +283,10 @@ export default function ReproductiveHealth() {
                         <h3 className="text-sm font-medium text-gray-500">
                           DHT
                         </h3>
-                        <p className="text-xl font-bold text-gray-900">32</p>
+                        <p className="text-xl font-bold text-gray-900">
+                          {hormonal_reproductive.men.dht ? 
+                          hormonal_reproductive.men.dht  : "Null" }
+                        </p>
                       </div>
                     </div>
                     <div>
@@ -221,7 +294,8 @@ export default function ReproductiveHealth() {
                         Vitamin D 25–OH
                       </h3>
                       <p className="text-xl font-bold text-gray-900">
-                        52{' '}
+                        {hormonal_reproductive.men.vitamin_d_25oh ? 
+                          hormonal_reproductive.men.vitamin_d_25oh  : "Null" }
                         <span className="text-sm font-normal text-gray-700">
                           ng/mL
                         </span>
@@ -233,7 +307,8 @@ export default function ReproductiveHealth() {
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">TSH</h3>
                       <p className="text-xl font-bold text-gray-900">
-                        2.5{' '}
+                           {hormonal_reproductive.men.tsh ? 
+                          hormonal_reproductive.men.tsh  : "Null" }
                         <span className="text-sm font-normal text-gray-700">
                           mIU/L
                         </span>
@@ -244,7 +319,8 @@ export default function ReproductiveHealth() {
                         DHEA-S
                       </h3>
                       <p className="text-xl font-bold text-gray-900">
-                        150{' '}
+                          {hormonal_reproductive.men.dhea_s ? 
+                          hormonal_reproductive.men.dhea_s  : "Null" }
                         <span className="text-sm font-normal text-gray-700">
                           µg/dL
                         </span>
@@ -260,14 +336,18 @@ export default function ReproductiveHealth() {
                       <h3 className="text-sm font-medium text-gray-500">
                         Estrone
                       </h3>
-                      <p className="text-xl font-bold text-gray-900">N/A</p>
+                      <p className="text-xl font-bold text-gray-900">
+                          {hormonal_reproductive.men.estrone ? 
+                          hormonal_reproductive.men.estrone  : "Null" }
+                      </p>
                     </div>
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">
                         Prolactin
                       </h3>
                       <p className="text-xl font-bold text-gray-900">
-                        23{' '}
+                          {hormonal_reproductive.men.prolactin ? 
+                          hormonal_reproductive.men.prolactin  : "Null" }
                         <span className="text-sm font-normal text-gray-700">
                           ng/mL
                         </span>
@@ -281,7 +361,8 @@ export default function ReproductiveHealth() {
                         Estradiol
                       </h3>
                       <p className="text-xl font-bold text-gray-900">
-                        3.4{' '}
+                        {hormonal_reproductive.men.estradiol ? 
+                          hormonal_reproductive.men.estradiol  : "Null" }
                         <span className="text-sm font-normal text-gray-700">
                           pg/mL
                         </span>
@@ -292,7 +373,8 @@ export default function ReproductiveHealth() {
                         Total T3
                       </h3>
                       <p className="text-xl font-bold text-gray-900">
-                        120{' '}
+                        {hormonal_reproductive?.women?.t3_total ? 
+                          hormonal_reproductive?.women?.t3_total  : "Null" }
                         <span className="text-sm font-normal text-gray-700">
                           ng/dL
                         </span>
@@ -306,7 +388,8 @@ export default function ReproductiveHealth() {
                         Free T3
                       </h3>
                       <p className="text-xl font-bold text-gray-900">
-                        3.4{' '}
+                        {hormonal_reproductive.men.ft3 ? 
+                          hormonal_reproductive.men.ft3  : "Null" }
                         <span className="text-sm font-normal text-gray-700">
                           pg/mL
                         </span>
@@ -317,7 +400,8 @@ export default function ReproductiveHealth() {
                         Total T3
                       </h3>
                       <p className="text-xl font-bold text-gray-900">
-                        120{' '}
+                        {hormonal_reproductive?.women?.t3_total ? 
+                          hormonal_reproductive?.women?.t3_total  : "Null" }
                         <span className="text-sm font-normal text-gray-700">
                           ng/dL
                         </span>
@@ -331,7 +415,8 @@ export default function ReproductiveHealth() {
                         Free T4
                       </h3>
                       <p className="text-xl font-bold text-gray-900">
-                        1.2{' '}
+                        {hormonal_reproductive?.women?.t4_total ? 
+                          hormonal_reproductive?.women?.t4_total  : "Null" }
                         <span className="text-sm font-normal text-gray-700">
                           ng/dL
                         </span>
@@ -342,7 +427,8 @@ export default function ReproductiveHealth() {
                         Total T4
                       </h3>
                       <p className="text-xl font-bold text-gray-900">
-                        9{' '}
+                        {hormonal_reproductive?.women?.t4_total ? 
+                          hormonal_reproductive?.women?.t4_total  : "Null" }
                         <span className="text-sm font-normal text-gray-700">
                           µg/dL
                         </span>
@@ -354,7 +440,8 @@ export default function ReproductiveHealth() {
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">LDH</h3>
                       <p className="text-xl font-bold text-gray-900">
-                        256{' '}
+                        {hormonal_reproductive?.women?.ldh ? 
+                          hormonal_reproductive?.women?.ldh  : "Null" }
                         <span className="text-sm font-normal text-gray-700">
                           U/L
                         </span>
@@ -365,7 +452,8 @@ export default function ReproductiveHealth() {
                         HbA1c
                       </h3>
                       <p className="text-xl font-bold text-gray-900">
-                        6.2{' '}
+                        {hormonal_reproductive.general.hba1c ? 
+                          hormonal_reproductive.general.hba1c  : "Null" }{ ' '}
                         <span className="text-sm font-normal text-gray-700">
                           %
                         </span>

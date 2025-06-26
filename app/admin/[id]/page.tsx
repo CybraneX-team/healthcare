@@ -146,116 +146,105 @@ export default function UserDetailsPage() {
     }
   }
 
-  const handleMultipleFileUpload = async (files: FileList) => {
-    if (!id) return
+const handleMultipleFileUpload = async (files: FileList) => {
+  if (!id) return;
 
-    const fileArray = Array.from(files)
-    if (!fileArray.length) return
+  const fileArray = Array.from(files);
+  if (!fileArray.length) return;
 
-    setprocessingText({
-      active: true,
-      message: 'Uploading and extracting all PDFs...',
-    })
-    setUploading(true)
+  setprocessingText({ active: true, message: "Uploading and extracting all PDFs..." });
+  setUploading(true);
 
-    try {
-      // Upload all files to Firebase Storage
-      const storage = getStorage()
-      const uploadedMetadata = await Promise.all(
-        fileArray.map(async (file) => {
-          const timestamp = Date.now()
-          const category = 'labs'
-          const fullStorageName = `${timestamp}-${file.name}`
-          const storageRef = ref(
-            storage,
-            `documents/${id}/${category}/${fullStorageName}`,
-          )
-          await uploadBytes(storageRef, file)
-          const downloadURL = await getDownloadURL(storageRef)
-          return {
-            file,
-            fullStorageName,
-            downloadURL,
-            docKey: file.name.split('.')[0],
-            category,
-          }
-        }),
-      )
-
-      // Send all files to Groq API
-      const formData = new FormData()
-      fileArray.forEach((file) => formData.append('files', file))
-
-      const res = await fetch('/api/process-pdf', {
-        method: 'POST',
-        body: formData,
+  try {
+    // Upload all files to Firebase Storage
+    const storage = getStorage();
+    const uploadedMetadata = await Promise.all(
+      fileArray.map(async (file) => {
+        const timestamp = Date.now();
+        const category = "labs";
+        const fullStorageName = `${timestamp}-${file.name}`;
+        const storageRef = ref(storage, `documents/${id}/${category}/${fullStorageName}`);
+        await uploadBytes(storageRef, file);
+        const downloadURL = await getDownloadURL(storageRef);
+        return {
+          file,
+          fullStorageName,
+          downloadURL,
+          docKey: file.name.split(".")[0],
+          category,
+        };
       })
+    );
 
-      const { extractedJsonArray: rawReply } = await res.json()
+    // Send all files to Groq API
+    const formData = new FormData();
+    fileArray.forEach((file) => formData.append("files", file));
 
-      // ✅ Fix: extract JSON inside code block if needed
-      let cleanedReply = rawReply
-      if (typeof rawReply === 'string') {
-        const match = rawReply.match(/```json\s*([\s\S]*?)```/i)
-        cleanedReply = match ? match[1] : rawReply
-      }
+    const res = await fetch("/api/process-pdf", {
+      method: "POST",
+      body: formData,
+    });
 
-      let extractedJsonArray
-      try {
-        extractedJsonArray = JSON.parse(cleanedReply)
-      } catch (err) {
-        console.error('❌ Failed to parse Groq JSON:', cleanedReply)
-        toast.error('Failed to parse extracted data.')
-        extractedJsonArray = []
-      }
+    // THIS assumes you're only extracting ONE unified object for all files
+  const { extractedJsonArray: rawReply } = await res.json();
 
-      if (!extractedJsonArray)
-        throw new Error('Groq extraction failed or returned nothing.')
+  // No need to clean — it's already parsed JSON
+  const extractedJsonObject = rawReply;
 
-      // Construct Firestore updates
-      const userRef = doc(db, 'users', id as string)
-      const updatedDocs: any = {}
-      const structuredExtractedData: Record<string, any> = {}
+  // Store this whole object directly
+  // const structuredExtractedData: Record<string, any> = {
+  //   combined_report: extractedJsonObject,  // 👈 just store it under a key
+  // };
 
-      uploadedMetadata.forEach((meta, index) => {
-        const extracted = extractedJsonArray?.[index] || ''
-        updatedDocs[meta.docKey] = {
-          name: meta.file.name,
-          size: meta.file.size,
-          type: meta.file.type,
-          uploadedAt: new Date().toISOString(),
-          downloadURL: meta.downloadURL,
-          fullStorageName: meta.fullStorageName,
-        }
-        structuredExtractedData[meta.docKey] = extracted
-      })
 
-      await updateDoc(userRef, {
-        labs: {
-          ...(userData?.labs || {}),
-          ...updatedDocs,
-        },
-        extractedLabData: JSON.stringify(structuredExtractedData, null, 2),
-      })
+    // Construct Firestore updates
+    const userRef = doc(db, "users", id as string);
+    const updatedDocs: any = {};
+    // const structuredExtractedData: Record<string, any> = {};
 
-      setUserData((prev: any) => ({
-        ...prev,
-        labs: {
-          ...(prev?.labs || {}),
-          ...updatedDocs,
-        },
-        extractedLabData: JSON.stringify(structuredExtractedData, null, 2),
-      }))
+  uploadedMetadata.forEach((meta) => {
+  updatedDocs[meta.docKey] = {
+    name: meta.file.name,
+    size: meta.file.size,
+    type: meta.file.type,
+    uploadedAt: new Date().toISOString(),
+    downloadURL: meta.downloadURL,
+    fullStorageName: meta.fullStorageName,
+  };
+});
 
-      toast.success('All files uploaded and processed!')
-    } catch (err) {
-      console.error('❌ Upload failed:', err)
-      toast.error('Upload or extraction failed.')
-    } finally {
-      setUploading(false)
-      setprocessingText({ active: false, message: '' })
-    }
+// Store full extracted JSON under a single key like "combined_report"
+const structuredExtractedData: Record<string, any> = {
+  combined_report: rawReply,  // this is your parsed, structured JSON from Groq
+};
+
+
+    await updateDoc(userRef, {
+      labs: {
+        ...(userData?.labs || {}),
+        ...updatedDocs,
+      },
+      extractedLabData: rawReply,
+    });
+
+    setUserData((prev: any) => ({
+      ...prev,
+      labs: {
+        ...(prev?.labs || {}),
+        ...updatedDocs,
+      },
+      extractedLabData: rawReply,
+    }));
+
+    toast.success("All files uploaded and processed!");
+  } catch (err) {
+    console.error("❌ Upload failed:", err);
+    toast.error("Upload or extraction failed.");
+  } finally {
+    setUploading(false);
+    setprocessingText({ active: false, message: "" });
   }
+}
 
   const handleViewPdf = (downloadURL: string) => {
     setSelectedPdf(downloadURL)
@@ -765,6 +754,11 @@ export default function UserDetailsPage() {
                         label="Upload Document"
                         multiple
                         accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                         onChange={(e) => {
+                        if (e.target.files && e.target.files.length > 0) {
+                          handleMultipleFileUpload(e.target.files);
+                        }
+                      }}
                       />
                       <p className="text-sm text-blue-600 mt-6 font-medium">
                         Supported formats: PDF, JPEG, PNG, DOC • Max size: 10MB

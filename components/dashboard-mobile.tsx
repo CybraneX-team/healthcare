@@ -38,7 +38,7 @@ import { ServicesProductsSection } from './ServicesSection'
 import { ProfileDropdown } from '@/components/ui/profile-dropdown'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Drawer } from 'vaul'
 import Neurology from '@/components/neurology'
 import UploadPage from './upload'
@@ -57,6 +57,10 @@ import { CombinedLabsSection } from './Lab-Services'
 import PancreasComponent from './pancreas-component'
 import Cardiology from './cardiology'
 import Kidney from './kidney'
+import { doc, getDoc } from 'firebase/firestore'
+import { db } from '@/utils/firebase'
+import { getAuth } from 'firebase/auth'
+import { defaultExtractedLabData } from '@/sameple-text-json'
 
 // Define types for weight trend data
 interface WeightTrendData {
@@ -148,7 +152,9 @@ export default function DashboardMobile() {
   const [activeTab, setActiveTab] = useState('overview')
   const [selectedOrgan, setSelectedOrgan] = useState('heart')
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [extractedLabData, setExtractedLabData] = useState<any>(defaultExtractedLabData);
   const weightTrendData = generateWeightTrendData()
+  const searchParams = useSearchParams()
   const { user, logout } = useAuth()
   const [isFoodModalOpen, setIsFoodModalOpen] = useState(false)
 
@@ -235,7 +241,35 @@ export default function DashboardMobile() {
       label: 'Tracker',
     },
   ]
-
+      useEffect(() => {
+      const tabParam = searchParams.get('tab')
+    const fetchUserData = async () => {
+      const auth = getAuth();
+      const user = auth.currentUser;
+  
+      
+  
+      try {
+        const userRef = doc(db, "users", user && user.uid ? user.uid : "");
+        const userSnap = await getDoc(userRef);
+  
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          // setIsAdmin(userData.role === "admin");
+  
+          // 👇 Assuming lab data is stored under `labData` in Firestore
+          console.log("userData.extractedLabData", userData.extractedLabData)
+          if (userData.extractedLabData) {
+            setExtractedLabData(userData.extractedLabData);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+  
+    fetchUserData();
+  }, [activeTab, selectedOrgan]);
   return (
     <div className="min-h-screen bg-gray-200">
       {/* Minimal header */}
@@ -349,22 +383,22 @@ export default function DashboardMobile() {
               <div className="mt-1 pb-24 bg-white-50">
                 {selectedOrgan === 'heart' ? (
                   <div className="px-2">
-                    <HeartComponent />
+                    <HeartComponent extractedLabData={extractedLabData} />
                   </div>
                 ) : selectedOrgan === 'lungs' ? (
                   <div className="">
-                    <Cardiology />
+                    <Cardiology  extractedLabData={extractedLabData} />
                   </div>
                 ) : selectedOrgan === 'liver' ? (
                   <div className="px-2">
-                    <LiverComponent />
+                    <LiverComponent extractedLabData={extractedLabData} />
                   </div>
                 ) : selectedOrgan === 'brain' ? (
-                  <Neurology />
+                  <Neurology extractedLabData={extractedLabData} />
                 ) : selectedOrgan === 'kidney' ? (
-                  <Kidney />
+                  <Kidney extractedLabData={extractedLabData} />
                 ) : selectedOrgan === 'reproductive' ? (
-                  <ReproductiveHealth />
+                  <ReproductiveHealth extractedLabData={extractedLabData} />
                 ) : null}
               </div>
             </div>

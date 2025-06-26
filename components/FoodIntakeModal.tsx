@@ -1517,7 +1517,7 @@ export default function FoodIntakeModal({
           ) : selectedTab === 'Body Transformation' ? (
             renderBodyTransformationContent()
           ) : selectedTab === 'Weight' ? (
-            <WeightTrackingComponent />
+            <WeightTrackingComponent user={user!}/>
           ) : (
             renderMealIntakeContent()
           )}

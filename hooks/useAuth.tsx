@@ -24,7 +24,7 @@ import { resetPassword as firebaseResetPassword } from '@/utils/firebase'
 import { sendEmailVerification } from 'firebase/auth'
 import { toast } from 'react-toastify'
 
-interface User {
+export interface User {
   id: string
   email: string | null
   fullName: string | null

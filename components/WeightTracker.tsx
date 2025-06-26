@@ -15,47 +15,7 @@ import {
 import { useEffect, useState } from "react";
 import { TrendingUp, Droplets, Zap, Beef, Target } from "lucide-react";
 import { useAuth, User } from "@/hooks/useAuth";
-import { doc, DocumentData, getDoc } from "firebase/firestore";
-
-const generateWeightData = (period: "weekly" | "monthly" | "yearly") => {
-  switch (period) {
-    case "weekly":
-      return [
-        { name: "Mon", weight: 71.2, target: 70, date: "Dec 16" },
-        { name: "Tue", weight: 71.0, target: 70, date: "Dec 17" },
-        { name: "Wed", weight: 70.8, target: 70, date: "Dec 18" },
-        { name: "Thu", weight: 70.5, target: 70, date: "Dec 19" },
-        { name: "Fri", weight: 70.3, target: 70, date: "Dec 20" },
-        { name: "Sat", weight: 70.1, target: 70, date: "Dec 21" },
-        { name: "Sun", weight: 69.9, target: 70, date: "Dec 22" },
-      ];
-    case "monthly":
-      return [
-        { name: "Week 1", weight: 72.1, target: 70, date: "Nov W1" },
-        { name: "Week 2", weight: 71.5, target: 70, date: "Nov W2" },
-        { name: "Week 3", weight: 70.8, target: 70, date: "Nov W3" },
-        { name: "Week 4", weight: 70.2, target: 70, date: "Nov W4" },
-        { name: "Week 5", weight: 65.9, target: 70, date: "Dec W1" },
-      ];
-    case "yearly":
-      return [
-        { name: "Jan", weight: 74.2, target: 70, date: "2024" },
-        { name: "Feb", weight: 73.8, target: 70, date: "2024" },
-        { name: "Mar", weight: 73.1, target: 70, date: "2024" },
-        { name: "Apr", weight: 72.5, target: 70, date: "2024" },
-        { name: "May", weight: 71.9, target: 70, date: "2024" },
-        { name: "Jun", weight: 71.2, target: 70, date: "2024" },
-        { name: "Jul", weight: 70.8, target: 70, date: "2024" },
-        { name: "Aug", weight: 70.4, target: 70, date: "2024" },
-        { name: "Sep", weight: 70.1, target: 70, date: "2024" },
-        { name: "Oct", weight: 69.8, target: 70, date: "2024" },
-        { name: "Nov", weight: 69.9, target: 70, date: "2024" },
-        { name: "Dec", weight: 70.0, target: 70, date: "2024" },
-      ];
-    default:
-      return [];
-  }
-};
+import { doc, DocumentData, getDoc, collection, query, orderBy, limit, getDocs, where } from "firebase/firestore";
 
 interface WeightTooltipProps {
   active?: boolean;
@@ -126,13 +86,30 @@ export const WeightTrackingComponent = ({user}: {user: User}) => {
   const [selectedPeriod, setSelectedPeriod] = useState<
     "weekly" | "monthly" | "yearly"
   >("weekly");
-  const weightData = generateWeightData(selectedPeriod);
+  const [weightData, setWeightData] = useState<any[]>([]);
   const [userData, setUserData] = useState<DocumentData | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const currentWeight = weightData[weightData.length - 1]?.weight || 65.9;
+  const currentWeight = weightData[weightData.length - 1]?.weight || 0;
   const targetWeight = 70.0;
-  const startWeight = weightData[0]?.weight || 71.2;
+  const startWeight = weightData[0]?.weight || 0;
   const weightChange = currentWeight - startWeight;
+
+  // Calculate BMI (assuming height of 1.75m as default, you can make this configurable)
+  const calculateBMI = (weight: number, height: number = 1.75) => {
+    if (!weight || weight === 0) return 0;
+    return Number((weight / (height * height)).toFixed(1));
+  };
+
+  const getBMICategory = (bmi: number) => {
+    if (bmi < 18.5) return { category: "Underweight", color: "text-blue-600" };
+    if (bmi < 25) return { category: "Normal Range", color: "text-green-600" };
+    if (bmi < 30) return { category: "Overweight", color: "text-yellow-600" };
+    return { category: "Obese", color: "text-red-600" };
+  };
+
+  const currentBMI = calculateBMI(currentWeight);
+  const bmiInfo = getBMICategory(currentBMI);
 
   const fetchUserData = async (id: any) => {
     const today = new Date().toISOString().split('T')[0];
@@ -146,17 +123,163 @@ export const WeightTrackingComponent = ({user}: {user: User}) => {
 }
   }
 
+  // Fetch weight data from database
+  const fetchWeightData = async (period: "weekly" | "monthly" | "yearly") => {
+    if (!user?.id) return [];
+
+    try {
+      const currentDate = new Date();
+      let startDate = new Date();
+      let dateFormat = '';
+      
+      // Calculate date range based on period
+      switch (period) {
+        case "weekly":
+          startDate.setDate(currentDate.getDate() - 7);
+          dateFormat = 'day';
+          break;
+        case "monthly":
+          startDate.setDate(currentDate.getDate() - 30);
+          dateFormat = 'week';
+          break;
+        case "yearly":
+          startDate.setFullYear(currentDate.getFullYear() - 1);
+          dateFormat = 'month';
+          break;
+      }
+
+      const startDateStr = startDate.toISOString().split('T')[0];
+      const endDateStr = currentDate.toISOString().split('T')[0];
+
+      // Query weight data from Firestore
+      const weightCollection = collection(db, 'users', user.id, 'dailyWeight');
+      const q = query(
+        weightCollection,
+        where('date', '>=', startDateStr),
+        where('date', '<=', endDateStr),
+        orderBy('date', 'asc')
+      );
+
+      const querySnapshot = await getDocs(q);
+      const rawWeightData: any[] = [];
+      
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        rawWeightData.push({
+          date: data.date,
+          weight: data.weight,
+          originalWeight: data.originalWeight,
+          unit: data.unit
+        });
+      });
+
+      // Process data based on period
+      return processWeightDataByPeriod(rawWeightData, period);
+    } catch (error) {
+      console.error('Error fetching weight data:', error);
+      return [];
+    }
+  };
+
+  // Process weight data based on selected period
+  const processWeightDataByPeriod = (data: any[], period: "weekly" | "monthly" | "yearly") => {
+    if (data.length === 0) return [];
+
+    switch (period) {
+      case "weekly":
+        // Show daily data for the last 7 days
+        return data.map((item) => {
+          const date = new Date(item.date);
+          const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+          const monthDay = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          
+          return {
+            name: dayName,
+            weight: Math.round(item.weight * 10) / 10,
+            target: targetWeight,
+            date: monthDay
+          };
+        });
+        
+      case "monthly":
+        // Group by weeks for the last month
+        const weeklyData: { [key: string]: { weights: number[], dates: string[] } } = {};
+        
+        data.forEach((item) => {
+          const date = new Date(item.date);
+          const weekStart = new Date(date);
+          weekStart.setDate(date.getDate() - date.getDay());
+          const weekKey = weekStart.toISOString().split('T')[0];
+          
+          if (!weeklyData[weekKey]) {
+            weeklyData[weekKey] = { weights: [], dates: [] };
+          }
+          weeklyData[weekKey].weights.push(item.weight);
+          weeklyData[weekKey].dates.push(item.date);
+        });
+        
+        return Object.entries(weeklyData).map(([weekStart, data], index) => {
+          const avgWeight = data.weights.reduce((sum, w) => sum + w, 0) / data.weights.length;
+          const weekStartDate = new Date(weekStart);
+          const weekLabel = `Week ${index + 1}`;
+          const monthLabel = weekStartDate.toLocaleDateString('en-US', { month: 'short' });
+          
+          return {
+            name: weekLabel,
+            weight: Math.round(avgWeight * 10) / 10,
+            target: targetWeight,
+            date: `${monthLabel} W${index + 1}`
+          };
+        });
+        
+      case "yearly":
+        // Group by months for the last year
+        const monthlyData: { [key: string]: { weights: number[], dates: string[] } } = {};
+        
+        data.forEach((item) => {
+          const date = new Date(item.date);
+          const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+          
+          if (!monthlyData[monthKey]) {
+            monthlyData[monthKey] = { weights: [], dates: [] };
+          }
+          monthlyData[monthKey].weights.push(item.weight);
+          monthlyData[monthKey].dates.push(item.date);
+        });
+        
+        return Object.entries(monthlyData).map(([monthKey, data]) => {
+          const avgWeight = data.weights.reduce((sum, w) => sum + w, 0) / data.weights.length;
+          const [year, month] = monthKey.split('-');
+          const monthName = new Date(parseInt(year), parseInt(month) - 1).toLocaleDateString('en-US', { month: 'short' });
+          
+          return {
+            name: monthName,
+            weight: Math.round(avgWeight * 10) / 10,
+            target: targetWeight,
+            date: year
+          };
+        });
+        
+      default:
+        return [];
+    }
+  };
+
   useEffect(()=>{
     const loadData = async () => {
       try{
         const data = await fetchUserData(user.id);
         setUserData(data);
+        const weightData = await fetchWeightData(selectedPeriod);
+        setWeightData(weightData);
       }catch (error) {
         console.error("Error fetching user data:", error);
+      } finally {
+        setLoading(false);
       }
     }
     loadData();
-  }, [user?.id])
+  }, [user?.id, selectedPeriod])
 
   return (
     <div className="min-h-screen md:h-screen p-4 md:overflow-hidden overflow-y-auto">
@@ -207,74 +330,91 @@ export const WeightTrackingComponent = ({user}: {user: User}) => {
 
                 {/* Chart Container */}
                 <div className="flex-1 min-h-[300px] md:min-h-0">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={weightData}
-                      margin={{
-                        top: 10,
-                        right: 20,
-                        left: 10,
-                        bottom: 5,
-                      }}
-                      barCategoryGap="15%"
-                      maxBarSize={40}
-                    >
-                      <defs>
-                        <linearGradient
-                          id="targetLineGradient"
-                          x1="0"
-                          y1="0"
-                          x2="0"
-                          y2="1"
-                        >
-                          <stop
-                            offset="5%"
-                            stopColor="#ef4444"
-                            stopOpacity={0.8}
-                          />
-                          <stop
-                            offset="95%"
-                            stopColor="#dc2626"
-                            stopOpacity={0.6}
-                          />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid
-                        strokeDasharray="3 3"
-                        vertical={false}
-                        stroke="#f3f4f6"
-                      />
-                      <XAxis
-                        dataKey="name"
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 11, fill: "#6b7280" }}
-                      />
-                      <YAxis
-                        domain={["dataMin - 1", "dataMax + 1"]}
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 11, fill: "#6b7280" }}
-                        tickFormatter={(value) => `${value}kg`}
-                        width={45}
-                      />
-                      <Tooltip content={<WeightTooltip />} />
-                      <Bar
-                        dataKey="weight"
-                        fill="#3b82f6"
-                        radius={[4, 4, 0, 0]}
-                        name="Weight"
-                      />
-                      <Bar
-                        dataKey="target"
-                        fill="url(#targetLineGradient)"
-                        radius={[2, 2, 0, 0]}
-                        name="Target"
-                        opacity={0.3}
-                        maxBarSize={8}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
+                  {loading ? (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="flex items-center gap-2 text-gray-500">
+                        <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+                        <span>Loading weight data...</span>
+                      </div>
+                    </div>
+                  ) : weightData.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                        <span className="text-gray-400 text-xl">⚖️</span>
+                      </div>
+                      <p className="text-sm text-center">No weight data available</p>
+                      <p className="text-xs text-center mt-1">Start logging your weight to see progress</p>
+                    </div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={weightData}
+                        margin={{
+                          top: 10,
+                          right: 20,
+                          left: 10,
+                          bottom: 5,
+                        }}
+                        barCategoryGap="15%"
+                        maxBarSize={40}
+                      >
+                        <defs>
+                          <linearGradient
+                            id="targetLineGradient"
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="5%"
+                              stopColor="#ef4444"
+                              stopOpacity={0.8}
+                            />
+                            <stop
+                              offset="95%"
+                              stopColor="#dc2626"
+                              stopOpacity={0.6}
+                            />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          vertical={false}
+                          stroke="#f3f4f6"
+                        />
+                        <XAxis
+                          dataKey="name"
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fontSize: 11, fill: "#6b7280" }}
+                        />
+                        <YAxis
+                          domain={["dataMin - 1", "dataMax + 1"]}
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fontSize: 11, fill: "#6b7280" }}
+                          tickFormatter={(value) => `${value}kg`}
+                          width={45}
+                        />
+                        <Tooltip content={<WeightTooltip />} />
+                        <Bar
+                          dataKey="weight"
+                          fill="#3b82f6"
+                          radius={[4, 4, 0, 0]}
+                          name="Weight"
+                        />
+                        <Bar
+                          dataKey="target"
+                          fill="url(#targetLineGradient)"
+                          radius={[2, 2, 0, 0]}
+                          name="Target"
+                          opacity={0.3}
+                          maxBarSize={8}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -300,20 +440,24 @@ export const WeightTrackingComponent = ({user}: {user: User}) => {
 
                 <div className="text-center">
                   <div className="text-4xl font-bold text-gray-900 mb-2">
-                    {currentWeight} kg
+                    {currentWeight ? `${currentWeight} kg` : 'No data'}
                   </div>
                   <div className="flex items-center justify-center gap-2 mb-4">
-                    <span
-                      className={`text-sm font-medium ${
-                        weightChange < 0 ? "text-green-600" : "text-red-600"
-                      }`}
-                    >
-                      {weightChange > 0 ? "+" : ""}
-                      {weightChange.toFixed(1)} kg
-                    </span>
-                    <span className="text-sm text-gray-500">
-                      this {selectedPeriod.slice(0, -2)}
-                    </span>
+                    {currentWeight > 0 && (
+                      <>
+                        <span
+                          className={`text-sm font-medium ${
+                            weightChange < 0 ? "text-green-600" : "text-red-600"
+                          }`}
+                        >
+                          {weightChange > 0 ? "+" : ""}
+                          {weightChange.toFixed(1)} kg
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          this {selectedPeriod.slice(0, -2)}
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -361,10 +505,10 @@ export const WeightTrackingComponent = ({user}: {user: User}) => {
 
                 <div className="text-center">
                   <div className="text-4xl font-bold text-gray-900 mb-2">
-                    20.5
+                    {currentBMI > 0 ? currentBMI : 'No data'}
                   </div>
-                  <div className="text-sm text-green-600 font-medium mb-4">
-                    Normal Range
+                  <div className={`text-sm ${bmiInfo.color} font-medium mb-4`}>
+                    {currentBMI > 0 ? bmiInfo.category : 'Log weight to see BMI'}
                   </div>
                 </div>
 

@@ -1,15 +1,16 @@
 'use client'
 
-import { useState, type ChangeEvent } from 'react'
+import { useState, useEffect, type ChangeEvent } from 'react'
 import { ChevronLeft, UploadCloud, Menu, X } from 'lucide-react'
 import Image from 'next/image'
 import Lottie from 'lottie-react'
 import * as animationData from './Vector.json'
 import { useAuth } from '@/hooks/useAuth'
 import { db } from '@/utils/firebase'
-import { collection, addDoc, doc, setDoc } from 'firebase/firestore'
+import { collection, addDoc, doc, setDoc, getDoc, getDocs, query, where, writeBatch, arrayUnion } from 'firebase/firestore'
 import { useToast } from '@/hooks/use-toast'
 import { WeightTrackingComponent } from './WeightTracker'
+import WaterIntakeModel from './WaterIntakeModel'
 
 interface FoodIntakeModalProps {
   isOpen: boolean
@@ -91,14 +92,57 @@ export default function FoodIntakeModal({
     null
   )
 
+  // Log Weight state
+  const [weightToLog, setWeightToLog] = useState<string>('')
+  const [weightUnit, setWeightUnit] = useState<'kg' | 'lbs'>('kg')
+  const [loggingWeight, setLoggingWeight] = useState(false)
+  const [weightError, setWeightError] = useState<string | null>(null)
+
+  // Water intake state
+  const [waterIntake, setWaterIntake] = useState(0)
+  const [loadingWaterData, setLoadingWaterData] = useState(false)
+  const [waterGoal] = useState(2000) // Daily goal in ml
+  const [savingWaterIntake, setSavingWaterIntake] = useState(false)
+
+  // Calculate water level percentage (capped at 100% for animation)
+  const waterLevelPercentage = Math.min((waterIntake / waterGoal) * 100, 100)
+
+  // Load water intake data on component mount
+  useEffect(() => {
+    const loadWaterIntake = async () => {
+      if (!user) return
+
+      try {
+        setLoadingWaterData(true)
+        const today = new Date().toISOString().split('T')[0]
+        
+        // Get the water intake document for today using date as document ID
+        const waterIntakeRef = doc(db, `users/${user.id}/dailyWaterIntake`, today)
+        const waterIntakeDoc = await getDoc(waterIntakeRef)
+        
+        if (waterIntakeDoc.exists()) {
+          const data = waterIntakeDoc.data()
+          setWaterIntake(data.totalIntake || 0)
+        } else {
+          setWaterIntake(0)
+        }
+      } catch (error) {
+        console.error('Error loading water intake:', error)
+        setWaterIntake(0)
+      } finally {
+        setLoadingWaterData(false)
+      }
+    }
+
+    loadWaterIntake()
+  }, [user])
+
   const tabs = [
+    "Overall Transformation",
     'Meal Intake',
     'Water Intake',
     'Body Transformation',
-    'Sleep Periods',
-    'Cardio',
-    'Weight',
-    'Habits',
+    'Log Weight',
   ]
 
   function parseQuantity(qty: string): { num: number; unit: string } {
@@ -131,6 +175,119 @@ export default function FoodIntakeModal({
       }
     })
   }
+
+  // Water intake functions
+  const handleWaterIntake = async (amount: number) => {
+    if (!user) return
+
+    try {
+      setSavingWaterIntake(true)
+      const newTotal = waterIntake + amount
+      setWaterIntake(newTotal)
+
+      // Save water intake to Firestore using date as document ID
+      const today = new Date().toISOString().split('T')[0]
+      const timestamp = new Date().toISOString()
+      
+      const waterIntakeRef = doc(db, `users/${user.id}/dailyWaterIntake`, today)
+      await setDoc(
+        waterIntakeRef,
+        {
+          totalIntake: newTotal,
+          date: today,
+          lastUpdated: timestamp,
+          intakeHistory: arrayUnion({
+            amount: amount,
+            timestamp: timestamp
+          })
+        },
+        { merge: true }
+      )
+
+      // Update dailySummaries with new total
+      const dailySummaryRef = doc(db, 'users', user.id, 'dailySummaries', today)
+      const existingSummary = await getDoc(dailySummaryRef)
+      const existingData = existingSummary.exists() ? existingSummary.data() : {}
+
+      await setDoc(
+        dailySummaryRef,
+        {
+          ...existingData,
+          date: today,
+          waterIntake: newTotal,
+          lastUpdated: new Date(),
+        },
+        { merge: true }
+      )
+
+      toast({
+        title: "Water intake updated",
+        description: `Added ${amount}ml to your daily intake`,
+      })
+    } catch (error) {
+      console.error('Error updating water intake:', error)
+      // Revert the UI state on error
+      setWaterIntake(waterIntake)
+      toast({
+        title: "Error",
+        description: "Failed to update water intake",
+        variant: "destructive",
+      })
+    } finally {
+      setSavingWaterIntake(false)
+    }
+  }
+
+  const resetWaterIntake = async () => {
+    if (!user) return
+
+    try {
+      setSavingWaterIntake(true)
+      const today = new Date().toISOString().split('T')[0]
+      
+      // Delete the water intake document for today
+      const waterIntakeRef = doc(db, `users/${user.id}/dailyWaterIntake`, today)
+      await setDoc(waterIntakeRef, {
+        totalIntake: 0,
+        date: today,
+        lastUpdated: new Date().toISOString(),
+        intakeHistory: []
+      })
+      
+      setWaterIntake(0)
+
+      // Update dailySummaries to reset water intake
+      const dailySummaryRef = doc(db, 'users', user.id, 'dailySummaries', today)
+      const existingSummary = await getDoc(dailySummaryRef)
+      const existingData = existingSummary.exists() ? existingSummary.data() : {}
+
+      await setDoc(
+        dailySummaryRef,
+        {
+          ...existingData,
+          date: today,
+          totalWaterIntake: 0,
+          lastUpdated: new Date(),
+        },
+        { merge: true }
+      )
+
+      toast({
+        title: "Water intake reset",
+        description: "Daily water intake has been reset to 0ml",
+      })
+    } catch (error) {
+      console.error('Error resetting water intake:', error)
+      toast({
+        title: "Error",
+        description: "Failed to reset water intake",
+        variant: "destructive",
+      })
+    } finally {
+      setSavingWaterIntake(false)
+    }
+  }
+
   const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -460,6 +617,85 @@ export default function FoodIntakeModal({
         i === idx ? { ...item, checked: !item.checked } : item
       )
     )
+  }
+
+  // Handle weight logging
+  const handleLogWeight = async () => {
+    if (!user) {
+      toast({
+        title: 'Authentication Required',
+        description: 'Please log in to log your weight.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    if (!weightToLog || isNaN(Number(weightToLog)) || Number(weightToLog) <= 0) {
+      setWeightError('Please enter a valid weight')
+      return
+    }
+
+    setLoggingWeight(true)
+    setWeightError(null)
+
+    try {
+      const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
+      const weightValue = Number(weightToLog)
+
+      // Convert to kg if necessary (for consistency)
+      const weightInKg = weightUnit === 'lbs' ? weightValue * 0.453592 : weightValue
+
+      // Save to dailyWeight collection
+      const weightData = {
+        userId: user.id,
+        date: today,
+        weight: weightInKg,
+        originalWeight: weightValue,
+        unit: weightUnit,
+        timestamp: new Date(),
+      }
+
+      const dailyWeightRef = doc(db, 'users', user.id, 'dailyWeight', today)
+      await setDoc(dailyWeightRef, weightData, { merge: true })
+
+      // Also update the dailySummaries for consistency
+      const dailySummaryRef = doc(db, 'users', user.id, 'dailySummaries', today)
+      const { getDoc } = await import('firebase/firestore')
+      const existingSummary = await getDoc(dailySummaryRef)
+      const existingData = existingSummary.exists() ? existingSummary.data() : {}
+
+      await setDoc(
+        dailySummaryRef,
+        {
+          ...existingData,
+          date: today,
+          weight: weightInKg,
+          weightUnit: weightUnit,
+          lastUpdated: new Date(),
+        },
+        { merge: true }
+      )
+
+      toast({
+        title: 'Weight Logged Successfully! ⚖️',
+        description: `Your weight of ${weightValue} ${weightUnit} has been saved for today.`,
+      })
+
+      // Reset form
+      setWeightToLog('')
+      setWeightError(null)
+      onClose()
+    } catch (error) {
+      console.error('Error logging weight:', error)
+      setWeightError('Failed to save weight. Please try again.')
+      toast({
+        title: 'Save Failed',
+        description: 'Failed to save weight. Please try again.',
+        variant: 'destructive',
+      })
+    } finally {
+      setLoggingWeight(false)
+    }
   }
 
   const renderHabitsContent = () => (
@@ -1439,6 +1675,192 @@ export default function FoodIntakeModal({
     </div>
   )
 
+  const renderLogWeightContent = () => (
+    <div className="flex-1 flex flex-col items-center justify-center max-w-md mx-auto">
+      <div className="w-full">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-blue-600 text-2xl">⚖️</span>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Log Your Weight
+          </h2>
+          <p className="text-gray-600">Track your daily weight progress</p>
+        </div>
+
+        {/* Weight Input Form */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+          <div className="space-y-6">
+            {/* Weight Input */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Current Weight
+              </label>
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    value={weightToLog}
+                    onChange={(e) => setWeightToLog(e.target.value)}
+                    placeholder="Enter weight"
+                    className="w-full text-3xl font-bold text-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  />
+                </div>
+
+                {/* Unit Selector */}
+                <div className="flex bg-gray-100 rounded-xl p-1">
+                  <button
+                    type="button"
+                    onClick={() => setWeightUnit('kg')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                      weightUnit === 'kg'
+                        ? 'bg-blue-500 text-white shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    kg
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setWeightUnit('lbs')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                      weightUnit === 'lbs'
+                        ? 'bg-blue-500 text-white shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    lbs
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Date Display */}
+            <div className="text-center">
+              <p className="text-sm text-gray-500">
+                Logging for:{' '}
+                <span className="font-medium text-gray-700">
+                  {new Date().toLocaleDateString()}
+                </span>
+              </p>
+            </div>
+
+            {/* Error Message */}
+            {weightError && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs">!</span>
+                  </div>
+                  <span className="text-red-600 text-sm">{weightError}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Save Button */}
+            <button
+              onClick={handleLogWeight}
+              disabled={loggingWeight || !weightToLog}
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-4 rounded-xl shadow-sm transition-all text-lg"
+            >
+              {loggingWeight ? (
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Saving...
+                </div>
+              ) : (
+                'Log Weight'
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+
+  const renderWaterIntakeContent = () => (
+    <div className="flex flex-col lg:flex-row gap-8 w-full items-stretch">
+      {/* Left: Water Intake Controls */}
+      <div className="flex-1 flex flex-col gap-6 min-w-[260px]">
+        <div className="bg-white rounded-2xl shadow border border-gray-100 p-6 flex flex-col items-center mb-2">
+          <div className="text-gray-500 text-base mb-2">Water Intake</div>
+          <div className="text-5xl font-extrabold text-blue-600 mb-1">
+            {loadingWaterData ? '--' : waterIntake}
+            <span className="text-2xl font-medium text-blue-400 ml-1">ml</span>
+          </div>
+        </div>
+        <div className="bg-white rounded-2xl shadow border border-gray-100 p-6 flex flex-col gap-4">
+          <div className="text-gray-500 text-base mb-2">Quick Add</div>
+          <div className="flex flex-col gap-4">
+            <button
+              onClick={() => handleWaterIntake(250)}
+              disabled={savingWaterIntake}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-colors text-lg shadow"
+            >
+              Add Intake
+            </button>
+            <div className="text-center text-gray-400 text-sm">250ml</div>
+            <button
+              onClick={() => handleWaterIntake(500)}
+              disabled={savingWaterIntake}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-colors text-lg shadow"
+            >
+              Add Intake
+            </button>
+            <div className="text-center text-gray-400 text-sm">500ml</div>
+            <button
+              onClick={() => handleWaterIntake(1000)}
+              disabled={savingWaterIntake}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-colors text-lg shadow"
+            >
+              Add Intake
+            </button>
+            <div className="text-center text-gray-400 text-sm">1000ml</div>
+            <button
+              onClick={resetWaterIntake}
+              disabled={savingWaterIntake}
+              className="w-full bg-gray-400 hover:bg-gray-500 text-white font-semibold py-2 rounded-xl transition-colors text-base mt-2"
+            >
+              {savingWaterIntake ? 'Resetting...' : 'Reset Daily Intake'}
+            </button>
+          </div>
+        </div>
+      </div>
+      {/* Right: Today's Intake and Human Model */}
+      <div className="flex-1 flex flex-col items-center justify-between gap-6 min-w-[260px]">
+        <div className="bg-white rounded-2xl shadow border border-gray-100 p-6 flex flex-col items-center w-full mb-4">
+          <div className="text-gray-500 text-base mb-2">Today's Intake</div>
+          <div className="flex items-center gap-4">
+            <div className="text-4xl font-extrabold text-blue-700">{waterIntake} <span className="text-lg font-medium text-blue-400">ml</span></div>
+            <div className="relative w-14 h-14 flex items-center justify-center">
+              <svg className="absolute top-0 left-0" width="56" height="56">
+                <circle cx="28" cy="28" r="25" stroke="#e0e7ef" strokeWidth="6" fill="none" />
+                <circle
+                  cx="28" cy="28" r="25"
+                  stroke="#3b82f6"
+                  strokeWidth="6"
+                  fill="none"
+                  strokeDasharray={2 * Math.PI * 25}
+                  strokeDashoffset={2 * Math.PI * 25 * (1 - waterLevelPercentage / 100)}
+                  strokeLinecap="round"
+                  style={{ transition: 'stroke-dashoffset 1s cubic-bezier(.4,2,.6,1)' }}
+                />
+              </svg>
+              <span className="absolute text-xs font-semibold text-blue-700">{Math.round(waterLevelPercentage)}%</span>
+            </div>
+          </div>
+          <div className="text-xs text-gray-400 mt-2">Goal: {waterGoal} ml</div>
+        </div>
+        <div className="flex-1 flex items-center justify-center w-full">
+          <WaterIntakeModel waterLevel={waterLevelPercentage} />
+        </div>
+      </div>
+    </div>
+  );
+
   if (!isOpen) return null
 
   return (
@@ -1516,8 +1938,12 @@ export default function FoodIntakeModal({
             renderHabitsContent()
           ) : selectedTab === 'Body Transformation' ? (
             renderBodyTransformationContent()
-          ) : selectedTab === 'Weight' ? (
+          ) : selectedTab === 'Water Intake' ? (
+            renderWaterIntakeContent()
+          ) : selectedTab === 'Overall Transformation' ? (
             <WeightTrackingComponent user={user!}/>
+          ) : selectedTab === 'Log Weight' ? (
+            renderLogWeightContent()
           ) : (
             renderMealIntakeContent()
           )}

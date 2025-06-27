@@ -11,7 +11,6 @@ import { deleteObject } from 'firebase/storage'
 import {
   ArrowLeft,
   FileText,
-  Upload,
   UserIcon,
   X,
   CheckCircle,
@@ -32,11 +31,11 @@ import OverlayLoader from '@/components/OverlayLoader'
 
 const Viewer = dynamic(
   () => import('@react-pdf-viewer/core').then((mod) => mod.Viewer),
-  { ssr: false },
+  { ssr: false }
 )
 const Worker = dynamic(
   () => import('@react-pdf-viewer/core').then((mod) => mod.Worker),
-  { ssr: false },
+  { ssr: false }
 )
 
 export default function UserDetailsPage() {
@@ -109,7 +108,7 @@ export default function UserDetailsPage() {
 
   const handleProgramSelect = (program: string, isChecked: boolean) => {
     setSelectedPrograms((prev) =>
-      isChecked ? [...prev, program] : prev.filter((p) => p !== program),
+      isChecked ? [...prev, program] : prev.filter((p) => p !== program)
     )
   }
 
@@ -120,7 +119,7 @@ export default function UserDetailsPage() {
       const userRef = doc(db, 'users', id as string)
       const updates = selectedPrograms.reduce(
         (acc, program) => ({ ...acc, [`assignedPrograms.${program}`]: true }),
-        {},
+        {}
       )
       await updateDoc(userRef, updates)
 
@@ -130,7 +129,7 @@ export default function UserDetailsPage() {
           ...(prev.assignedPrograms || {}),
           ...selectedPrograms.reduce(
             (acc, program) => ({ ...acc, [program]: true }),
-            {},
+            {}
           ),
         },
       }))
@@ -146,105 +145,116 @@ export default function UserDetailsPage() {
     }
   }
 
-const handleMultipleFileUpload = async (files: FileList) => {
-  if (!id) return;
+  const handleMultipleFileUpload = async (files: FileList) => {
+    if (!id) return
 
-  const fileArray = Array.from(files);
-  if (!fileArray.length) return;
+    const fileArray = Array.from(files)
+    if (!fileArray.length) return
 
-  setprocessingText({ active: true, message: "Uploading and extracting all PDFs..." });
-  setUploading(true);
+    setprocessingText({
+      active: true,
+      message: 'Uploading and extracting all PDFs...',
+    })
+    setUploading(true)
 
-  try {
-    // Upload all files to Firebase Storage
-    const storage = getStorage();
-    const uploadedMetadata = await Promise.all(
-      fileArray.map(async (file) => {
-        const timestamp = Date.now();
-        const category = "labs";
-        const fullStorageName = `${timestamp}-${file.name}`;
-        const storageRef = ref(storage, `documents/${id}/${category}/${fullStorageName}`);
-        await uploadBytes(storageRef, file);
-        const downloadURL = await getDownloadURL(storageRef);
-        return {
-          file,
-          fullStorageName,
-          downloadURL,
-          docKey: file.name.split(".")[0],
-          category,
-        };
+    try {
+      // Upload all files to Firebase Storage
+      const storage = getStorage()
+      const uploadedMetadata = await Promise.all(
+        fileArray.map(async (file) => {
+          const timestamp = Date.now()
+          const category = 'labs'
+          const fullStorageName = `${timestamp}-${file.name}`
+          const storageRef = ref(
+            storage,
+            `documents/${id}/${category}/${fullStorageName}`
+          )
+          await uploadBytes(storageRef, file)
+          const downloadURL = await getDownloadURL(storageRef)
+          return {
+            file,
+            fullStorageName,
+            downloadURL,
+            docKey: file.name.split('.')[0],
+            category,
+          }
+        })
+      )
+
+      // Send all files to Groq API
+      const formData = new FormData()
+      fileArray.forEach((file) => formData.append('files', file))
+
+      const res = await fetch('/api/process-pdf', {
+        method: 'POST',
+        body: formData,
       })
-    );
 
-    // Send all files to Groq API
-    const formData = new FormData();
-    fileArray.forEach((file) => formData.append("files", file));
+      const { extractedJsonArray: rawReply } = await res.json()
 
-    const res = await fetch("/api/process-pdf", {
-      method: "POST",
-      body: formData,
-    });
+      // ✅ Fix: extract JSON inside code block if needed
+      let cleanedReply = rawReply
+      if (typeof rawReply === 'string') {
+        const match = rawReply.match(/```json\s*([\s\S]*?)```/i)
+        cleanedReply = match ? match[1] : rawReply
+      }
 
-    // THIS assumes you're only extracting ONE unified object for all files
-  const { extractedJsonArray: rawReply } = await res.json();
+      let extractedJsonArray
+      try {
+        extractedJsonArray = JSON.parse(cleanedReply)
+      } catch (err) {
+        console.error('❌ Failed to parse Groq JSON:', cleanedReply)
+        toast.error('Failed to parse extracted data.')
+        extractedJsonArray = []
+      }
 
-  // No need to clean — it's already parsed JSON
-  const extractedJsonObject = rawReply;
+      if (!extractedJsonArray)
+        throw new Error('Groq extraction failed or returned nothing.')
 
-  // Store this whole object directly
-  // const structuredExtractedData: Record<string, any> = {
-  //   combined_report: extractedJsonObject,  // 👈 just store it under a key
-  // };
+      // Construct Firestore updates
+      const userRef = doc(db, 'users', id as string)
+      const updatedDocs: any = {}
+      const structuredExtractedData: Record<string, any> = {}
 
+      uploadedMetadata.forEach((meta, index) => {
+        const extracted = extractedJsonArray?.[index] || ''
+        updatedDocs[meta.docKey] = {
+          name: meta.file.name,
+          size: meta.file.size,
+          type: meta.file.type,
+          uploadedAt: new Date().toISOString(),
+          downloadURL: meta.downloadURL,
+          fullStorageName: meta.fullStorageName,
+        }
+        structuredExtractedData[meta.docKey] = extracted
+      })
 
-    // Construct Firestore updates
-    const userRef = doc(db, "users", id as string);
-    const updatedDocs: any = {};
-    // const structuredExtractedData: Record<string, any> = {};
+      await updateDoc(userRef, {
+        labs: {
+          ...(userData?.labs || {}),
+          ...updatedDocs,
+        },
+        extractedLabData: JSON.stringify(structuredExtractedData, null, 2),
+      })
 
-  uploadedMetadata.forEach((meta) => {
-  updatedDocs[meta.docKey] = {
-    name: meta.file.name,
-    size: meta.file.size,
-    type: meta.file.type,
-    uploadedAt: new Date().toISOString(),
-    downloadURL: meta.downloadURL,
-    fullStorageName: meta.fullStorageName,
-  };
-});
+      setUserData((prev: any) => ({
+        ...prev,
+        labs: {
+          ...(prev?.labs || {}),
+          ...updatedDocs,
+        },
+        extractedLabData: JSON.stringify(structuredExtractedData, null, 2),
+      }))
 
-// Store full extracted JSON under a single key like "combined_report"
-const structuredExtractedData: Record<string, any> = {
-  combined_report: rawReply,  // this is your parsed, structured JSON from Groq
-};
-
-
-    await updateDoc(userRef, {
-      labs: {
-        ...(userData?.labs || {}),
-        ...updatedDocs,
-      },
-      extractedLabData: rawReply,
-    });
-
-    setUserData((prev: any) => ({
-      ...prev,
-      labs: {
-        ...(prev?.labs || {}),
-        ...updatedDocs,
-      },
-      extractedLabData: rawReply,
-    }));
-
-    toast.success("All files uploaded and processed!");
-  } catch (err) {
-    console.error("❌ Upload failed:", err);
-    toast.error("Upload or extraction failed.");
-  } finally {
-    setUploading(false);
-    setprocessingText({ active: false, message: "" });
+      toast.success('All files uploaded and processed!')
+    } catch (err) {
+      console.error('❌ Upload failed:', err)
+      toast.error('Upload or extraction failed.')
+    } finally {
+      setUploading(false)
+      setprocessingText({ active: false, message: '' })
+    }
   }
-}
 
   const handleViewPdf = (downloadURL: string) => {
     setSelectedPdf(downloadURL)
@@ -256,7 +266,7 @@ const structuredExtractedData: Record<string, any> = {
   const handleDeleteFile = async (
     category: string,
     fileId: string,
-    fullStorageName: string,
+    fullStorageName: string
   ) => {
     try {
       if (!id) return
@@ -275,7 +285,7 @@ const structuredExtractedData: Record<string, any> = {
       const storage = getStorage()
       const fileRef = ref(
         storage,
-        `documents/${id}/${category}/${fullStorageName}`,
+        `documents/${id}/${category}/${fullStorageName}`
       )
       await deleteObject(fileRef) // Ensure this works depending on your Firebase version
 
@@ -291,35 +301,6 @@ const structuredExtractedData: Record<string, any> = {
       toast.error('Failed to delete file.')
     }
   }
-
-  // const handleDownloadClinicalSummary = async () => {
-  //   if (!userData?.extractedLabData) return toast.error("No extracted lab data found.");
-
-  //   try {
-  //     const res = await fetch("/api/generate-summary", {
-  //       method: "POST",
-  //       body: JSON.stringify({
-  //         extractedText: userData.extractedLabData,
-  //         type: "summary",
-  //       }),
-  //     });
-
-  //     const data = await res.json();
-
-  //     const blob = await pdf(<ClinicalSummaryPdf summary={data.result} />).toBlob();
-  //     const url = URL.createObjectURL(blob);
-  //     const a = document.createElement("a");
-  //     a.href = url;
-  //     a.download = "Clinical_Summary.pdf";
-  //     a.click();
-  //     URL.revokeObjectURL(url);
-
-  //     toast.success("Clinical Summary PDF downloaded!");
-  //   } catch (err) {
-  //     console.error(err);
-  //     toast.error("Failed to download clinical summary.");
-  //   }
-  // };
 
   const handleDownloadClinicalSummary = async () => {
     if (!userData?.extractedLabData)
@@ -341,7 +322,7 @@ const structuredExtractedData: Record<string, any> = {
       const data = await res.json()
 
       const blob = await pdf(
-        <ClinicalSummaryPdf summary={data.result} />,
+        <ClinicalSummaryPdf summary={data.result} />
       ).toBlob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -358,35 +339,6 @@ const structuredExtractedData: Record<string, any> = {
       setPdfLoading({ active: false, message: '' })
     }
   }
-
-  // const handleDownloadSalesScript = async () => {
-  //   if (!userData?.extractedLabData) return toast.error("No extracted lab data found.");
-
-  //   try {
-  //     const res = await fetch("/api/generate-summary", {
-  //       method: "POST",
-  //       body: JSON.stringify({
-  //         extractedText: userData.extractedLabData,
-  //         type: "sales",
-  //       }),
-  //     });
-
-  //     const data = await res.json();
-
-  //     const blob = await pdf(<SalesScriptPdf script={data.result} />).toBlob();
-  //     const url = URL.createObjectURL(blob);
-  //     const a = document.createElement("a");
-  //     a.href = url;
-  //     a.download = "Sales_Script.pdf";
-  //     a.click();
-  //     URL.revokeObjectURL(url);
-
-  //     toast.success("Sales Script PDF downloaded!");
-  //   } catch (err) {
-  //     console.error(err);
-  //     toast.error("Failed to download sales script.");
-  //   }
-  // };
 
   const handleDownloadSalesScript = async () => {
     if (!userData?.extractedLabData)
@@ -440,8 +392,8 @@ const structuredExtractedData: Record<string, any> = {
             pdfLoading.active
               ? pdfLoading.message
               : processingText.active
-                ? processingText.message
-                : 'Downloading file...'
+              ? processingText.message
+              : 'Downloading file...'
           }
         />
       )}
@@ -504,7 +456,7 @@ const structuredExtractedData: Record<string, any> = {
                     <Calendar className="h-5 w-5 text-blue-500" />
                     <span className="text-blue-900 font-medium">
                       {new Date(
-                        userData.dateOfBirth.seconds * 1000,
+                        userData.dateOfBirth.seconds * 1000
                       ).toLocaleDateString()}
                     </span>
                   </div>
@@ -549,7 +501,7 @@ const structuredExtractedData: Record<string, any> = {
                   <p className="text-xl font-semibold text-blue-900">
                     {userData.createdAt
                       ? new Date(
-                          userData.createdAt.seconds * 1000,
+                          userData.createdAt.seconds * 1000
                         ).toLocaleDateString()
                       : 'N/A'}
                   </p>
@@ -589,45 +541,68 @@ const structuredExtractedData: Record<string, any> = {
 
                       return Object.entries(parsed).map(
                         ([sectionName, sectionData]: [string, any]) => (
-                          <div
+                          <motion.div
                             key={sectionName}
-                            className="bg-white p-6 rounded-xl shadow border min-w-[250px] w-full"
+                            className="bg-gradient-to-r from-white to-blue-50 p-6 rounded-3xl shadow-lg border border-blue-100/50 hover:scale-105 hover:shadow-xl transition-all duration-200"
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
                           >
-                            <h3 className="text-blue-700 font-bold text-md mb-2 capitalize">
+                            <h3 className="text-blue-700 font-bold text-lg mb-2 capitalize">
                               {sectionName.replace(/_/g, ' ')}
                             </h3>
-                            <ul className="list-disc list-inside text-blue-900 space-y-1">
+                            <div className="space-y-3">
                               {Object.entries(sectionData || {}).map(
                                 ([label, value]) => (
-                                  <li key={label}>
-                                    <span className="font-medium capitalize">
-                                      {label.replace(/_/g, ' ')}:
-                                    </span>{' '}
-                                    {value === null || value === '' ? (
-                                      'N/A'
-                                    ) : typeof value === 'object' &&
-                                      !Array.isArray(value) ? (
-                                      <ul className="ml-4 list-disc text-sm">
-                                        {Object.entries(value).map(([k, v]) => (
-                                          <li key={k}>
-                                            <span className="font-medium capitalize">
-                                              {k.replace(/_/g, ' ')}:
-                                            </span>{' '}
-                                            {v === null || v === ''
-                                              ? 'N/A'
-                                              : String(v)}
-                                          </li>
-                                        ))}
-                                      </ul>
-                                    ) : (
-                                      String(value)
-                                    )}
-                                  </li>
-                                ),
+                                  <div key={label} className="group">
+                                    <div className="flex items-start justify-between p-3 bg-white/60 rounded-2xl border border-blue-100/30 hover:bg-white/80 hover:border-blue-200/50 transition-all duration-200">
+                                      <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-1">
+                                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                          <span className="text-sm font-semibold text-blue-800 capitalize">
+                                            {label.replace(/_/g, ' ')}
+                                          </span>
+                                        </div>
+                                        <div className="ml-4">
+                                          {value === null || value === '' ? (
+                                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+                                              N/A
+                                            </span>
+                                          ) : typeof value === 'object' &&
+                                            !Array.isArray(value) ? (
+                                            <div className="space-y-2 mt-2">
+                                              {Object.entries(value).map(
+                                                ([k, v]) => (
+                                                  <div
+                                                    key={k}
+                                                    className="flex items-center justify-between p-2 bg-blue-50/50 rounded-xl"
+                                                  >
+                                                    <span className="text-xs font-medium text-blue-700 capitalize">
+                                                      {k.replace(/_/g, ' ')}
+                                                    </span>
+                                                    <span className="text-xs text-blue-900 font-semibold">
+                                                      {v === null || v === ''
+                                                        ? 'N/A'
+                                                        : String(v)}
+                                                    </span>
+                                                  </div>
+                                                )
+                                              )}
+                                            </div>
+                                          ) : (
+                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                                              {String(value)}
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )
                               )}
-                            </ul>
-                          </div>
-                        ),
+                            </div>
+                          </motion.div>
+                        )
                       )
                     } catch (e) {
                       return (
@@ -679,21 +654,23 @@ const structuredExtractedData: Record<string, any> = {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {availablePrograms.map((program) => {
-                  // const isDefault = defaultPrograms.includes(program);
                   const isAlreadyAssigned =
                     !!userData.assignedPrograms?.[program]
                   const isChecked = selectedPrograms.includes(program)
 
                   return (
-                    <label
+                    <motion.label
                       key={program}
                       className={`flex items-center gap-4 p-6 rounded-xl border-2 transition-all duration-200 cursor-pointer ${
                         isAlreadyAssigned
                           ? 'bg-blue-50 border-blue-200'
                           : isChecked
-                            ? 'bg-blue-100 border-blue-300 shadow-md'
-                            : 'hover:border-blue-300 hover:bg-blue-50'
+                          ? 'bg-blue-100 border-blue-300 shadow-md'
+                          : 'hover:border-blue-300 hover:bg-blue-50'
                       }`}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
                     >
                       <input
                         type="checkbox"
@@ -707,17 +684,12 @@ const structuredExtractedData: Record<string, any> = {
                       <span className="flex-1 font-medium text-blue-900">
                         {program}
                       </span>
-                      {/* {isDefault && (
-                      <span className="text-xs px-3 py-1 bg-blue-500 text-white rounded-full font-medium">
-                        default
-                      </span>
-                    )} */}
                       {isAlreadyAssigned && (
                         <span className="text-xs px-3 py-1 bg-green-500 text-white rounded-full font-medium">
                           assigned
                         </span>
                       )}
-                    </label>
+                    </motion.label>
                   )
                 })}
               </div>
@@ -749,16 +721,11 @@ const structuredExtractedData: Record<string, any> = {
                       uploading ? 'opacity-50' : 'hover:opacity-80'
                     }`}
                   >
-                    <div className="  text-white mb-6">
+                    <div className="text-white mb-6">
                       <FileUpload
                         label="Upload Document"
                         multiple
                         accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                         onChange={(e) => {
-                        if (e.target.files && e.target.files.length > 0) {
-                          handleMultipleFileUpload(e.target.files);
-                        }
-                      }}
                       />
                       <p className="text-sm text-blue-600 mt-6 font-medium">
                         Supported formats: PDF, JPEG, PNG, DOC • Max size: 10MB
@@ -768,9 +735,6 @@ const structuredExtractedData: Record<string, any> = {
                     <span className="text-blue-900 font-semibold text-lg mb-2">
                       {uploading ? 'Uploading...' : 'Upload Document'}
                     </span>
-                    {/* <span className="text-blue-600">
-                    PDF, DOC, DOCX, or images
-                  </span> */}
                   </label>
 
                   {uploading && (
@@ -800,7 +764,7 @@ const structuredExtractedData: Record<string, any> = {
                               },
                             })
                           }
-                        },
+                        }
                       )
                     }
                   })
@@ -814,9 +778,12 @@ const structuredExtractedData: Record<string, any> = {
                   }
 
                   return allDocs.map(({ id, data }) => (
-                    <div
+                    <motion.div
                       key={id}
                       className="flex justify-between items-center bg-green-50 rounded-xl p-4 border border-green-100 shadow-sm hover:shadow-md transition"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
                     >
                       <div className="flex items-center space-x-4">
                         <div className="h-10 w-10 bg-green-500 rounded-lg flex items-center justify-center">
@@ -873,14 +840,14 @@ const structuredExtractedData: Record<string, any> = {
                             handleDeleteFile(
                               data.category || 'labs',
                               id,
-                              data.fullStorageName,
+                              data.fullStorageName
                             )
                           }
                         >
                           <X className="h-5 w-5" />
                         </Button>
                       </div>
-                    </div>
+                    </motion.div>
                   ))
                 })()}
               </div>

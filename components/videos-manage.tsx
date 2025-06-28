@@ -36,6 +36,10 @@ import { ref, get, set, onValue, push, remove, update } from 'firebase/database'
 import { doc, getDoc, updateDoc } from 'firebase/firestore'
 import { getAuth } from 'firebase/auth'
 import { useProgramContext } from '@/hooks/useProgressData'
+import { FileUpload } from './ui/file-upload'
+// Correct usage in your component/page:
+import { ref as dbRef } from 'firebase/database'
+import { ref as storageRef, uploadBytes, getDownloadURL, getStorage } from 'firebase/storage'
 
 interface VideosManagerProps {
   programId: string
@@ -64,7 +68,11 @@ export function VideosManager({
     duration: '00:00',
     order: 1,
     todo: [''],
+    documentUrl : ''
   })
+  const [uploadingDoc, setUploadingDoc] = useState(false)
+const [uploadError, setUploadError] = useState<string | null>(null)
+
   const { recentActivity, setrecentActivity } = useProgramContext()
   // const [currentModuleForVideo, setCurrentModuleForVideo] = useState<Module | null>(null);
 
@@ -183,35 +191,46 @@ export function VideosManager({
     // },
   ])
 
-  useEffect(() => {
-    const fetchModuleVideos = async () => {
-      const videosRef = ref(
-        rtdb,
-        `courses/thrivemed/programs/${programId}/modules/${moduleId}/videos`,
-      )
-      const snapshot = await get(videosRef)
-      if (snapshot.exists()) {
-        const data = snapshot.val()
-        // setVideos(data); // optionally map/transform and set to state
-        const loadedPrograms = Object.entries(data).map(([id, value]: any) => ({
-          id,
-          ...value,
-          createdAt: new Date(value.createdAt).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-          }),
-        }))
-        setVideos(loadedPrograms)
-      } else {
-        console.log('No videos found.')
-      }
-    }
+useEffect(() => {
+  const fetchModuleVideos = async () => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) return;
 
-    if (programId && moduleId) {
-      fetchModuleVideos()
+    const userRef = doc(db, 'users', user.uid);
+    const userSnap = await getDoc(userRef);
+    const userData = userSnap.data();
+    const completedVideos = userData?.completedVideos?.[programId]?.[moduleId] || [];
+
+    const videosRef = ref(
+      rtdb,
+      `courses/thrivemed/programs/${programId}/modules/${moduleId}/videos`
+    );
+    const snapshot = await get(videosRef);
+
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      const loadedVideos = Object.entries(data).map(([id, value]: any) => ({
+        id,
+        ...value,
+        completed: completedVideos.includes(id), // ✅ Mark completed
+        createdAt: new Date(value.createdAt).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        }),
+      }));
+      setVideos(loadedVideos);
+    } else {
+      setVideos([]);
     }
-  }, [programId, moduleId])
+  };
+
+  if (programId && moduleId) {
+    fetchModuleVideos();
+  }
+}, [programId, moduleId]);
+
 
   const filteredVideos = videos
     .filter(
@@ -297,10 +316,12 @@ export function VideosManager({
     const newVideoData = {
       id,
       ...newVideo,
+      documentUrl: newVideo.documentUrl || '',
       progress: 0,
       modules: {},
       createdAt: nowISOString,
       updatedAt: nowISOString,
+
     }
 
     try {
@@ -377,13 +398,13 @@ export function VideosManager({
       await updateDoc(userRef, {
         [`programProgress.${programId}`]: programProgressPercent,
       })
-      if (programProgressPercent === 100) {
-        const programStatusRef = ref(
-          rtdb,
-          `courses/thrivemed/programs/${programId}/status`,
-        )
-        await set(programStatusRef, 'completed')
-      }
+        if (programProgressPercent === 100) {
+      await updateDoc(userRef, {
+        [`programStatus.${programId}`]: 'completed',
+      })
+    }
+
+
     } catch (error) {
       console.error('Error saving to Firebase:', error)
     } finally {
@@ -394,6 +415,7 @@ export function VideosManager({
         duration: '00:00',
         order: 1,
         todo: [''],
+        documentUrl : ""
       })
       setisAdding(false)
     }
@@ -547,6 +569,9 @@ export function VideosManager({
         completedVideos: updatedCompletedVideos,
         [`programProgress.${programId}`]: programProgressPercent,
       })
+      await updateDoc(userRef, {
+      [`programStatus.${programId}`]: programProgressPercent === 100 ? 'completed' : 'active',
+    })
     } catch (error) {
       console.error('Failed to delete video from Firebase:', error)
     } finally {
@@ -621,9 +646,11 @@ const toggleVideoCompletion = async (videoId: string) => {
   });
 
   if (programProgressPercent === 100) {
-    const programStatusRef = ref(rtdb, `courses/thrivemed/programs/${programId}/status`);
-    await set(programStatusRef, "completed");
+    await updateDoc(userRef, {
+    [`programStatus.${programId}`]: programProgressPercent === 100 ? 'completed' : 'active',
+  })
   }
+
 
   // Update UI
   const updatedVideos = videos.map((video) =>
@@ -809,6 +836,46 @@ const toggleVideoCompletion = async (videoId: string) => {
                     + Add Another Item
                   </Button>
                 </div>
+                <div className="space-y-2">
+  <label className="text-sm font-medium">Upload Supporting Document (optional)</label>
+        <FileUpload
+          onChange={async (e) => {
+            const file = e.target.files?.[0]
+            if (!file) return
+
+            setUploadingDoc(true)
+            setUploadError(null)
+
+            try {
+              const storage = getStorage()
+              const fileRef = storageRef(storage, `videos/${programId}/${moduleId}/${file.name}`)
+
+              await uploadBytes(fileRef, file)
+              const downloadUrl = await getDownloadURL(fileRef)
+
+              setNewVideo((prev) => ({ ...prev, documentUrl: downloadUrl }))
+            } catch (error) {
+              console.error('Upload failed', error)
+              setUploadError('Failed to upload document. Please try again.')
+            } finally {
+              setUploadingDoc(false)
+            }
+          }}
+          label="Upload Supporting Document"
+        />
+
+        </div>
+                  {uploadingDoc && (
+          <p className="text-xs text-blue-600 mt-1">Uploading document...</p>
+        )}
+
+        {uploadError && (
+          <p className="text-xs text-red-600 mt-1">{uploadError}</p>
+        )}
+
+        {newVideo.documentUrl && !uploadingDoc && !uploadError && (
+          <p className="text-xs text-green-600 mt-1">Document uploaded successfully ✅</p>
+        )}
               </div>
               <div className="flex flex-col sm:flex-row justify-end gap-3">
                 <Button
@@ -822,6 +889,7 @@ const toggleVideoCompletion = async (videoId: string) => {
                       duration: '00:00',
                       order: 1,
                       todo: [''],
+                      documentUrl : ""
                     })
                   }}
                   className="w-full sm:w-auto"
@@ -972,6 +1040,7 @@ const toggleVideoCompletion = async (videoId: string) => {
             </div>
           )}
         </div>
+
 
         {/* Edit Video Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>

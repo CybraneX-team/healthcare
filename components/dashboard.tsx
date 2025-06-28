@@ -495,12 +495,13 @@ useEffect(() => {
 
     {isAdmin && (
       <Link href="/admin">
-        <Button
-          variant="ghost"
-          className={`rounded-xl px-8 py-2 bg-blue-500 text-white hover:bg-blue-600 absolute left-10 font-medium`}
-        >
-          Admin
-        </Button>
+       <Button
+        variant="ghost"
+        className={`rounded-xl px-8 py-2 bg-blue-500 text-white hover:bg-blue-600 absolute left-36 bottom-1 font-medium`}
+      >
+        Admin
+      </Button>
+
       </Link>
     )}
 

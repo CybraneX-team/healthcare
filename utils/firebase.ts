@@ -78,8 +78,22 @@ export const signInWithApple = async (): Promise<UserCredential> => {
   provider.addScope('email')
   provider.addScope('name')
 
-  return signInWithPopup(auth, provider)
+  const result = await signInWithPopup(auth, provider)
+  const user = result.user
+
+  const existing = await getUserProfile(user.uid)
+  if (!existing) {
+    await createUserProfile(user.uid, {
+      email: user.email,
+      fullName: user.displayName,
+      photoURL: user.photoURL,
+      provider: 'apple',
+    })
+  }
+
+  return result
 }
+
 
 // Sign out
 export const signOut = async (): Promise<void> => {
@@ -172,8 +186,23 @@ export const resetPassword = async (email: string): Promise<void> => {
 
 export const signInWithGoogle = async (): Promise<UserCredential> => {
   const provider = new GoogleAuthProvider()
-  return signInWithPopup(auth, provider)
+  const result = await signInWithPopup(auth, provider)
+  const user = result.user
+
+  // Optional: check if the user already exists to avoid overwriting
+  const existing = await getUserProfile(user.uid)
+  if (!existing) {
+    await createUserProfile(user.uid, {
+      email: user.email,
+      fullName : user.displayName,
+      photoURL: user.photoURL,
+      provider: 'google',
+    })
+  }
+
+  return result
 }
+
 
 export const saveUserProgress = async (
   userId: string,

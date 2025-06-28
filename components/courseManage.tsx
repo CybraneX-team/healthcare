@@ -175,82 +175,74 @@ export default function Course() {
   //     setModuleProgress(newModuleProgress);
   // };
 
-  const handleMarkVideoComplete = async (videoId: string, moduleId: string) => {
-    const auth = getAuth()
-    const user = auth.currentUser
-    if (!user || !selectedProgram) return
+const handleMarkVideoComplete = async (videoId: string, moduleId: string) => {
+  const auth = getAuth()
+  const user = auth.currentUser
+  if (!user || !selectedProgram) return
 
-    const userRef = doc(db, 'users', user.uid)
-    const userSnap = await getDoc(userRef)
+  const userRef = doc(db, 'users', user.uid)
+  const userSnap = await getDoc(userRef)
 
-    const prevCompletedVideos = userSnap.data()?.completedVideos || {}
-    const programVideos = prevCompletedVideos[selectedProgram] || {}
-    const moduleVideos = new Set(programVideos[moduleId] || [])
-    moduleVideos.add(videoId)
+  const prevCompletedVideos = userSnap.data()?.completedVideos || {}
+  const programVideos = prevCompletedVideos[selectedProgram] || {}
+  const moduleVideos = new Set(programVideos[moduleId] || [])
 
-    const updatedCompletedVideos = {
-      ...prevCompletedVideos,
-      [selectedProgram]: {
-        ...programVideos,
-        [moduleId]: Array.from(moduleVideos),
-      },
-    }
+  moduleVideos.add(videoId) // ✅ Mark current video complete
 
-    // Fetch all modules to recalculate progress
-    const programRef = ref(
-      rtdb,
-      `courses/thrivemed/programs/${selectedProgram}`,
-    )
-    const programSnap = await new Promise<any>((resolve) => {
-      onValue(programRef, (snapshot) => resolve(snapshot.val()), {
-        onlyOnce: true,
-      })
-    })
-    const modules = (programSnap.modules || {}) as Record<string, ModuleData>
-
-    const newModuleProgress: Record<string, number> = {}
-    let totalVideosCount = 0
-    let totalCompletedCount = 0
-
-    for (const [modId, modData] of Object.entries(modules)) {
-      const totalVideos = Object.keys(modData.videos || {}).length
-      const completedCount = (
-        updatedCompletedVideos[selectedProgram]?.[modId] || []
-      ).length
-      const progress =
-        totalVideos === 0 ? 0 : Math.round((completedCount / totalVideos) * 100)
-
-      newModuleProgress[modId] = progress
-
-      totalVideosCount += totalVideos
-      totalCompletedCount += completedCount
-    }
-
-    const programProgressPercent =
-      totalVideosCount === 0
-        ? 0
-        : Math.round((totalCompletedCount / totalVideosCount) * 100)
-
-    await updateDoc(userRef, {
-      [`completedVideos.${selectedProgram}`]:
-        updatedCompletedVideos[selectedProgram],
-      [`moduleProgress.${selectedProgram}`]: newModuleProgress,
-      [`programProgress.${selectedProgram}`]: programProgressPercent,
-    })
-
-    // Update status in RTDB if program is completed
-    if (programProgressPercent === 100) {
-      const programStatusRef = ref(
-        rtdb,
-        `courses/thrivemed/programs/${selectedProgram}/status`,
-      )
-      await set(programStatusRef, 'completed')
-    }
-
-    // Update local state
-    setCompletedVideos(updatedCompletedVideos)
-    setModuleProgress(newModuleProgress)
+  const updatedCompletedVideos = {
+    ...prevCompletedVideos,
+    [selectedProgram]: {
+      ...programVideos,
+      [moduleId]: Array.from(moduleVideos),
+    },
   }
+
+  // 1️⃣ Fetch full program structure from RTDB
+  const programRef = ref(rtdb, `courses/thrivemed/programs/${selectedProgram}`)
+  const programSnap = await new Promise<any>((resolve) => {
+    onValue(programRef, (snapshot) => resolve(snapshot.val()), { onlyOnce: true })
+  })
+
+  const modules = (programSnap.modules || {}) as Record<string, ModuleData>
+  const newModuleProgress: Record<string, number> = {}
+
+  let totalVideosCount = 0
+  let totalCompletedCount = 0
+
+  // 2️⃣ Loop through all modules to recalculate progress
+  for (const [modId, modData] of Object.entries(modules)) {
+    const videoIds = Object.keys(modData.videos || {})
+    const completedIds = updatedCompletedVideos[selectedProgram]?.[modId] || []
+
+    totalVideosCount += videoIds.length
+    totalCompletedCount += completedIds.length
+
+    const progress =
+      videoIds.length === 0 ? 0 : Math.round((completedIds.length / videoIds.length) * 100)
+
+    newModuleProgress[modId] = progress
+  }
+
+  // 3️⃣ Calculate program progress %
+  const programProgressPercent =
+    totalVideosCount === 0
+      ? 0
+      : Math.round((totalCompletedCount / totalVideosCount) * 100)
+
+  // 4️⃣ Update Firestore fields
+  await updateDoc(userRef, {
+    [`completedVideos.${selectedProgram}`]: updatedCompletedVideos[selectedProgram],
+    [`moduleProgress.${selectedProgram}`]: newModuleProgress,
+    [`programProgress.${selectedProgram}`]: programProgressPercent,
+    [`programStatus.${selectedProgram}`]: programProgressPercent === 100 ? 'completed' : 'active',
+  })
+
+  // 5️⃣ Update local state for UI sync
+  setCompletedVideos(updatedCompletedVideos)
+  setModuleProgress(newModuleProgress)
+
+  // console.log(`Program ${selectedProgram} progress: ${programProgressPercent}%`)
+}
 
   return (
     <div className="min-h-screen flex -mt-10">

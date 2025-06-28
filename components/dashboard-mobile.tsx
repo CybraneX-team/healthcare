@@ -273,11 +273,9 @@ export default function DashboardMobile() {
   return (
     <div className="min-h-screen bg-gray-200">
       {/* Minimal header */}
-      <header className="top-0 z-20 w-auto px-5 py-4 flex items-center justify-between bg-transparent">
+      <header className="flex justify-center z-20 w-auto px-5 py-4 bg-transparent">
         <div className="flex items-center">
-          <h1 className="font-bold text-lg mt-5 text-gray-800">
-            Healthcare App
-          </h1>
+          <img src="/logo.png" alt="Logo" className="h-20 w-auto" />
         </div>
         {/* <div className="flex items-center space-x-3">
           <ProfileDropdown />

@@ -71,7 +71,7 @@ export function ProfileDropdown() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="absolute top-12 right-0 z-50 min-w-[240px] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg"
+            className="absolute top-12 right-0 z-50 min-w-[240px] overflow-hidden bg-white/5 backdrop-blur-md border border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.1)] rounded-2xl"
           >
             <div className="p-3 border-b border-gray-100">
               <div className="flex items-center gap-3 px-1">
@@ -102,19 +102,9 @@ export function ProfileDropdown() {
                 }}
               >
                 <User className="mr-2 h-4 w-4" />
-                <span>Profile</span>
+                <span>My Account</span>
               </Button>
 
-              <Button
-                variant="ghost"
-                className="w-full justify-start px-2 py-1.5 text-gray-700 hover:bg-gray-100 rounded-lg mb-1"
-                onClick={() => {
-                  setIsOpen(false)
-                }}
-              >
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
-              </Button>
 
               <Button
                 variant="ghost"
@@ -125,7 +115,7 @@ export function ProfileDropdown() {
                 }}
               >
                 <Upload className="mr-2 h-4 w-4" />
-                <span>Upload Docs</span>
+                <span>Health Records</span>
               </Button>
 
               <Button

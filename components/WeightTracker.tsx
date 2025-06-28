@@ -564,7 +564,7 @@ export const WeightTrackingComponent = ({user}: {user: User}) => {
                   Water Intake
                 </h4>
                 <div className="text-2xl font-bold text-blue-800">{(userData?.waterIntake / 1000).toFixed(2) || 0}L</div>
-                <p className="text-sm text-blue-600">of {(userData?.waterGoal/1000).toFixed(2) || 2.5}L</p>
+                <p className="text-sm text-blue-600">of {((userData?.waterGoal || 2500)/1000).toFixed(2) || 2.5}L</p>
                 <div className="w-full bg-blue-200 rounded-full h-2 mt-3">
                   <div
                     className="bg-blue-500 h-2 rounded-full"

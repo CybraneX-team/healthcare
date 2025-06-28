@@ -27,6 +27,7 @@ export default function FoodIntakeModal({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [savingMeal, setSavingMeal] = useState(false)
   const [selectedMealType, setSelectedMealType] = useState('Breakfast')
+  const [mealLogDate, setMealLogDate] = useState<string>(new Date().toISOString().split('T')[0])
   const [manualEntries, setManualEntries] = useState({
     carbohydrates: 0,
     fats: 0,
@@ -97,6 +98,7 @@ export default function FoodIntakeModal({
   const [weightUnit, setWeightUnit] = useState<'kg' | 'lbs'>('kg')
   const [loggingWeight, setLoggingWeight] = useState(false)
   const [weightError, setWeightError] = useState<string | null>(null)
+  const [weightLogDate, setWeightLogDate] = useState<string>(new Date().toISOString().split('T')[0])
 
   // Water intake state
   const [waterIntake, setWaterIntake] = useState(0)
@@ -540,7 +542,7 @@ export default function FoodIntakeModal({
       const mealData = {
         userId: user.id,
         timestamp: new Date(),
-        date: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
+        date: mealLogDate, // Use selected date instead of today
         mealType: selectedMealType, // Use the selected meal type
         foodItems: checkedItems.map((item) => ({
           name: item.item,
@@ -592,11 +594,12 @@ export default function FoodIntakeModal({
       )
       toast({
         title: `${selectedMealType} Logged Successfully! 🍽️`,
-        description: `Saved ${checkedItems.length} food items with ${totalMacros.calories} calories total.`,
+        description: `Saved ${checkedItems.length} food items with ${totalMacros.calories} calories total for ${new Date(mealLogDate).toLocaleDateString()}.`,
       })
       // Reset form
       setFoodItems([])
       setUploadedMealImage(null)
+      setMealLogDate(new Date().toISOString().split('T')[0]) // Reset to today
       onClose()
     } catch (error) {
       console.error('Error saving meal intake:', error)
@@ -639,7 +642,7 @@ export default function FoodIntakeModal({
     setWeightError(null)
 
     try {
-      const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD format
+      const today = weightLogDate // Use selected date instead of today
       const weightValue = Number(weightToLog)
 
       // Convert to kg if necessary (for consistency)
@@ -678,12 +681,13 @@ export default function FoodIntakeModal({
 
       toast({
         title: 'Weight Logged Successfully! ⚖️',
-        description: `Your weight of ${weightValue} ${weightUnit} has been saved for today.`,
+        description: `Your weight of ${weightValue} ${weightUnit} has been saved for ${new Date(weightLogDate).toLocaleDateString()}.`,
       })
 
       // Reset form
       setWeightToLog('')
       setWeightError(null)
+      setWeightLogDate(new Date().toISOString().split('T')[0]) // Reset to today
       onClose()
     } catch (error) {
       console.error('Error logging weight:', error)
@@ -1271,6 +1275,20 @@ export default function FoodIntakeModal({
             ))}
           </div>
         </div>
+
+        {/* Date Selector */}
+        <div className="bg-gray-50 rounded-lg p-4">
+          <h3 className="text-sm font-medium text-gray-700 mb-3">
+            Log Date
+          </h3>
+          <input
+            type="date"
+            value={mealLogDate}
+            onChange={(e) => setMealLogDate(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            max={new Date().toISOString().split('T')[0]}
+          />
+        </div>
       </div>
       {/* Upload area - full height */}
       <div className="flex-1 border-2 border-dashed border-blue-300 rounded-xl sm:rounded-2xl p-8 sm:p-16 lg:p-40 flex items-center justify-center relative overflow-hidden min-h-[300px]">
@@ -1367,11 +1385,6 @@ export default function FoodIntakeModal({
               <div className="text-red-600 text-sm">{error}</div>
             </div>
           </div>
-        </div>
-      )}
-      {apiDebug && (
-        <div className="mt-2 text-xs text-gray-400 break-all">
-          <b>API Response:</b> {apiDebug}
         </div>
       )}
       {/* Food items table or no items message */}
@@ -1738,14 +1751,18 @@ export default function FoodIntakeModal({
               </div>
             </div>
 
-            {/* Date Display */}
-            <div className="text-center">
-              <p className="text-sm text-gray-500">
-                Logging for:{' '}
-                <span className="font-medium text-gray-700">
-                  {new Date().toLocaleDateString()}
-                </span>
-              </p>
+            {/* Date Selector */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Log Date
+              </label>
+              <input
+                type="date"
+                value={weightLogDate}
+                onChange={(e) => setWeightLogDate(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                max={new Date().toISOString().split('T')[0]}
+              />
             </div>
 
             {/* Error Message */}
@@ -1832,7 +1849,7 @@ export default function FoodIntakeModal({
       {/* Right: Today's Intake and Human Model */}
       <div className="flex-1 flex flex-col items-center justify-between gap-6 min-w-[260px]">
         <div className="bg-white rounded-2xl shadow border border-gray-100 p-6 flex flex-col items-center w-full mb-4">
-          <div className="text-gray-500 text-base mb-2">Today's Intake</div>
+          <div className="text-gray-500 text-base mb-2">Today's Target</div>
           <div className="flex items-center gap-4">
             <div className="text-4xl font-extrabold text-blue-700">{waterIntake} <span className="text-lg font-medium text-blue-400">ml</span></div>
             <div className="relative w-14 h-14 flex items-center justify-center">

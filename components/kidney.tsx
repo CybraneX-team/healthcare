@@ -1,3 +1,5 @@
+'use client'
+
 import React from 'react'
 import { motion } from 'framer-motion'
 
@@ -40,6 +42,7 @@ interface PatientData {
 
 interface KidneyProps {
   data?: PatientData
+  extractedLabData: any
 }
 
 const containerVariants = {
@@ -77,42 +80,70 @@ const itemVariants = {
   },
 }
 
-const Kidney = ({ data }: KidneyProps) => {
-  // Extract renal system data
+const Kidney = ({ data, extractedLabData }: KidneyProps) => {
   const renalSystem = data?.systems.find((system) => system.name === 'Renal')
 
-  // Helper function to find a test by name
   const findTest = (testName: string): Test | undefined => {
     return renalSystem?.tests.find((test) => test.test_name === testName)
   }
 
-  // Extract specific test values with fallbacks
-  const eGFR = findTest('eGFR')?.value || 117
-  const eGFRUnit = findTest('eGFR')?.unit || 'mL/min/1.73m²'
+  const eGFR = extractedLabData?.kidney?.egfr ?? findTest('eGFR')?.value ?? null
+const eGFRUnit = findTest('eGFR')?.unit || 'mL/min/1.73m²'
 
-  const creatinine = findTest('Creatinine')?.value || 1.2
-  const creatinineUnit = findTest('Creatinine')?.unit || 'mg/dL'
+const creatinine = findTest('Creatinine')?.value ?? 1.2
+const creatinineUnit = findTest('Creatinine')?.unit || 'mg/dL'
 
-  const bun = findTest('BUN')?.value || 29
-  const bunUnit = findTest('BUN')?.unit || 'mg/dL'
+const bun = extractedLabData?.kidney?.bun ?? findTest('BUN')?.value ?? null
+const bunUnit = findTest('BUN')?.unit || 'mg/dL'
 
-  // Calculate BUN/Creatinine ratio
-  const bunCreatinineRatio = Math.round((bun / creatinine) * 10) / 10
+// ⚠️ Safe division to avoid NaN/Infinity
+const bunCreatinineRatio =
+  creatinine && bun ? Math.round((bun / creatinine) * 10) / 10 : null
 
-  // Mock values for additional kidney health indicators
-  const uricAcid = 6.0 // This could come from metabolic system
-  const urineAlbumin = 20 // This could come from urine tests
-  const urinePH = 6.5
+const uricAcid =
+  extractedLabData?.kidney?.uric_acid != null
+    ? extractedLabData.kidney.uric_acid
+    : "null"
 
-  // Toxins data (heavy metals) - based on Risk Stats
-  const toxicBurden = 43
-  const mercury = 5 // μg/L μg/dL
-  const cadmium = 1.3 // μg/g
-  const lead = 1.6 // μg/dL
-  const bpa = 1.5 // ng/mL
+const urineAlbumin =
+  extractedLabData?.kidney?.random_urine_albumin != null
+    ? extractedLabData.kidney.random_urine_albumin
+    : "null"
 
-  // Determine kidney health status
+const urinePH =
+  extractedLabData?.kidney?.urine_ph != null
+    ? extractedLabData.kidney.urine_ph
+    : "null"
+
+const toxicBurden = "null" // No field for this yet
+
+const mercury =
+  extractedLabData?.kidney?.heavy_metals?.mercury != null
+    ? extractedLabData.kidney.heavy_metals.mercury
+    : "null"
+
+const cadmium =
+  extractedLabData?.kidney?.heavy_metals?.cadmium != null
+    ? extractedLabData.kidney.heavy_metals.cadmium
+    : "null"
+
+const lead =
+  extractedLabData?.kidney?.heavy_metals?.lead != null
+    ? extractedLabData.kidney.heavy_metals.lead
+    : "null"
+
+const bpa =
+  extractedLabData?.kidney?.bpa != null
+    ? extractedLabData.kidney.bpa
+    : "null"
+
+const hydrationLevelRaw = extractedLabData?.kidney?.hydration;
+const hydrationLevel: number = isNaN(Number(hydrationLevelRaw))
+  ? 0
+  : Number(hydrationLevelRaw);
+
   const getKidneyStatus = (egfr: number): { status: string; color: string } => {
+    console.log("egfr-egfr", egfr)
     if (egfr >= 90)
       return { status: 'Healthy', color: 'bg-green-100 text-green-800' }
     if (egfr >= 60)
@@ -128,9 +159,7 @@ const Kidney = ({ data }: KidneyProps) => {
   }
 
   const kidneyStatus = getKidneyStatus(eGFR)
-
-  // Hydration level (mock data - could be calculated from various factors)
-  const hydrationLevel = 75 // percentage
+  // const hydrationLevel = extractedLabData?.kidney?.hydration ?? 75
 
   return (
     <div className="h-full overflow-y-auto md:overflow-y-hidden p-4 text-black md:-mt-3">
@@ -160,12 +189,12 @@ const Kidney = ({ data }: KidneyProps) => {
                 <p className="text-gray-500">Urine PH</p>
                 <p className="text-3xl font-semibold">{urinePH}</p>
                 <div className="mt-2">
-                  {/* <span className={`inline-block px-2 py-1 rounded-full text-xs ${
+                  <span className={`inline-block px-2 py-1 rounded-full text-xs ${
                     urinePH >= 6.0 && urinePH <= 7.0 ? "bg-green-100 text-green-800" :
                     "bg-yellow-100 text-yellow-800"
                   }`}>
                     {urinePH >= 6.0 && urinePH <= 7.0 ? "Normal" : "Monitor"}
-                  </span> */}
+                  </span>
                 </div>
               </div>
             </div>

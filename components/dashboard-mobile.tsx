@@ -38,7 +38,7 @@ import { ServicesProductsSection } from './ServicesSection'
 import { ProfileDropdown } from '@/components/ui/profile-dropdown'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Drawer } from 'vaul'
 import Neurology from '@/components/neurology'
 import UploadPage from './upload'
@@ -48,6 +48,7 @@ import { useAuth } from '@/hooks/useAuth'
 import '@/styles/dashboard-mobile.css'
 import MobileAnatomy from '@/components/anatomy-mobile'
 import ReproductiveHealth from '@/components/reproductive-health'
+import FoodIntakeModal from '@/components/FoodIntakeModal'
 
 // Import organ components
 import HeartComponent from '@/components/heart-component'
@@ -56,6 +57,10 @@ import { CombinedLabsSection } from './Lab-Services'
 import PancreasComponent from './pancreas-component'
 import Cardiology from './cardiology'
 import Kidney from './kidney'
+import { doc, getDoc } from 'firebase/firestore'
+import { db } from '@/utils/firebase'
+import { getAuth } from 'firebase/auth'
+import { defaultExtractedLabData } from '@/sameple-text-json'
 
 // Define types for weight trend data
 interface WeightTrendData {
@@ -147,8 +152,19 @@ export default function DashboardMobile() {
   const [activeTab, setActiveTab] = useState('overview')
   const [selectedOrgan, setSelectedOrgan] = useState('heart')
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [extractedLabData, setExtractedLabData] = useState<any>(defaultExtractedLabData);
   const weightTrendData = generateWeightTrendData()
+  const searchParams = useSearchParams()
   const { user, logout } = useAuth()
+  const [isFoodModalOpen, setIsFoodModalOpen] = useState(false)
+
+  useEffect(() => {
+    if (activeTab === 'upload') {
+      setIsFoodModalOpen(true)
+    } else {
+      setIsFoodModalOpen(false)
+    }
+  }, [activeTab])
   const router = useRouter()
 
   // Restore selected organ from localStorage on component mount
@@ -176,7 +192,7 @@ export default function DashboardMobile() {
 
   // Handle navigation to health records (upload page)
   const handleHealthRecords = () => {
-    setActiveTab('upload')
+    setActiveTab('progress')
     setDrawerOpen(false)
   }
 
@@ -198,20 +214,62 @@ export default function DashboardMobile() {
 
   // Bottom navigation icons and handlers
   const bottomNavItems = [
-    { id: 'overview', icon: <Activity className="h-6 w-6" />, label: 'Twin' },
-    { id: 'courses', icon: <FileText className="h-6 w-6" />, label: 'Courses' },
+    {
+      id: 'overview',
+      icon: <img src="/twin.svg" alt="Digital Twin Icon" className="h-6 w-6" />,
+      label: 'Twin',
+    },
+    {
+      id: 'courses',
+      icon: <img src="/courses.svg" alt="Courses Icon" className="h-6 w-6" />,
+      label: 'Courses',
+    },
     {
       id: 'labs',
-      icon: <FileText className="h-6 w-6" />,
+      icon: <img src="/book.svg" alt="Courses Icon" className="h-6 w-6" />,
       label: 'Directories',
     },
     {
       id: 'upload',
-      icon: <UploadCloud className="h-6 w-6" />,
+      icon: (
+        <img
+          src="/tracker-upload.svg"
+          alt="Tracker Icons"
+          className="h-6 w-6"
+        />
+      ),
       label: 'Tracker',
     },
   ]
-
+      useEffect(() => {
+      const tabParam = searchParams.get('tab')
+    const fetchUserData = async () => {
+      const auth = getAuth();
+      const user = auth.currentUser;
+  
+      
+  
+      try {
+        const userRef = doc(db, "users", user && user.uid ? user.uid : "");
+        const userSnap = await getDoc(userRef);
+  
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          // setIsAdmin(userData.role === "admin");
+  
+          // 👇 Assuming lab data is stored under `labData` in Firestore
+          console.log("userData.extractedLabData", userData.extractedLabData)
+          if (userData.extractedLabData) {
+            setExtractedLabData(userData.extractedLabData);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+  
+    fetchUserData();
+  }, [activeTab, selectedOrgan]);
   return (
     <div className="min-h-screen bg-gray-200">
       {/* Minimal header */}
@@ -325,22 +383,22 @@ export default function DashboardMobile() {
               <div className="mt-1 pb-24 bg-white-50">
                 {selectedOrgan === 'heart' ? (
                   <div className="px-2">
-                    <HeartComponent />
+                    <HeartComponent extractedLabData={extractedLabData} />
                   </div>
                 ) : selectedOrgan === 'lungs' ? (
                   <div className="">
-                    <Cardiology />
+                    <Cardiology  extractedLabData={extractedLabData} />
                   </div>
                 ) : selectedOrgan === 'liver' ? (
                   <div className="px-2">
-                    <LiverComponent />
+                    <LiverComponent extractedLabData={extractedLabData} />
                   </div>
                 ) : selectedOrgan === 'brain' ? (
-                  <Neurology />
+                  <Neurology extractedLabData={extractedLabData} />
                 ) : selectedOrgan === 'kidney' ? (
-                  <Kidney />
+                  <Kidney extractedLabData={extractedLabData} />
                 ) : selectedOrgan === 'reproductive' ? (
-                  <ReproductiveHealth />
+                  <ReproductiveHealth extractedLabData={extractedLabData} />
                 ) : null}
               </div>
             </div>
@@ -354,79 +412,19 @@ export default function DashboardMobile() {
             <Course />
           </div>
         ) : activeTab === 'upload' ? (
-          <div className="bg-gradient-to-b from-gray-200 to-white min-h-screen px-2">
-            <UploadPage />
+          <div className="bg-gradient-to-b from-gray-200 to-white min-h-screen">
+            Error Opening Modal
           </div>
         ) : activeTab === 'progress' ? (
-          <div className="bg-gradient-to-b from-gray-200 to-white min-h-screen px-2">
-            <div className="p-6 bg-white rounded-2xl shadow-sm mt-2 card-mobile">
-              <h2 className="text-xl font-semibold mb-4">Overall Progress</h2>
-              <p className="text-gray-600 text-sm mb-4">
-                Track your health metrics and progress.
-              </p>
-
-              <div className="mt-4">
-                <h3 className="text-base font-medium mb-2">Health Score</h3>
-                <Progress value={75} className="h-2 w-full" />
-                <div className="flex justify-between mt-1">
-                  <span className="text-xs text-gray-500">0</span>
-                  <span className="text-xs text-gray-500">100</span>
-                </div>
-              </div>
-
-              <div className="mt-6 grid grid-cols-2 gap-4">
-                <div className="bg-gray-50 p-4 rounded-xl stat-card">
-                  <h4 className="text-sm font-medium text-gray-600">
-                    Weight Change
-                  </h4>
-                  <div className="mt-1 text-xl font-bold text-green-500">
-                    -2.5 kg
-                  </div>
-                  <div className="text-xs text-gray-500 mt-0.5">
-                    Last 30 days
-                  </div>
-                </div>
-
-                <div className="bg-gray-50 p-4 rounded-xl stat-card">
-                  <h4 className="text-sm font-medium text-gray-600">
-                    Activity Level
-                  </h4>
-                  <div className="mt-1 text-xl font-bold">Medium</div>
-                  <div className="text-xs text-gray-500 mt-0.5">
-                    7,580 steps/day
-                  </div>
-                </div>
-
-                <div className="bg-gray-50 p-4 rounded-xl stat-card">
-                  <h4 className="text-sm font-medium text-gray-600">
-                    Sleep Quality
-                  </h4>
-                  <div className="mt-1 text-xl font-bold">Good</div>
-                  <div className="text-xs text-gray-500 mt-0.5">
-                    7.2 hrs/night
-                  </div>
-                </div>
-
-                <div className="bg-gray-50 p-4 rounded-xl stat-card">
-                  <h4 className="text-sm font-medium text-gray-600">
-                    Stress Level
-                  </h4>
-                  <div className="mt-1 text-xl font-bold text-yellow-500">
-                    Moderate
-                  </div>
-                  <div className="text-xs text-gray-500 mt-0.5">
-                    Based on HRV
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div className="bg-gradient-to-b from-gray-200 to-white min-h-screen">
+            <UploadPage />
           </div>
         ) : null}
       </main>
 
       {/* Bottom Navigation Bar - Floating pill-shaped dock */}
       <div className="fixed bottom-0 left-0 right-0 z-30 px-5 pb-6">
-        <div className="bg-white rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.15)] py-3 px-2 bottom-nav-shadow safe-area-bottom mx-auto flex justify-around items-center max-w-md">
+        <div className="bg-white/10 backdrop-blur-xs border border-white/20 rounded-full  py-3 px-2 bottom-nav-shadow safe-area-bottom mx-auto flex justify-around items-center max-w-md">
           {bottomNavItems.map((item) => (
             <button
               key={item.id}
@@ -460,7 +458,11 @@ export default function DashboardMobile() {
             onClick={() => setDrawerOpen(true)}
           >
             <div className="p-1 text-gray-400">
-              <User className="h-6 w-6" />
+              <img
+                src="/profile-circle.svg"
+                alt="Profile Icon"
+                className="h-6 w-6"
+              />
             </div>
             <span className="text-xs font-medium mt-0.5 text-gray-500">
               Profile
@@ -511,7 +513,7 @@ export default function DashboardMobile() {
                   className="w-full justify-start text-base font-medium py-3 rounded-xl"
                 >
                   <User className="mr-3 h-5 w-5" />
-                  Profile
+                  My Account
                 </Button>
 
                 <Button
@@ -521,22 +523,6 @@ export default function DashboardMobile() {
                 >
                   <Activity className="mr-3 h-5 w-5" />
                   Health Records
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start text-base font-medium py-3 rounded-xl"
-                >
-                  <FileText className="mr-3 h-5 w-5" />
-                  Documents
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start text-base font-medium py-3 rounded-xl"
-                >
-                  <MoreHorizontal className="mr-3 h-5 w-5" />
-                  Settings
                 </Button>
 
                 <div className="pt-2">
@@ -553,6 +539,13 @@ export default function DashboardMobile() {
           </Drawer.Content>
         </Drawer.Portal>
       </Drawer.Root>
+      <FoodIntakeModal
+        isOpen={isFoodModalOpen}
+        onClose={() => {
+          setIsFoodModalOpen(false)
+          setActiveTab('overview')
+        }}
+      />
     </div>
   )
 }

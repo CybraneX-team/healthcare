@@ -21,6 +21,9 @@ import {
   updateDoc,
   collection,
   deleteField,
+  where,
+  getDocs,
+  query,
 } from 'firebase/firestore'
 import {
   getStorage,
@@ -213,6 +216,23 @@ export const giveLoggedInUser = async () => {
   const user = auth.currentUser
   if (!user) return
   return user
+}
+
+
+export async function checkUserExists(email: string) {
+  const usersRef = collection(db, "users");
+  const q = query(usersRef, where("email", "==", email));
+  const snapshot = await getDocs(q);
+
+  if (!snapshot.empty) {
+    const doc = snapshot.docs[0];
+    return {
+      uid: doc.id,
+      data: doc.data()
+    };
+  }
+
+  return null;
 }
 
 export const rtdb = getDatabase(app)

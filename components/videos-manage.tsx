@@ -564,12 +564,73 @@ export function VideosManager({
     setIsDeleteDialogOpen(true)
   }
 
-  const toggleVideoCompletion = (videoId: string) => {
-    const updatedVideos = videos.map((video) =>
-      video.id === videoId ? { ...video, completed: !video.completed } : video,
-    )
-    setVideos(updatedVideos)
+const toggleVideoCompletion = async (videoId: string) => {
+  const auth = getAuth();
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const userRef = doc(db, "users", user.uid);
+  const userSnap = await getDoc(userRef);
+  const prevCompletedVideos = userSnap.data()?.completedVideos || {};
+  const programVideos = prevCompletedVideos[programId] || {};
+  const moduleVideos = new Set(programVideos[moduleId] || []);
+
+  const isCompleted = moduleVideos.has(videoId);
+
+  if (isCompleted) {
+    moduleVideos.delete(videoId); // Mark as Incomplete
+  } else {
+    moduleVideos.add(videoId); // Mark as Complete
   }
+
+  const updatedCompletedVideos = {
+    ...prevCompletedVideos,
+    [programId]: {
+      ...programVideos,
+      [moduleId]: Array.from(moduleVideos),
+    },
+  };
+
+  const programRefRTDB = ref(rtdb, `courses/thrivemed/programs/${programId}`);
+  const programSnap = await new Promise<any>((resolve) => {
+    onValue(programRefRTDB, (snapshot) => resolve(snapshot.val()), { onlyOnce: true });
+  });
+  const modules = (programSnap.modules || {}) as Record<string, any>;
+
+  const newModuleProgress: Record<string, number> = {};
+  let totalVideosCount = 0;
+  let totalCompletedCount = 0;
+
+  for (const [modId, modData] of Object.entries(modules)) {
+    const totalVideos = Object.keys(modData.videos || {}).length;
+    const completedCount = updatedCompletedVideos[programId]?.[modId]?.length || 0;
+    const progress = totalVideos === 0 ? 0 : Math.round((completedCount / totalVideos) * 100);
+
+    newModuleProgress[modId] = progress;
+    totalVideosCount += totalVideos;
+    totalCompletedCount += completedCount;
+  }
+
+  const programProgressPercent =
+    totalVideosCount === 0 ? 0 : Math.round((totalCompletedCount / totalVideosCount) * 100);
+
+  await updateDoc(userRef, {
+    [`completedVideos.${programId}`]: updatedCompletedVideos[programId],
+    [`moduleProgress.${programId}`]: newModuleProgress,
+    [`programProgress.${programId}`]: programProgressPercent,
+  });
+
+  if (programProgressPercent === 100) {
+    const programStatusRef = ref(rtdb, `courses/thrivemed/programs/${programId}/status`);
+    await set(programStatusRef, "completed");
+  }
+
+  // Update UI
+  const updatedVideos = videos.map((video) =>
+    video.id === videoId ? { ...video, completed: !isCompleted } : video
+  );
+  setVideos(updatedVideos);
+};
 
   return (
     <>

@@ -7,14 +7,75 @@ import Lottie from 'lottie-react'
 import * as animationData from './Vector.json'
 import { useAuth } from '@/hooks/useAuth'
 import { db } from '@/utils/firebase'
-import { collection, addDoc, doc, setDoc, getDoc, getDocs, query, where, writeBatch, arrayUnion } from 'firebase/firestore'
+import {
+  collection,
+  addDoc,
+  doc,
+  setDoc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+  arrayUnion,
+  orderBy,
+} from 'firebase/firestore'
 import { useToast } from '@/hooks/use-toast'
 import { WeightTrackingComponent } from './WeightTracker'
 import WaterIntakeModel from './WaterIntakeModel'
+import {
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts'
+import { Card, CardContent } from '@/components/ui/card'
 
 interface FoodIntakeModalProps {
   isOpen: boolean
   onClose: () => void
+}
+
+interface NutritionTooltipProps {
+  active?: boolean
+  payload?: Array<{
+    value: number
+    dataKey: string
+    color: string
+  }>
+  label?: string
+}
+
+const NutritionTooltip = ({
+  active,
+  payload,
+  label,
+}: NutritionTooltipProps) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white p-3 rounded-xl shadow-lg border border-gray-100">
+        <p className="text-sm font-medium text-gray-800 mb-1">{label}</p>
+        <div className="space-y-1">
+          {payload.map((entry, index) => (
+            <p
+              key={index}
+              className="text-sm font-medium"
+              style={{ color: entry.color }}
+            >
+              {`${entry.dataKey}: ${entry.value}${
+                entry.dataKey === 'calories' ? ' kcal' : 'g'
+              }`}
+            </p>
+          ))}
+        </div>
+      </div>
+    )
+  }
+  return null
 }
 
 export default function FoodIntakeModal({
@@ -34,6 +95,13 @@ export default function FoodIntakeModal({
     protein: 0,
     total: 0,
   })
+
+  // Comparison data state
+  const [comparisonData, setComparisonData] = useState<any[]>([])
+  const [comparisonPeriod, setComparisonPeriod] = useState<
+    'weekly' | 'monthly'
+  >('weekly')
+  const [loadingComparison, setLoadingComparison] = useState(false)
 
   // State for habits
   const [habits, setHabits] = useState({
@@ -109,6 +177,151 @@ export default function FoodIntakeModal({
   // Calculate water level percentage (capped at 100% for animation)
   const waterLevelPercentage = Math.min((waterIntake / waterGoal) * 100, 100)
 
+  // Fetch comparison data
+  const fetchComparisonData = async (period: 'weekly' | 'monthly') => {
+    if (!user?.id) return []
+
+    try {
+      setLoadingComparison(true)
+      const currentDate = new Date()
+      const startDate = new Date()
+
+      // Calculate date range based on period
+      switch (period) {
+        case 'weekly':
+          startDate.setDate(currentDate.getDate() - 7)
+          break
+        case 'monthly':
+          startDate.setDate(currentDate.getDate() - 30)
+          break
+      }
+
+      const startDateStr = startDate.toISOString().split('T')[0]
+      const endDateStr = currentDate.toISOString().split('T')[0]
+
+      // Query daily summaries from Firestore
+      const summariesCollection = collection(
+        db,
+        'users',
+        user.id,
+        'dailySummaries'
+      )
+      const q = query(
+        summariesCollection,
+        where('date', '>=', startDateStr),
+        where('date', '<=', endDateStr),
+        orderBy('date', 'asc')
+      )
+
+      const querySnapshot = await getDocs(q)
+      const rawData: any[] = []
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data()
+        rawData.push({
+          date: data.date,
+          calories: data.totalCalories || 0,
+          protein: data.totalProtein || 0,
+          carbs: data.totalCarbs || 0,
+          fats: data.totalFats || 0,
+        })
+      })
+
+      // Process data based on period - only real data, no dummy data
+      return processComparisonData(rawData, period)
+    } catch (error) {
+      console.error('Error fetching comparison data:', error)
+      return []
+    } finally {
+      setLoadingComparison(false)
+    }
+  }
+
+  // Process comparison data based on selected period
+  const processComparisonData = (data: any[], period: 'weekly' | 'monthly') => {
+    // If no real data, return empty array (no dummy data)
+    if (data.length === 0) {
+      return []
+    }
+
+    // Rest of the existing logic for real data processing remains the same...
+    switch (period) {
+      case 'weekly':
+        // Show daily data for the last 7 days
+        return data.map((item) => {
+          const date = new Date(item.date)
+          const dayName = date.toLocaleDateString('en-US', { weekday: 'short' })
+
+          return {
+            name: dayName,
+            calories: item.calories,
+            protein: item.protein,
+            carbs: item.carbs,
+            fats: item.fats,
+            date: item.date,
+          }
+        })
+
+      case 'monthly':
+        // Group by weeks for the last month
+        const weeklyData: { [key: string]: { data: any[]; dates: string[] } } =
+          {}
+
+        data.forEach((item) => {
+          const date = new Date(item.date)
+          const weekStart = new Date(date)
+          weekStart.setDate(date.getDate() - date.getDay())
+          const weekKey = weekStart.toISOString().split('T')[0]
+
+          if (!weeklyData[weekKey]) {
+            weeklyData[weekKey] = { data: [], dates: [] }
+          }
+          weeklyData[weekKey].data.push(item)
+          weeklyData[weekKey].dates.push(item.date)
+        })
+
+        return Object.entries(weeklyData).map(
+          ([weekStart, weekData], index) => {
+            const avgCalories =
+              weekData.data.reduce((sum, d) => sum + d.calories, 0) /
+              weekData.data.length
+            const avgProtein =
+              weekData.data.reduce((sum, d) => sum + d.protein, 0) /
+              weekData.data.length
+            const avgCarbs =
+              weekData.data.reduce((sum, d) => sum + d.carbs, 0) /
+              weekData.data.length
+            const avgFats =
+              weekData.data.reduce((sum, d) => sum + d.fats, 0) /
+              weekData.data.length
+
+            return {
+              name: `Week ${index + 1}`,
+              calories: Math.round(avgCalories),
+              protein: Math.round(avgProtein),
+              carbs: Math.round(avgCarbs),
+              fats: Math.round(avgFats),
+              date: weekStart,
+            }
+          }
+        )
+
+      default:
+        return []
+    }
+  }
+
+  // Load comparison data when tab is selected or period changes
+  useEffect(() => {
+    if (selectedTab === 'Comparison' && user?.id) {
+      const loadData = async () => {
+        const data = await fetchComparisonData(comparisonPeriod)
+        setComparisonData(data)
+      }
+      loadData()
+    }
+  }, [selectedTab, comparisonPeriod, user?.id])
+
   // Load water intake data on component mount
   useEffect(() => {
     const loadWaterIntake = async () => {
@@ -117,11 +330,15 @@ export default function FoodIntakeModal({
       try {
         setLoadingWaterData(true)
         const today = new Date().toISOString().split('T')[0]
-        
+
         // Get the water intake document for today using date as document ID
-        const waterIntakeRef = doc(db, `users/${user.id}/dailyWaterIntake`, today)
+        const waterIntakeRef = doc(
+          db,
+          `users/${user.id}/dailyWaterIntake`,
+          today
+        )
         const waterIntakeDoc = await getDoc(waterIntakeRef)
-        
+
         if (waterIntakeDoc.exists()) {
           const data = waterIntakeDoc.data()
           setWaterIntake(data.totalIntake || 0)
@@ -140,11 +357,12 @@ export default function FoodIntakeModal({
   }, [user])
 
   const tabs = [
-    "Overall Transformation",
+    'Overall Transformation',
     'Meal Intake',
     'Water Intake',
     'Body Transformation',
     'Log Weight',
+    'Comparison', // New tab added
   ]
 
   function parseQuantity(qty: string): { num: number; unit: string } {
@@ -190,7 +408,7 @@ export default function FoodIntakeModal({
       // Save water intake to Firestore using date as document ID
       const today = new Date().toISOString().split('T')[0]
       const timestamp = new Date().toISOString()
-      
+
       const waterIntakeRef = doc(db, `users/${user.id}/dailyWaterIntake`, today)
       await setDoc(
         waterIntakeRef,
@@ -200,8 +418,8 @@ export default function FoodIntakeModal({
           lastUpdated: timestamp,
           intakeHistory: arrayUnion({
             amount: amount,
-            timestamp: timestamp
-          })
+            timestamp: timestamp,
+          }),
         },
         { merge: true }
       )
@@ -209,7 +427,9 @@ export default function FoodIntakeModal({
       // Update dailySummaries with new total
       const dailySummaryRef = doc(db, 'users', user.id, 'dailySummaries', today)
       const existingSummary = await getDoc(dailySummaryRef)
-      const existingData = existingSummary.exists() ? existingSummary.data() : {}
+      const existingData = existingSummary.exists()
+        ? existingSummary.data()
+        : {}
 
       await setDoc(
         dailySummaryRef,
@@ -223,7 +443,7 @@ export default function FoodIntakeModal({
       )
 
       toast({
-        title: "Water intake updated",
+        title: 'Water intake updated',
         description: `Added ${amount}ml to your daily intake`,
       })
     } catch (error) {
@@ -231,9 +451,9 @@ export default function FoodIntakeModal({
       // Revert the UI state on error
       setWaterIntake(waterIntake)
       toast({
-        title: "Error",
-        description: "Failed to update water intake",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to update water intake',
+        variant: 'destructive',
       })
     } finally {
       setSavingWaterIntake(false)
@@ -246,22 +466,24 @@ export default function FoodIntakeModal({
     try {
       setSavingWaterIntake(true)
       const today = new Date().toISOString().split('T')[0]
-      
+
       // Delete the water intake document for today
       const waterIntakeRef = doc(db, `users/${user.id}/dailyWaterIntake`, today)
       await setDoc(waterIntakeRef, {
         totalIntake: 0,
         date: today,
         lastUpdated: new Date().toISOString(),
-        intakeHistory: []
+        intakeHistory: [],
       })
-      
+
       setWaterIntake(0)
 
       // Update dailySummaries to reset water intake
       const dailySummaryRef = doc(db, 'users', user.id, 'dailySummaries', today)
       const existingSummary = await getDoc(dailySummaryRef)
-      const existingData = existingSummary.exists() ? existingSummary.data() : {}
+      const existingData = existingSummary.exists()
+        ? existingSummary.data()
+        : {}
 
       await setDoc(
         dailySummaryRef,
@@ -275,15 +497,15 @@ export default function FoodIntakeModal({
       )
 
       toast({
-        title: "Water intake reset",
-        description: "Daily water intake has been reset to 0ml",
+        title: 'Water intake reset',
+        description: 'Daily water intake has been reset to 0ml',
       })
     } catch (error) {
       console.error('Error resetting water intake:', error)
       toast({
-        title: "Error",
-        description: "Failed to reset water intake",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to reset water intake',
+        variant: 'destructive',
       })
     } finally {
       setSavingWaterIntake(false)
@@ -633,7 +855,11 @@ export default function FoodIntakeModal({
       return
     }
 
-    if (!weightToLog || isNaN(Number(weightToLog)) || Number(weightToLog) <= 0) {
+    if (
+      !weightToLog ||
+      isNaN(Number(weightToLog)) ||
+      Number(weightToLog) <= 0
+    ) {
       setWeightError('Please enter a valid weight')
       return
     }
@@ -646,7 +872,8 @@ export default function FoodIntakeModal({
       const weightValue = Number(weightToLog)
 
       // Convert to kg if necessary (for consistency)
-      const weightInKg = weightUnit === 'lbs' ? weightValue * 0.453592 : weightValue
+      const weightInKg =
+        weightUnit === 'lbs' ? weightValue * 0.453592 : weightValue
 
       // Save to dailyWeight collection
       const weightData = {
@@ -665,7 +892,9 @@ export default function FoodIntakeModal({
       const dailySummaryRef = doc(db, 'users', user.id, 'dailySummaries', today)
       const { getDoc } = await import('firebase/firestore')
       const existingSummary = await getDoc(dailySummaryRef)
-      const existingData = existingSummary.exists() ? existingSummary.data() : {}
+      const existingData = existingSummary.exists()
+        ? existingSummary.data()
+        : {}
 
       await setDoc(
         dailySummaryRef,
@@ -701,6 +930,280 @@ export default function FoodIntakeModal({
       setLoggingWeight(false)
     }
   }
+
+  // New comparison content renderer
+  const renderComparisonContent = () => (
+    <div className="flex-1 overflow-auto">
+      <div className="mb-6 sm:mb-8 flex-shrink-0">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-xl sm:text-2xl font-bold text-black">
+              Nutrition Comparison
+            </h2>
+            <p className="text-gray-600">
+              Compare your nutrition intake over time
+            </p>
+          </div>
+
+          {/* Period Selector */}
+          <div className="flex bg-gray-100 rounded-full p-1">
+            {(['weekly', 'monthly'] as const).map((period) => (
+              <button
+                key={period}
+                onClick={() => setComparisonPeriod(period)}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
+                  comparisonPeriod === period
+                    ? 'bg-blue-500 text-white shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                {period.charAt(0).toUpperCase() + period.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {loadingComparison ? (
+        <div className="flex items-center justify-center h-64">
+          <div className="flex items-center gap-2 text-gray-500">
+            <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+            <span>Loading comparison data...</span>
+          </div>
+        </div>
+      ) : comparisonData.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+          <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+            <span className="text-gray-400 text-xl">📊</span>
+          </div>
+          <p className="text-sm text-center">No nutrition data available</p>
+          <p className="text-xs text-center mt-1">
+            Start logging meals to see comparisons
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Calories Bar Chart */}
+          <Card className="shadow-sm border-0 bg-gradient-to-br from-orange-50 to-orange-100 rounded-3xl hover:shadow-md transition-shadow duration-300">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-orange-900">
+                    Calories Intake
+                  </h3>
+                  <p className="text-sm text-orange-600">
+                    Daily calorie consumption
+                  </p>
+                </div>
+                <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-sm">🔥</span>
+                </div>
+              </div>
+
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={comparisonData}
+                    margin={{ top: 10, right: 10, left: 10, bottom: 5 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="#fed7aa"
+                    />
+                    <XAxis
+                      dataKey="name"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 11, fill: '#9a3412' }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 11, fill: '#9a3412' }}
+                      tickFormatter={(value) => `${value}`}
+                    />
+                    <Tooltip content={<NutritionTooltip />} />
+                    <Bar
+                      dataKey="calories"
+                      fill="#ea580c"
+                      radius={[4, 4, 0, 0]}
+                      name="calories"
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Protein Line Chart */}
+          <Card className="shadow-sm border-0 bg-gradient-to-br from-red-50 to-red-100 rounded-3xl hover:shadow-md transition-shadow duration-300">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-red-900">
+                    Protein Intake
+                  </h3>
+                  <p className="text-sm text-red-600">
+                    Daily protein consumption
+                  </p>
+                </div>
+                <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-sm">🥩</span>
+                </div>
+              </div>
+
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={comparisonData}
+                    margin={{ top: 10, right: 10, left: 10, bottom: 5 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="#fecaca"
+                    />
+                    <XAxis
+                      dataKey="name"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 11, fill: '#991b1b' }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 11, fill: '#991b1b' }}
+                      tickFormatter={(value) => `${value}g`}
+                    />
+                    <Tooltip content={<NutritionTooltip />} />
+                    <Line
+                      type="monotone"
+                      dataKey="protein"
+                      stroke="#dc2626"
+                      strokeWidth={3}
+                      dot={{ fill: '#dc2626', strokeWidth: 2, r: 4 }}
+                      activeDot={{ r: 6, fill: '#dc2626' }}
+                      name="protein"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Carbs Bar Chart */}
+          <Card className="shadow-sm border-0 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-3xl hover:shadow-md transition-shadow duration-300">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-yellow-900">
+                    Carbs Intake
+                  </h3>
+                  <p className="text-sm text-yellow-600">
+                    Daily carbohydrate consumption
+                  </p>
+                </div>
+                <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-sm">🍞</span>
+                </div>
+              </div>
+
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={comparisonData}
+                    margin={{ top: 10, right: 10, left: 10, bottom: 5 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="#fef3c7"
+                    />
+                    <XAxis
+                      dataKey="name"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 11, fill: '#92400e' }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 11, fill: '#92400e' }}
+                      tickFormatter={(value) => `${value}g`}
+                    />
+                    <Tooltip content={<NutritionTooltip />} />
+                    <Bar
+                      dataKey="carbs"
+                      fill="#d97706"
+                      radius={[4, 4, 0, 0]}
+                      name="carbs"
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Fats Line Chart */}
+          <Card className="shadow-sm border-0 bg-gradient-to-br from-purple-50 to-purple-100 rounded-3xl hover:shadow-md transition-shadow duration-300">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-purple-900">
+                    Fats Intake
+                  </h3>
+                  <p className="text-sm text-purple-600">
+                    Daily fat consumption
+                  </p>
+                </div>
+                <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-sm">🥑</span>
+                </div>
+              </div>
+
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={comparisonData}
+                    margin={{ top: 10, right: 10, left: 10, bottom: 5 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="#e9d5ff"
+                    />
+                    <XAxis
+                      dataKey="name"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 11, fill: '#7c2d12' }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 11, fill: '#7c2d12' }}
+                      tickFormatter={(value) => `${value}g`}
+                    />
+                    <Tooltip content={<NutritionTooltip />} />
+                    <Line
+                      type="monotone"
+                      dataKey="fats"
+                      stroke="#9333ea"
+                      strokeWidth={3}
+                      dot={{ fill: '#9333ea', strokeWidth: 2, r: 4 }}
+                      activeDot={{ r: 6, fill: '#9333ea' }}
+                      name="fats"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </div>
+  )
 
   const renderHabitsContent = () => (
     <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 h-full">
@@ -1160,6 +1663,7 @@ export default function FoodIntakeModal({
                 <img
                   src={
                     URL.createObjectURL(transformationImage!) ||
+                    '/placeholder.svg' ||
                     '/placeholder.svg'
                   }
                   alt="Current"
@@ -1851,22 +2355,40 @@ export default function FoodIntakeModal({
         <div className="bg-white rounded-2xl shadow border border-gray-100 p-6 flex flex-col items-center w-full mb-4">
           <div className="text-gray-500 text-base mb-2">Today's Target</div>
           <div className="flex items-center gap-4">
-            <div className="text-4xl font-extrabold text-blue-700">{waterIntake} <span className="text-lg font-medium text-blue-400">ml</span></div>
+            <div className="text-4xl font-extrabold text-blue-700">
+              {waterIntake}{' '}
+              <span className="text-lg font-medium text-blue-400">ml</span>
+            </div>
             <div className="relative w-14 h-14 flex items-center justify-center">
               <svg className="absolute top-0 left-0" width="56" height="56">
-                <circle cx="28" cy="28" r="25" stroke="#e0e7ef" strokeWidth="6" fill="none" />
                 <circle
-                  cx="28" cy="28" r="25"
+                  cx="28"
+                  cy="28"
+                  r="25"
+                  stroke="#e0e7ef"
+                  strokeWidth="6"
+                  fill="none"
+                />
+                <circle
+                  cx="28"
+                  cy="28"
+                  r="25"
                   stroke="#3b82f6"
                   strokeWidth="6"
                   fill="none"
                   strokeDasharray={2 * Math.PI * 25}
-                  strokeDashoffset={2 * Math.PI * 25 * (1 - waterLevelPercentage / 100)}
+                  strokeDashoffset={
+                    2 * Math.PI * 25 * (1 - waterLevelPercentage / 100)
+                  }
                   strokeLinecap="round"
-                  style={{ transition: 'stroke-dashoffset 1s cubic-bezier(.4,2,.6,1)' }}
+                  style={{
+                    transition: 'stroke-dashoffset 1s cubic-bezier(.4,2,.6,1)',
+                  }}
                 />
               </svg>
-              <span className="absolute text-xs font-semibold text-blue-700">{Math.round(waterLevelPercentage)}%</span>
+              <span className="absolute text-xs font-semibold text-blue-700">
+                {Math.round(waterLevelPercentage)}%
+              </span>
             </div>
           </div>
           <div className="text-xs text-gray-400 mt-2">Goal: {waterGoal} ml</div>
@@ -1876,7 +2398,7 @@ export default function FoodIntakeModal({
         </div>
       </div>
     </div>
-  );
+  )
 
   if (!isOpen) return null
 
@@ -1958,9 +2480,11 @@ export default function FoodIntakeModal({
           ) : selectedTab === 'Water Intake' ? (
             renderWaterIntakeContent()
           ) : selectedTab === 'Overall Transformation' ? (
-            <WeightTrackingComponent user={user!}/>
+            <WeightTrackingComponent user={user!} />
           ) : selectedTab === 'Log Weight' ? (
             renderLogWeightContent()
+          ) : selectedTab === 'Comparison' ? (
+            renderComparisonContent()
           ) : (
             renderMealIntakeContent()
           )}

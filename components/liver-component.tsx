@@ -40,7 +40,7 @@ const itemVariants = {
 
 const barVariants = {
   hidden: { scaleY: 0 },
-  visible: (i) => ({
+  visible: (i : any) => ({
     scaleY: 1,
     transition: {
       duration: 0.6,
@@ -58,18 +58,56 @@ interface GutHealthItem {
   color: string
 }
 
-const gutHealthData: GutHealthItem[] = [
-  { name: 'Amylase', value: 85, height: 100, color: 'bg-blue-500' },
-  { name: 'Maltase', value: 95, height: 85, color: 'bg-blue-600' },
-  { name: 'Protease', value: 40, height: 35, color: 'bg-blue-200' },
-  { name: 'Lactase', value: 88, height: 75, color: 'bg-blue-500' },
-  { name: 'Lipase', value: 70, height: 50, color: 'bg-blue-300' },
-  { name: 'Proteases', value: 90, height: 80, color: 'bg-blue-600' },
-  { name: 'Sucrase', value: 92, height: 82, color: 'bg-blue-600' },
-  { name: 'Occult Blood', value: 45, height: 40, color: 'bg-blue-200' },
-]
+export const LiverComponent = ({ extractedLabData }: any) => {
+  const liverData = extractedLabData?.liver || {}
+  const geneData = liverData?.gene_based || {}
+  const enzymes = liverData?.enzymes || {}
 
-export const LiverComponent = () => {
+  const gutHealthData: GutHealthItem[] = [
+    {
+      name: 'Amylase',
+      value: enzymes?.amylase ?? 0,
+      height: Math.min((enzymes?.amylase ?? 0), 100),
+      color: 'bg-blue-500',
+    },
+    {
+      name: 'Maltase',
+      value: enzymes?.maltase ?? 0,
+      height: Math.min((enzymes?.maltase ?? 0), 100),
+      color: 'bg-blue-600',
+    },
+    {
+      name: 'Protease',
+      value: enzymes?.protease ?? 0,
+      height: Math.min((enzymes?.protease ?? 0), 100),
+      color: 'bg-blue-200',
+    },
+    {
+      name: 'Lactase',
+      value: enzymes?.lactase ?? 0,
+      height: Math.min((enzymes?.lactase ?? 0), 100),
+      color: 'bg-blue-500',
+    },
+    {
+      name: 'Lipase',
+      value: enzymes?.lipase ?? 0,
+      height: Math.min((enzymes?.lipase ?? 0), 100),
+      color: 'bg-blue-300',
+    },
+    {
+      name: 'Sucrase',
+      value: enzymes?.sucrase ?? 0,
+      height: Math.min((enzymes?.sucrase ?? 0), 100),
+      color: 'bg-blue-600',
+    },
+    {
+      name: 'Occult Blood',
+      value: enzymes?.occult_blood ?? 0,
+      height: Math.min((enzymes?.occult_blood ?? 0), 100),
+      color: 'bg-blue-200',
+    },
+  ]
+
   return (
     <motion.div
       className="w-full h-full overflow-y-auto md:overflow-y-hidden"
@@ -87,10 +125,14 @@ export const LiverComponent = () => {
               <h3 className="font-medium text-gray-800 text-lg">Liver Care</h3>
               {/* Bilirubin Card */}
               <h3 className="text-gray-800 text-xs mb-2">Bilirubin</h3>
-              <div className="text-2xl md:text-xs font-semibold">1.3 mg/dl</div>
+              <div className="text-2xl md:text-xs font-semibold">
+                {liverData?.bilirubin != null ? `${liverData.bilirubin} mg/dl` : 'N/A'}
+              </div>
               <div className="mt-8 md:mt-20">
                 <div className="text-gray-500 text-sm">Fatty Liver</div>
-                <div className="text-2xl font-semibold mt-1">Grade III</div>
+                <div className="text-2xl font-semibold mt-1">
+                  {liverData?.fatty_liver ?? 'Not Reported'}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -109,7 +151,7 @@ export const LiverComponent = () => {
                   ALT
                 </h3>
                 <div className="text-2xl md:text-3xl font-extralight mt-2">
-                  80 U/L
+                  {liverData?.alt != null ? `${liverData.alt} U/L` : 'N/A'}
                 </div>
               </CardContent>
             </Card>
@@ -121,7 +163,7 @@ export const LiverComponent = () => {
                   AST
                 </h3>
                 <div className="text-2xl md:text-3xl font-extralight">
-                  35 U/L
+                  {liverData?.ast != null ? `${liverData.ast} U/L` : 'N/A'}
                 </div>
               </CardContent>
             </Card>
@@ -133,7 +175,7 @@ export const LiverComponent = () => {
                   GGT
                 </h3>
                 <div className="text-2xl md:text-3xl font-extralight">
-                  53 U/L
+                  {liverData?.ggt != null ? `${liverData.ggt} U/L` : 'N/A'}
                 </div>
               </CardContent>
             </Card>
@@ -164,7 +206,9 @@ export const LiverComponent = () => {
                     <p className="font-semibold text-gray-800">C677T</p>
                     <p className="text-xs text-gray-500">RS1801133</p>
                   </div>
-                  <p className="text-lg font-semibold text-gray-800">CT</p>
+                  <p className="text-lg font-semibold text-gray-800">
+                    {geneData?.c677t ?? 'N/A'}
+                  </p>
                 </div>
                 <div className="flex justify-between items-center">
                   <p className="text-sm text-gray-500 font-medium">SNPs</p>
@@ -172,7 +216,9 @@ export const LiverComponent = () => {
                     <p className="font-semibold text-gray-800">GSTM1</p>
                     <p className="text-xs text-gray-500">Null variant</p>
                   </div>
-                  <p className="text-lg font-semibold text-gray-800">AA</p>
+                  <p className="text-lg font-semibold text-gray-800">
+                    {geneData?.gstm1 ?? 'N/A'}
+                  </p>
                 </div>
               </div>
             </div>

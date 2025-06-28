@@ -47,6 +47,7 @@ import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/utils/firebase'
 import Cardiology from './cardiology'
 import Kidney from './kidney'
+import { defaultExtractedLabData } from '@/sameple-text-json'
 
 // Other organ components will be imported here as they are created
 
@@ -213,6 +214,7 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(false) // Add loading state
   const [extractedText, setExtractedText] = useState('') // Optional: show result
   const [isFoodModalOpen, setIsFoodModalOpen] = useState(false)
+  const [extractedLabData, setExtractedLabData] = useState<any>(defaultExtractedLabData);
   // const fileInputRef = useRef<HTMLInputElement>(null);
 
   // const handleUploadClick = () => {
@@ -248,6 +250,7 @@ export default function Dashboard() {
       setIsLoading(false) // End loading
     }
   }
+
 
   useEffect(() => {
     const tabParam = searchParams.get('tab')
@@ -312,6 +315,40 @@ export default function Dashboard() {
     }, 500)
     return () => clearTimeout(timer)
   }, [])
+
+  
+useEffect(() => {
+    const tabParam = searchParams.get('tab')
+  const fetchUserData = async () => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
+
+    try {
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        // setIsAdmin(userData.role === "admin");
+
+        // 👇 Assuming lab data is stored under `labData` in Firestore
+        console.log("userData.extractedLabData", userData.extractedLabData)
+        if (userData.extractedLabData) {
+          setExtractedLabData(userData.extractedLabData);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+  };
+
+  fetchUserData();
+}, [activeTab, selectedOrgan]);
 
   // CSS for organ switcher circles
   const organSwitcherStyle = `
@@ -485,32 +522,32 @@ export default function Dashboard() {
                 <div className="lg:col-span-8 flex flex-col overflow-hidden md:mt-6 2xl:mt-20">
                   {selectedOrgan === 'heart' && (
                     <div className="h-full overflow-y-auto pr-2 organ-component-wrapper">
-                      <HeartComponent />
+                      <HeartComponent extractedLabData={extractedLabData || {}} />
                     </div>
                   )}
                   {selectedOrgan === 'lungs' && (
                     <div className="h-full overflow-y-auto pr-2 organ-component-wrapper">
-                      <LiverComponent />
+                      <LiverComponent  extractedLabData={extractedLabData || {}} />
                     </div>
                   )}
                   {selectedOrgan === 'liver' && (
                     <div className="h-full overflow-y-auto pr-2 organ-component-wrapper">
-                      <Neurology />
+                      <Neurology extractedLabData={extractedLabData || {}} />
                     </div>
                   )}
                   {selectedOrgan === 'brain' && (
                     <div className="h-full overflow-y-hidden pr-2 organ-component-wrapper">
-                      <Cardiology />
+                      <Cardiology  extractedLabData={extractedLabData || {}} />
                     </div>
                   )}
                   {selectedOrgan === 'kidney' && (
                     <div className="h-full overflow-y-hidden pr-2 organ-component-wrapper">
-                      <Kidney />
+                      <Kidney  extractedLabData={extractedLabData || {}} />
                     </div>
                   )}
                   {selectedOrgan === 'reproductive' && (
                     <div className="h-full overflow-y-auto pr-2 organ-component-wrapper">
-                      <ReproductiveHealth />
+                      <ReproductiveHealth  extractedLabData={extractedLabData || {}}/>
                     </div>
                   )}
                 </div>

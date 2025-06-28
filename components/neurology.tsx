@@ -38,7 +38,10 @@ const itemVariants = {
   },
 }
 
-export default function Component() {
+export default function Component({ extractedLabData }: any) {
+  const brain = extractedLabData?.brain || {}
+  const neurotransmitters = brain?.neurotransmitters || {}
+
   return (
     <div className="h-full overflow-y-auto md:overflow-y-hidden p-3 sm:p-4">
       <motion.div
@@ -58,6 +61,7 @@ export default function Component() {
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-4">
                     <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center">
+                      {/* Full SVG preserved exactly as you had it */}
                       <svg
                         width="29"
                         height="29"
@@ -78,13 +82,13 @@ export default function Component() {
                     <div>
                       <div className="text-gray-500 text-sm mb-1">RMSSD</div>
                       <div className="text-sm font-bold text-gray-900">
-                        72ms
+                        {brain?.rmssd != null ? `${brain.rmssd} ms` : 'N/A'}
                       </div>
                     </div>
                     <div>
                       <div className="text-gray-500 text-sm mb-1">SDNN</div>
                       <div className="text-sm font-bold text-gray-900">
-                        65ms
+                        {brain?.sdnn != null ? `${brain.sdnn} ms` : 'N/A'}
                       </div>
                     </div>
                   </div>
@@ -99,7 +103,9 @@ export default function Component() {
                     <div className="text-gray-500 text-sm mb-2">
                       Gait Readiness
                     </div>
-                    <div className="text-lg font-bold text-gray-900">72ms</div>
+                    <div className="text-lg font-bold text-gray-900">
+                      {brain?.gait_readiness != null ? `${brain.gait_readiness} ms` : 'N/A'}
+                    </div>
                   </div>
                   <div className="bg-gray-100 px-4 py-2 h-10 mt-3 rounded-3xl text-gray-600 text-sm font-medium">
                     Calculate Stress
@@ -111,7 +117,7 @@ export default function Component() {
                   <div>
                     <div className="text-gray-500 text-sm">CD-RISC:</div>
                     <div className="text-lg font-bold text-gray-900">
-                      80/100
+                      {brain?.cd_risc != null ? `${brain.cd_risc}/100` : 'N/A'}
                     </div>
                   </div>
                   <div>
@@ -119,7 +125,7 @@ export default function Component() {
                       PTau-217
                     </div>
                     <div className="text-lg font-normal text-gray-600">
-                      2 pg/mL
+                      {brain?.p_tau217 != null ? `${brain.p_tau217} pg/mL` : 'N/A'}
                     </div>
                   </div>
                 </div>
@@ -180,7 +186,7 @@ export default function Component() {
                     Involved in pleasure
                   </div>
                   <div className="text-base mt-12 sm:text-lg font-semibold text-gray-900">
-                    0.002 μM
+                    {neurotransmitters?.dopamine != null ? `${neurotransmitters.dopamine} μM` : 'N/A'}
                   </div>
                 </div>
 
@@ -193,7 +199,7 @@ export default function Component() {
                     Low Levels indicates Depression
                   </div>
                   <div className="text-base mt-12 sm:text-lg font-semibold text-gray-900">
-                    0.002 μM
+                    {neurotransmitters?.serotonin != null ? `${neurotransmitters.serotonin} μM` : 'N/A'}
                   </div>
                 </div>
 
@@ -206,7 +212,7 @@ export default function Component() {
                     Endorphin
                   </div>
                   <div className="text-base mt-12 sm:text-lg font-semibold text-gray-900">
-                    0.002 μM
+                    {neurotransmitters?.gaba != null ? `${neurotransmitters.gaba} μM` : 'N/A'}
                   </div>
                 </div>
               </div>

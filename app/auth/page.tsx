@@ -34,37 +34,7 @@ export default function AuthPage() {
       className="rounded-2xl p-8 text-center"
     >
       <div className="mb-6">
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-          className="w-24 h-24 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center shadow-sm"
-        >
-          <div className="w-14 h-14 text-blue-600">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M12 3L18 5.6V11.5C18 15.7 15.6 19.5 12 21C8.4 19.5 6 15.7 6 11.5V5.6L12 3Z"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M9.5 11.5L11 13L14.5 9.5"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-        </motion.div>
+
         <h1 className="text-3xl font-bold text-gray-800 mb-2 tracking-tight">
           Healthcare Dashboard
         </h1>

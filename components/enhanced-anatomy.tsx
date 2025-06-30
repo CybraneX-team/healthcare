@@ -121,14 +121,14 @@ export default function EnhancedAnatomy({
 
   const getLineColor = (organId: string) => {
     const colors = {
-      liver: '#f59e0b',
-      heart: '#ef4444',
+      liver: '#3b82f6',
+      heart: '#3b82f6',
       lungs: '#3b82f6',
-      brain: '#8b5cf6',
-      kidney: '#8b5cf6',
-      reproductive: '#ec4899',
+      brain: '#3b82f6',
+      kidney: '#3b82f6',
+      reproductive: '#3b82f6',
     }
-    return colors[organId as keyof typeof colors] || '#6b7280'
+    return colors[organId as keyof typeof colors] || '#3b82f6'
   }
 
   const calculateArrowEndpoint = (organ: OrganInfo) => {
@@ -190,102 +190,7 @@ export default function EnhancedAnatomy({
         </div>
 
         {/* Overlay SVG for lines and dots */}
-        {isLoaded && (
-          <svg
-            className="absolute inset-0 w-full h-full pointer-events-none"
-            viewBox="0 0 100 100"
-            preserveAspectRatio="none"
-          >
-            <defs>
-              {organData.map((organ) => (
-                <marker
-                  key={`arrow-${organ.id}`}
-                  id={`arrow-${organ.id}`}
-                  viewBox="0 0 12 12"
-                  refX="11"
-                  refY="6"
-                  markerWidth="10"
-                  markerHeight="10"
-                  orient="auto"
-                >
-                  <path
-                    d="M2,2 L2,10 L10,6 z"
-                    fill={getLineColor(organ.id)}
-                    opacity={getOrganOpacity(organ.id)}
-                  />
-                </marker>
-              ))}
-            </defs>
-
-            {organData.map((organ) => {
-              const arrowEndpoint = calculateArrowEndpoint(organ)
-              const dx = arrowEndpoint.x - organ.dotPosition.x
-              const dy = arrowEndpoint.y - organ.dotPosition.y
-              const angle = (Math.atan2(dy, dx) * 180) / Math.PI
-
-              return (
-                <g key={organ.id} opacity={getOrganOpacity(organ.id)}>
-                  <motion.path
-                    d={`M ${organ.dotPosition.x} ${organ.dotPosition.y} L ${arrowEndpoint.x} ${arrowEndpoint.y}`}
-                    stroke={getLineColor(organ.id)}
-                    strokeWidth="0.5"
-                    fill="none"
-                    variants={lineVariants}
-                    initial="hidden"
-                    animate="visible"
-                    strokeDasharray="none"
-                  />
-                  <motion.polygon
-                    points={`${arrowEndpoint.x - 1.5},${arrowEndpoint.y - 0.8} ${arrowEndpoint.x - 1.5},${arrowEndpoint.y + 0.8} ${arrowEndpoint.x},${arrowEndpoint.y}`}
-                    fill={getLineColor(organ.id)}
-                    transform={`rotate(${angle} ${arrowEndpoint.x} ${arrowEndpoint.y})`}
-                    variants={lineVariants}
-                    initial="hidden"
-                    animate="visible"
-                  />
-                  <motion.circle
-                    cx={organ.dotPosition.x}
-                    cy={organ.dotPosition.y}
-                    r="1.2"
-                    fill={getLineColor(organ.id)}
-                    stroke="white"
-                    strokeWidth="0.3"
-                    className="cursor-pointer pointer-events-auto"
-                    onClick={() => onOrganSelect(organ.id)}
-                    whileHover={{ scale: 1.3 }}
-                    whileTap={{ scale: 0.8 }}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.5, duration: 0.3 }}
-                    style={{
-                      filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.3))',
-                    }}
-                  />
-                  {selectedOrgan === organ.id && (
-                    <motion.circle
-                      cx={organ.dotPosition.x}
-                      cy={organ.dotPosition.y}
-                      r="2.5"
-                      fill="none"
-                      stroke={getLineColor(organ.id)}
-                      strokeWidth="0.2"
-                      initial={{ scale: 0, opacity: 1 }}
-                      animate={{
-                        scale: [1, 1.2, 1],
-                        opacity: [0.9, 0.3, 0.9],
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: 'easeInOut',
-                      }}
-                    />
-                  )}
-                </g>
-              )
-            })}
-          </svg>
-        )}
+        
 
         {/* Organ labels */}
         {isLoaded &&

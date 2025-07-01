@@ -38,6 +38,7 @@ type Step =
   | "2fa-setup" 
   | "name"
   | "dob"
+  | "gender" 
   | "diagnosis"
   | "medications"
   | "contact"
@@ -55,6 +56,7 @@ interface UserProfile {
   medications: string;
   phone: string;
   avatar: any;
+  gender: string;
 }
 
 export default function SignupPage() {
@@ -79,6 +81,7 @@ export default function SignupPage() {
     medications: "",
     phone: "",
     avatar: null,
+    gender: "",
   });
   
   // Separate state for avatar preview URL
@@ -103,7 +106,7 @@ export default function SignupPage() {
   
   // Calculate progress percentage based on current step
   const steps: Step[] = [
-    "email", "password", "2fa-setup", "name", "dob", 
+    "email", "password", "2fa-setup", "name", "dob",  "gender",
     "diagnosis", "medications", "contact", "avatar", "review"
   ];
   const currentStepIndex = steps.indexOf(currentStep);
@@ -162,8 +165,16 @@ export default function SignupPage() {
         setError("Please select your date of birth");
         return;
       }
+      setCurrentStep("gender");
+    }
+    else if (currentStep === "gender") {
+      if (!profile.gender) {
+        setError("Please select your gender");
+        return;
+      }
       setCurrentStep("diagnosis");
     }
+
     else if (currentStep === "diagnosis") {
       if (!profile.primaryDiagnosis.trim()) {
         setError("Please enter your primary diagnosis");
@@ -251,7 +262,8 @@ const handleSignup = async () => {
       avatar: profile.avatar,
       role: 'patient',
       use2FA : profile.use2FA,
-      twoFASecret: secret || null
+      twoFASecret: secret || null,
+      gender: profile.gender, // ← Add this
     };
 
     await signup(profile.email, profile.password, userData);
@@ -659,6 +671,36 @@ const handleSignup = async () => {
             </motion.div>
           )}
 
+          {currentStep === "gender" && (
+          <motion.div
+            key="gender"
+            custom={1}
+            variants={variants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.5, ease: "easeInOut" }}
+            className="absolute top-0 left-0 w-full"
+          >
+            <div className="space-y-6">
+              <Label htmlFor="gender">Gender</Label>
+              <div className="flex gap-3">
+                {["Male", "Female", "Other"].map((option) => (
+                  <Button
+                    key={option}
+                    variant={profile.gender === option ? "default" : "outline"}
+                    onClick={() => setProfile({ ...profile, gender: option })}
+                  >
+                    {option}
+                  </Button>
+                ))}
+              </div>
+              <p className="text-sm text-gray-500">Select your gender for personalized care recommendations</p>
+            </div>
+          </motion.div>
+        )}
+
+
           {currentStep === "diagnosis" && (
             <motion.div
               key="diagnosis"
@@ -939,7 +981,7 @@ const handleSignup = async () => {
             </div>
           </div>
           
-          <Button 
+          {/* <Button 
             onClick={handleAppleSignIn}
             variant="outline" 
             className="w-full mt-4 flex items-center justify-center space-x-2"
@@ -956,7 +998,7 @@ const handleSignup = async () => {
               <path d="M11.182.008C11.148-.03 9.923.023 8.857 1.18c-1.066 1.156-.902 2.482-.878 2.516.024.034 1.52.087 2.475-1.258.955-1.345.762-2.391.728-2.43zm3.314 11.733c-.048-.096-2.325-1.234-2.113-3.422.212-2.189 1.675-2.789 1.698-2.854.023-.065-.597-.79-1.254-1.157a3.692 3.692 0 0 0-1.563-.434c-.108-.003-.483-.095-1.254.116-.508.139-1.653.589-1.968.607-.316.018-1.256-.522-2.267-.665-.647-.125-1.333.131-1.824.328-.49.196-1.422.754-2.074 2.237-.652 1.482-.311 3.83-.067 4.56.244.729.625 1.924 1.273 2.796.576.984 1.34 1.667 1.659 1.899.319.232 1.219.386 1.843.067.502-.308 1.408-.485 1.766-.472.357.013 1.061.154 1.782.539.571.197 1.111.115 1.652-.105.541-.221 1.324-1.059 2.238-2.758.347-.79.505-1.217.473-1.282z" />
             </svg>
             <span>Sign up with Apple</span>
-          </Button>
+          </Button> */}
 
              <Button 
             onClick={loginWithGoogle}

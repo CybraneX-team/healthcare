@@ -403,7 +403,7 @@ export default function DashboardMobile() {
           </div>
         ) : activeTab === 'labs' ? (
           <div className="bg-gradient-to-b from-gray-200 to-white min-h-screen">
-            <CombinedLabsSection />
+            <CombinedLabsSection extractedLabData={extractedLabData} />
           </div>
         ) : activeTab === 'courses' ? (
           <div className="bg-gradient-to-b from-gray-200 to-white min-h-screen">

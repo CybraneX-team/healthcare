@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 export const samplePdfData = {
   liver: {
     bilirubin: null,
@@ -64,6 +66,7 @@ export const samplePdfData = {
     },
     imt: null,
     troponin: null,
+    CtChestImpression : null
   },
 
   lungs: {
@@ -282,3 +285,149 @@ export const defaultExtractedLabData = {
     },
   },
 }
+
+
+
+export const samplePdfSchema = z.object({
+  liver: z.object({
+    bilirubin: z.number().nullable(),
+    alt: z.number().nullable(),
+    ast: z.number().nullable(),
+    ggt: z.number().nullable(),
+    gene_based: z.object({
+      c677t: z.number().nullable(),
+      gstm1: z.number().nullable(),
+    }),
+    enzymes: z.object({
+      amylase: z.number().nullable(),
+      maltase: z.number().nullable(),
+      protease: z.number().nullable(),
+      lactase: z.number().nullable(),
+      lipase: z.number().nullable(),
+      sucrase: z.number().nullable(),
+      occult_blood: z.number().nullable(),
+    }),
+    fatty_liver: z.union([z.string(), z.boolean(), z.null()]),
+  }),
+
+  kidney: z.object({
+    random_urine_albumin: z.number().nullable(),
+    urine_ph: z.number().nullable(),
+    bun: z.number().nullable(),
+    egfr: z.number().nullable(),
+    uric_acid: z.number().nullable(),
+    heavy_metals: z.object({
+      mercury: z.number().nullable(),
+      cadmium: z.number().nullable(),
+      lead: z.number().nullable(),
+    }),
+    bpa: z.number().nullable(),
+    hydration: z.number().nullable(),
+  }),
+
+  brain: z.object({
+    cd_risc: z.number().nullable(),
+    p_tau217: z.number().nullable(),
+    rmssd: z.number().nullable(),
+    sdnn: z.number().nullable(),
+    gait_readiness: z.number().nullable(),
+    neurotransmitters: z.object({
+      gaba: z.number().nullable(),
+      dopamine: z.number().nullable(),
+      serotonin: z.number().nullable(),
+    }),
+    brain_impression_log: z.string().nullable(),
+  }),
+
+  heart: z.object({
+    heart_rate: z.number().nullable(),
+    heart_recovery_rate: z.number().nullable(),
+    heart_rate_variability: z.number().nullable(),
+    cholesterol: z.number().nullable(),
+    homocysteine: z.number().nullable(),
+    hs_crp: z.number().nullable(),
+    nt_bnp: z.number().nullable(),
+    aortic_compliance: z.number().nullable(),
+    blood_pressure: z.object({
+      systolic: z.number().nullable(),
+      diastolic: z.number().nullable(),
+    }),
+    imt: z.number().nullable(),
+    troponin: z.number().nullable(),
+    CtChestImpression : z.string().nullable()
+  }),
+
+  lungs: z.object({
+    vo2_max: z.number().nullable(),
+    heart_rate_variability: z.number().nullable(),
+    pulmonary_capacity: z.number().nullable(),
+    spo2: z.number().nullable(),
+    chest_impression_log: z.string(),
+  }),
+
+  hormonal_reproductive: z.object({
+    general: z.object({
+    hormones_panel: z.string(),
+    igf_1: z.number().nullable(),
+    hba1c: z.number().nullable(),
+    snps: z.object({
+      comt: z.number().nullable(),
+      cyps: z.number().nullable(),
+    }),
+  }),
+
+  women: z.object({
+    vitamin_d_25oh_total: z.number().nullable(),
+    progesterone: z.number().nullable(),
+    ldh: z.number().nullable(),
+    insulin_fasting: z.number().nullable(),
+    transferrin: z.number().nullable(),
+    thyroid_panel_comprehensive: z.string(),
+    testosterone_bioavailable: z.object({
+      total: z.number().nullable(),
+      free: z.number().nullable(),
+      bio_available: z.number().nullable(),
+      shbg: z.number().nullable(),
+    }),
+    t4_total: z.number().nullable(),
+    t3_total: z.number().nullable(),
+    a1c: z.number().nullable(),
+    ggt: z.number().nullable(),
+    fsh: z.number().nullable(),
+    lh: z.number().nullable(),
+    estradiol_e2: z.number().nullable(),
+    dhea_sulfate: z.number().nullable(),
+    cortisol: z.number().nullable(),
+    androstenedione: z.number().nullable(),
+    igf_1: z.number().nullable(),
+  }),
+
+  men: z.object({
+    testosterone_total: z.number().nullable(),
+    testosterone_free: z.number().nullable(),
+    shbg: z.number().nullable(),
+    estradiol: z.number().nullable(),
+    estrone: z.number().nullable(),
+    dhea_s: z.number().nullable(),
+    fsh: z.number().nullable(),
+    lh: z.number().nullable(),
+    dht: z.number().nullable(),
+    prolactin: z.number().nullable(),
+    progesterone: z.number().nullable(),
+    psa: z.number().nullable(),
+    tsh: z.number().nullable(),
+    ft4: z.number().nullable(),
+    ft3: z.number().nullable(),
+    vitamin_d_25oh: z.number().nullable(),
+    parathyroid_hormone: z.number().nullable(),
+    cmp: z.number().nullable(),
+    lipids: z.number().nullable(),
+    insulin: z.number().nullable(),
+    hba1c: z.number().nullable(),
+    hs_crp: z.number().nullable(),
+    homocysteine: z.number().nullable(),
+    androstenedione: z.number().nullable(),
+    igf_1: z.number().nullable(),
+  }),
+  })
+})

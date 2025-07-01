@@ -72,6 +72,7 @@ export const HeartComponent = ({extractedLabData}: any) => {
     diastolic: null,
   },
   aortic_compliance: null,
+  
 } 
   console.log("heartData", heartData)
 

@@ -1,5 +1,5 @@
 // app/api/process-pdf-batch/route.ts
-import { samplePdfData } from '@/sameple-text-json'
+import { samplePdfData, samplePdfSchema } from '@/sameple-text-json'
 import { NextRequest, NextResponse } from 'next/server'
 import pdf from 'pdf-parse'
 
@@ -41,17 +41,34 @@ const extractUnifiedJson = (groqRawOutput: string) => {
 }
 
 async function sendToGroqLLM(allText: string): Promise<any> {
-  const prompt = `
+   const prompt = `
 You are a medical report parser.
 
 Your job is to extract structured data from multiple medical reports. Below is the combined raw text.
 
 Please return ONLY one unified JSON object based on the schema below — combining all the information found across all reports.
+
 Important mapping hints:
 - "AST (SGOT)" refers to "ast"
 - "ALT (SGPT)" refers to "alt"
 - "Bilirubin Total" maps to "bilirubin"
 - "GGT" or "GGTP" maps to "ggt"
+
+🧠 Also extract imaging and neurological impression notes:
+
+- If the raw text contains CT Chest or radiology findings like:
+  - "lungs are clear without consolidation, effusion..."
+  - "no mass or pneumothorax noted"
+  - "CT shows no abnormalities"
+  → Store this full sentence in \`lungs.chest_impression_log\`
+
+- If the text contains neurological or migraine-related findings like:
+  - "rhythmic heartbeat"
+  - "above high heart rate"
+  - "migraine symptoms reported"
+  → Store these impressions in \`brain.brain_impression_log\`
+
+Only extract clean natural-sentence logs, not diagnoses or interpretations. If not found, use an empty string.
 
 ❗️STRICT RULES:
 - Return ONLY the raw JSON.
@@ -67,7 +84,8 @@ ${JSON.stringify(samplePdfData, null, 2)}
 
 Combined Reports:
 ${allText}
-`
+`;
+
 
   // console.log("🧠 Prompt sent to Groq:\n", prompt.slice(0, 1000), "...[truncated]");
 
@@ -121,11 +139,14 @@ export async function POST(req: NextRequest) {
   const rawReply = await sendToGroqLLM(combinedText)
 
   try {
-    const cleaned = rawReply.replace(/```json|```/gi, '').trim()
-    const finalData = extractUnifiedJson(cleaned)
-    return NextResponse.json({ extractedJsonArray: finalData })
+    const cleaned = rawReply.replace(/```json|```/gi, '').trim();
+    const finalData = extractUnifiedJson(cleaned);
+
+    const parsed = samplePdfSchema.parse(finalData); // ✅ Zod validation
+
+    return NextResponse.json({ extractedJsonArray: parsed });
   } catch (err) {
-    console.error('❌ Failed to parse JSON from Groq:', err, rawReply)
-    return NextResponse.json({ extractedJsonArray: [] })
+    console.error('❌ Failed to parse JSON from Groq or validate with Zod:', err, rawReply);
+    return NextResponse.json({ extractedJsonArray: [] }, { status: 400 });
   }
 }

@@ -66,15 +66,16 @@ export function UsersManager({ setSidebarOpen }: UsersManagerProps) {
   const [selectedUser, setSelectedUser] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [newUser, setNewUser] = useState({
-    name: '',
-    email: '',
-    role: 'patient',
-    phone: '',
-    dateOfBirth: '',
-    primaryDiagnosis: '',
-    medications: '',
-    use2FA: false,
-  })
+  name: '',
+  email: '',
+  role: 'patient',
+  phone: '',
+  dateOfBirth: '',
+  primaryDiagnosis: '',
+  medications: '',
+  use2FA: false,
+  gender: '', // ✅ Add this
+})
   const [actionLoading, setActionLoading] = useState<{
     loading: boolean
     message: string
@@ -205,6 +206,7 @@ export function UsersManager({ setSidebarOpen }: UsersManagerProps) {
         primaryDiagnosis: newUser.primaryDiagnosis || '',
         medications: newUser.medications || '',
         use2FA: newUser.use2FA || false,
+        gender: newUser.gender || '',
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
         displayName: newUser.name,
@@ -240,6 +242,7 @@ export function UsersManager({ setSidebarOpen }: UsersManagerProps) {
         primaryDiagnosis: '',
         medications: '',
         use2FA: false,
+        gender : ''
       })
     } catch (error) {
       console.error('Error adding user:', error)
@@ -274,6 +277,7 @@ export function UsersManager({ setSidebarOpen }: UsersManagerProps) {
         medications: selectedUser.medications || '',
         use2FA: selectedUser.use2FA || false,
         updatedAt: Timestamp.now(),
+        gender: selectedUser.gender || '',
       })
 
       // Update local state
@@ -447,7 +451,24 @@ export function UsersManager({ setSidebarOpen }: UsersManagerProps) {
                     }
                   />
                 </div>
-
+                <div className="space-y-2">
+              <label htmlFor="gender" className="text-sm font-medium">
+                Gender
+              </label>
+              <select
+                id="gender"
+                className="w-full rounded-md border border-gray-300 p-2"
+                value={newUser.gender}
+                onChange={(e) =>
+                  setNewUser({ ...newUser, gender: e.target.value })
+                }
+              >
+                <option value="">Select gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
                 <div className="space-y-2">
                   <label htmlFor="diagnosis" className="text-sm font-medium">
                     Primary Diagnosis
@@ -778,7 +799,24 @@ export function UsersManager({ setSidebarOpen }: UsersManagerProps) {
                     }
                   />
                 </div>
-
+                <div className="space-y-2">
+                <label htmlFor="edit-gender" className="text-sm font-medium">
+                  Gender
+                </label>
+                <select
+                  id="edit-gender"
+                  className="w-full rounded-md border border-gray-300 p-2"
+                  value={selectedUser.gender || ''}
+                  onChange={(e) =>
+                    setSelectedUser({ ...selectedUser, gender: e.target.value })
+                  }
+                >
+                  <option value="">Select gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
                 <div className="flex items-center space-x-2">
                   <input
                     type="checkbox"

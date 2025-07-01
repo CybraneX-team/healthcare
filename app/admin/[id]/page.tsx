@@ -487,6 +487,17 @@ const structuredExtractedData: Record<string, any> = {
                       : 'N/A'}
                   </p>
                 </div>
+                 <div>
+                  <h3 className="text-sm font-medium text-blue-500 uppercase tracking-wide mb-2">
+                    Gender
+                  </h3>
+                  <p className="text-xl font-semibold text-blue-900">
+                    {userData.gender
+                      ? 
+                      userData.gender   
+                      : 'N/A'}
+                  </p>
+                </div>
               </div>
             </Card>
 

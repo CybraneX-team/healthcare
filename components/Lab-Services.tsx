@@ -4,17 +4,44 @@ import { ServicesProductsSection } from './ServicesSection'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 
-export const CombinedLabsSection = () => {
+export const CombinedLabsSection = ({extractedLabData} : any) => {
   const [showServices, setShowServices] = useState(false)
 
-  const organs = [
-    { id: 'heart', image: '/onlyheart_light.svg', alt: 'Heart', progress: 80 },
-    { id: 'lungs', image: '/onlylungs_light.svg', alt: 'Lungs', progress: 60 },
-    { id: 'liver', image: '/onlyliver_light.svg', alt: 'Liver', progress: 40 },
-    { id: 'brain', image: '/onlybrain_light.svg', alt: 'Brain', progress: 90 },
-    { id: 'kidney', image: '/onlykidneys_light.svg', alt: 'Kidneys', progress: 50 },
-    { id: 'reproductive', image: '/onlymr_light.svg', alt: 'Reproductive', progress: 30 },
-  ]
+
+
+const organs = [
+  { id: 'heart', image: '/onlyheart_light.svg', alt: 'Heart' },
+  { id: 'lungs', image: '/onlylungs_light.svg', alt: 'Lungs' },
+  { id: 'liver', image: '/onlyliver_light.svg', alt: 'Liver' },
+  { id: 'brain', image: '/onlybrain_light.svg', alt: 'Brain' },
+  { id: 'kidney', image: '/onlykidneys_light.svg', alt: 'Kidneys' },
+  { id: 'reproductive', dataKey: 'hormonal_reproductive', image: '/onlymr_light.svg', alt: 'Reproductive' },
+];
+
+// Helper to recursively count total keys
+const getTotalKeys = (obj: any): number => {
+  if (obj === null || typeof obj !== 'object') return 1;
+  return Object.values(obj).reduce((acc: number, val: any) => acc + getTotalKeys(val), 0);
+};
+
+// Helper to recursively count non-null, non-empty values
+const getNonNullCount = (obj: any): number => {
+  if (obj === null) return 0;
+  if (typeof obj !== 'object') return obj !== '' ? 1 : 0;
+  return Object.values(obj).reduce((acc: number, val: any) => acc + getNonNullCount(val), 0);
+};
+
+
+  const organsWithDynamicProgress = organs.map((e) => {
+  const objectOfOrgan = extractedLabData?.[e.dataKey || e.id] ?? {};
+  const totalKeys = getTotalKeys(objectOfOrgan);
+  const nonNullCount = getNonNullCount(objectOfOrgan);
+  const progress = totalKeys > 0 ? (nonNullCount / totalKeys) * 100 : 0;
+
+  console.log(`Progress for ${e.id}: ${progress}%`);
+  return { ...e, progress };
+});
+
 
   return (
     <div className="flex flex-col gap-6 mt-14 mb-8 md:px-10 px-0">
@@ -47,7 +74,7 @@ export const CombinedLabsSection = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      {organs.map((organ) => (
+      {organsWithDynamicProgress.map((organ) => (
         <div key={organ.id} className="flex flex-col items-center w-16">
           <div className="relative w-12 h-12">
             {/* Icon Circle */}

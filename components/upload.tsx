@@ -158,7 +158,7 @@ export default function UploadPage() {
     const fileArray = Array.from(files)
     setUploadingFiles(
       fileArray.map((file, i) => ({
-        id: `file-${i}`,
+        id: `${Date.now()}-${Math.random().toString(36).substring(2, 10)}`,
         name: file.name,
         size: file.size,
         type: file.type,

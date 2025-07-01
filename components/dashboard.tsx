@@ -567,7 +567,7 @@ useEffect(() => {
             </div>
           ) : activeTab === 'labs' ? (
             // <LabsSection />
-            <CombinedLabsSection />
+            <CombinedLabsSection  extractedLabData={extractedLabData || {}}/>
           ) : activeTab === 'upload' ? (
             <Upload />
           ) : activeTab === 'progress' ? (

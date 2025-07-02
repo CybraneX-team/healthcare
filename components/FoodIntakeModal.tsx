@@ -22,17 +22,8 @@ import {
 import { useToast } from '@/hooks/use-toast'
 import { WeightTrackingComponent } from './WeightTracker'
 import WaterIntakeModel from './WaterIntakeModel'
-import {
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts'
+
+  import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import { Card, CardContent } from '@/components/ui/card'
 
 interface FoodIntakeModalProps {
@@ -67,7 +58,11 @@ const NutritionTooltip = ({
               style={{ color: entry.color }}
             >
               {`${entry.dataKey}: ${entry.value}${
-                entry.dataKey === 'calories' ? ' kcal' : 'g'
+                entry.dataKey === 'calories'
+                  ? ' kcal'
+                  : entry.dataKey === 'weight'
+                  ? ' kg'
+                  : 'g'
               }`}
             </p>
           ))}
@@ -224,6 +219,7 @@ export default function FoodIntakeModal({
           protein: data.totalProtein || 0,
           carbs: data.totalCarbs || 0,
           fats: data.totalFats || 0,
+          weight: data.weight || 0,
         })
       })
 
@@ -258,6 +254,7 @@ export default function FoodIntakeModal({
             protein: item.protein,
             carbs: item.carbs,
             fats: item.fats,
+            weight: item.weight,
             date: item.date,
           }
         })
@@ -294,6 +291,9 @@ export default function FoodIntakeModal({
             const avgFats =
               weekData.data.reduce((sum, d) => sum + d.fats, 0) /
               weekData.data.length
+            const avgWeight =
+              weekData.data.reduce((sum, d) => sum + d.weight, 0) /
+              weekData.data.length
 
             return {
               name: `Week ${index + 1}`,
@@ -301,6 +301,7 @@ export default function FoodIntakeModal({
               protein: Math.round(avgProtein),
               carbs: Math.round(avgCarbs),
               fats: Math.round(avgFats),
+              weight: Math.round(avgWeight),
               date: weekStart,
             }
           }
@@ -1002,7 +1003,7 @@ export default function FoodIntakeModal({
 
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
+                  <ComposedChart
                     data={comparisonData}
                     margin={{ top: 10, right: 10, left: 10, bottom: 5 }}
                   >
@@ -1023,14 +1024,34 @@ export default function FoodIntakeModal({
                       tick={{ fontSize: 11, fill: '#9a3412' }}
                       tickFormatter={(value) => `${value}`}
                     />
+                    <YAxis
+                      yAxisId="right"
+                      orientation="right"
+                      stroke="#1e40af"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 11, fill: '#1e40af' }}
+                      tickFormatter={(value) => `${value}kg`}
+                    />
                     <Tooltip content={<NutritionTooltip />} />
+                    <Legend />
                     <Bar
                       dataKey="calories"
                       fill="#ea580c"
                       radius={[4, 4, 0, 0]}
                       name="calories"
                     />
-                  </BarChart>
+                    <Line
+                      type="monotone"
+                      dataKey="weight"
+                      stroke="#1e40af"
+                      strokeWidth={2}
+                      dot={{ fill: '#1e40af', strokeWidth: 1, r: 3 }}
+                      activeDot={{ r: 5, fill: '#1e40af' }}
+                      name="weight"
+                      yAxisId="right"
+                    />
+                  </ComposedChart>
                 </ResponsiveContainer>
               </div>
             </CardContent>
@@ -1055,7 +1076,7 @@ export default function FoodIntakeModal({
 
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
+                  <ComposedChart
                     data={comparisonData}
                     margin={{ top: 10, right: 10, left: 10, bottom: 5 }}
                   >
@@ -1076,7 +1097,17 @@ export default function FoodIntakeModal({
                       tick={{ fontSize: 11, fill: '#991b1b' }}
                       tickFormatter={(value) => `${value}g`}
                     />
+                    <YAxis
+                      yAxisId="right"
+                      orientation="right"
+                      stroke="#1e40af"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 11, fill: '#1e40af' }}
+                      tickFormatter={(value) => `${value}kg`}
+                    />
                     <Tooltip content={<NutritionTooltip />} />
+                    <Legend />
                     <Line
                       type="monotone"
                       dataKey="protein"
@@ -1086,7 +1117,17 @@ export default function FoodIntakeModal({
                       activeDot={{ r: 6, fill: '#dc2626' }}
                       name="protein"
                     />
-                  </LineChart>
+                    <Line
+                      type="monotone"
+                      dataKey="weight"
+                      stroke="#1e40af"
+                      strokeWidth={2}
+                      dot={{ fill: '#1e40af', strokeWidth: 1, r: 3 }}
+                      activeDot={{ r: 5, fill: '#1e40af' }}
+                      name="weight"
+                      yAxisId="right"
+                    />
+                  </ComposedChart>
                 </ResponsiveContainer>
               </div>
             </CardContent>
@@ -1111,7 +1152,7 @@ export default function FoodIntakeModal({
 
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
+                  <ComposedChart
                     data={comparisonData}
                     margin={{ top: 10, right: 10, left: 10, bottom: 5 }}
                   >
@@ -1132,14 +1173,34 @@ export default function FoodIntakeModal({
                       tick={{ fontSize: 11, fill: '#92400e' }}
                       tickFormatter={(value) => `${value}g`}
                     />
+                    <YAxis
+                      yAxisId="right"
+                      orientation="right"
+                      stroke="#1e40af"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 11, fill: '#1e40af' }}
+                      tickFormatter={(value) => `${value}kg`}
+                    />
                     <Tooltip content={<NutritionTooltip />} />
+                    <Legend />
                     <Bar
                       dataKey="carbs"
                       fill="#d97706"
                       radius={[4, 4, 0, 0]}
                       name="carbs"
                     />
-                  </BarChart>
+                    <Line
+                      type="monotone"
+                      dataKey="weight"
+                      stroke="#1e40af"
+                      strokeWidth={2}
+                      dot={{ fill: '#1e40af', strokeWidth: 1, r: 3 }}
+                      activeDot={{ r: 5, fill: '#1e40af' }}
+                      name="weight"
+                      yAxisId="right"
+                    />
+                  </ComposedChart>
                 </ResponsiveContainer>
               </div>
             </CardContent>
@@ -1164,7 +1225,7 @@ export default function FoodIntakeModal({
 
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
+                  <ComposedChart
                     data={comparisonData}
                     margin={{ top: 10, right: 10, left: 10, bottom: 5 }}
                   >
@@ -1185,7 +1246,17 @@ export default function FoodIntakeModal({
                       tick={{ fontSize: 11, fill: '#7c2d12' }}
                       tickFormatter={(value) => `${value}g`}
                     />
+                    <YAxis
+                      yAxisId="right"
+                      orientation="right"
+                      stroke="#1e40af"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 11, fill: '#1e40af' }}
+                      tickFormatter={(value) => `${value}kg`}
+                    />
                     <Tooltip content={<NutritionTooltip />} />
+                    <Legend />
                     <Line
                       type="monotone"
                       dataKey="fats"
@@ -1195,7 +1266,17 @@ export default function FoodIntakeModal({
                       activeDot={{ r: 6, fill: '#9333ea' }}
                       name="fats"
                     />
-                  </LineChart>
+                    <Line
+                      type="monotone"
+                      dataKey="weight"
+                      stroke="#1e40af"
+                      strokeWidth={2}
+                      dot={{ fill: '#1e40af', strokeWidth: 1, r: 3 }}
+                      activeDot={{ r: 5, fill: '#1e40af' }}
+                      name="weight"
+                      yAxisId="right"
+                    />
+                  </ComposedChart>
                 </ResponsiveContainer>
               </div>
             </CardContent>

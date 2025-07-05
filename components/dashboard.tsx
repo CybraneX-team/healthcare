@@ -214,7 +214,9 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(false) // Add loading state
   const [extractedText, setExtractedText] = useState('') // Optional: show result
   const [isFoodModalOpen, setIsFoodModalOpen] = useState(false)
-  const [extractedLabData, setExtractedLabData] = useState<any>(defaultExtractedLabData);
+  const [extractedLabData, setExtractedLabData] = useState<any>(
+    defaultExtractedLabData,
+  )
   // const fileInputRef = useRef<HTMLInputElement>(null);
 
   // const handleUploadClick = () => {
@@ -222,7 +224,7 @@ export default function Dashboard() {
   // };
 
   const handleFileChange = async (
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0]
     if (!file) return
@@ -250,7 +252,6 @@ export default function Dashboard() {
       setIsLoading(false) // End loading
     }
   }
-
 
   useEffect(() => {
     const tabParam = searchParams.get('tab')
@@ -316,39 +317,38 @@ export default function Dashboard() {
     return () => clearTimeout(timer)
   }, [])
 
-  
-useEffect(() => {
+  useEffect(() => {
     const tabParam = searchParams.get('tab')
-  const fetchUserData = async () => {
-    const auth = getAuth();
-    const user = auth.currentUser;
+    const fetchUserData = async () => {
+      const auth = getAuth()
+      const user = auth.currentUser
 
-    if (!user) {
-      setIsAdmin(false);
-      return;
-    }
-
-    try {
-      const userRef = doc(db, "users", user.uid);
-      const userSnap = await getDoc(userRef);
-
-      if (userSnap.exists()) {
-        const userData = userSnap.data();
-        // setIsAdmin(userData.role === "admin");
-
-        // 👇 Assuming lab data is stored under `labData` in Firestore
-        console.log("userData.extractedLabData", userData.extractedLabData)
-        if (userData.extractedLabData) {
-          setExtractedLabData(userData.extractedLabData);
-        }
+      if (!user) {
+        setIsAdmin(false)
+        return
       }
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-    }
-  };
 
-  fetchUserData();
-}, [activeTab, selectedOrgan]);
+      try {
+        const userRef = doc(db, 'users', user.uid)
+        const userSnap = await getDoc(userRef)
+
+        if (userSnap.exists()) {
+          const userData = userSnap.data()
+          // setIsAdmin(userData.role === "admin");
+
+          // 👇 Assuming lab data is stored under `labData` in Firestore
+          console.log('userData.extractedLabData', userData.extractedLabData)
+          if (userData.extractedLabData) {
+            setExtractedLabData(userData.extractedLabData)
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error)
+      }
+    }
+
+    fetchUserData()
+  }, [activeTab, selectedOrgan])
 
   // CSS for organ switcher circles
   const organSwitcherStyle = `
@@ -441,76 +441,75 @@ useEffect(() => {
         <main className="w-full flex-1 flex flex-col">
           {/* Digital Twin Navigation - Moved outside conditionals so it stays in same position */}
           <div className="px-6 py-4 flex-shrink-0">
-  <div className="flex justify-center items-center w-full mb-2 relative">
-    {/* Logo on the left */}
-    <div className="absolute left-0 top-1/2 transform -translate-y-1/2">
-      <img src="/logo.png" alt="Logo" className="h-20 w-auto" />
-    </div>
+            <div className="flex justify-center items-center w-full mb-2 relative">
+              {/* Logo on the left */}
+              <div className="absolute left-0 top-1/2 transform -translate-y-1/2">
+                <img src="/logo.svg" alt="Logo" className="h-10 w-auto" />
+              </div>
 
-    <div className="flex bg-gray-100 rounded-full p-1 overflow-hidden">
-      <Button
-        variant="ghost"
-        className={`rounded-full px-6 py-2 ${
-          activeTab === 'overview'
-            ? 'bg-blue-500 text-white'
-            : 'text-gray-700'
-        } text-sm`}
-        onClick={() => setActiveTab('overview')}
-      >
-        Digital Twin
-      </Button>
-      <Button
-        variant="ghost"
-        className={`rounded-full px-6 py-2 ${
-          activeTab === 'courses'
-            ? 'bg-blue-500 text-white'
-            : 'text-gray-700'
-        } text-sm`}
-        onClick={() => setActiveTab('courses')}
-      >
-        Courses
-      </Button>
+              <div className="flex bg-gray-100 rounded-full p-1 overflow-hidden">
+                <Button
+                  variant="ghost"
+                  className={`rounded-full px-6 py-2 ${
+                    activeTab === 'overview'
+                      ? 'bg-blue-500 text-white'
+                      : 'text-gray-700'
+                  } text-sm`}
+                  onClick={() => setActiveTab('overview')}
+                >
+                  Digital Twin
+                </Button>
+                <Button
+                  variant="ghost"
+                  className={`rounded-full px-6 py-2 ${
+                    activeTab === 'courses'
+                      ? 'bg-blue-500 text-white'
+                      : 'text-gray-700'
+                  } text-sm`}
+                  onClick={() => setActiveTab('courses')}
+                >
+                  Courses
+                </Button>
 
-      <Button
-        variant="ghost"
-        className={`rounded-full px-6 py-2 ${
-          activeTab === 'labs'
-            ? 'bg-blue-500 text-white'
-            : 'text-gray-700'
-        } text-sm`}
-        onClick={() => setActiveTab('labs')}
-      >
-        Directories
-      </Button>
-    </div>
+                <Button
+                  variant="ghost"
+                  className={`rounded-full px-6 py-2 ${
+                    activeTab === 'labs'
+                      ? 'bg-blue-500 text-white'
+                      : 'text-gray-700'
+                  } text-sm`}
+                  onClick={() => setActiveTab('labs')}
+                >
+                  Directories
+                </Button>
+              </div>
 
-    {/* Calorie Tracker Button */}
-    <Button
-      variant="ghost"
-      className="rounded-full px-6 py-5 border border-4 bg-gray-100  border-blue-500 text-gray-700 ml-3 font-medium"
-      onClick={() => setIsFoodModalOpen(true)}
-    >
-      Tracker
-    </Button>
+              {/* Calorie Tracker Button */}
+              <Button
+                variant="ghost"
+                className="rounded-full px-6 py-5 border border-4 bg-gray-100  border-blue-500 text-gray-700 ml-3 font-medium"
+                onClick={() => setIsFoodModalOpen(true)}
+              >
+                Tracker
+              </Button>
 
-    {isAdmin && (
-      <Link href="/admin">
-       <Button
-        variant="ghost"
-        className={`rounded-xl px-8 py-2 bg-blue-500 text-white hover:bg-blue-600 absolute left-36 bottom-1 font-medium`}
-      >
-        Admin
-      </Button>
+              {isAdmin && (
+                <Link href="/admin">
+                  <Button
+                    variant="ghost"
+                    className={`rounded-xl px-8 py-2 bg-blue-500 text-white hover:bg-blue-600 absolute left-36 bottom-1 font-medium`}
+                  >
+                    Admin
+                  </Button>
+                </Link>
+              )}
 
-      </Link>
-    )}
-
-    {/* Profile dropdown */}
-    <div className="absolute right-0 top-1/2 transform -translate-y-1/2">
-      <ProfileDropdown />
-    </div>
-  </div>
-</div>
+              {/* Profile dropdown */}
+              <div className="absolute right-0 top-1/2 transform -translate-y-1/2">
+                <ProfileDropdown />
+              </div>
+            </div>
+          </div>
 
           {activeTab === 'overview' ? (
             <div className="digital-twin flex-1 px-6 bg-gradient-to-b from-gray-200 to-white overflow-hidden">
@@ -530,32 +529,38 @@ useEffect(() => {
                 <div className="lg:col-span-8 flex flex-col overflow-hidden md:mt-6 2xl:mt-20">
                   {selectedOrgan === 'heart' && (
                     <div className="h-full overflow-y-auto pr-2 organ-component-wrapper">
-                      <HeartComponent extractedLabData={extractedLabData || {}} />
+                      <HeartComponent
+                        extractedLabData={extractedLabData || {}}
+                      />
                     </div>
                   )}
                   {selectedOrgan === 'lungs' && (
                     <div className="h-full overflow-y-auto pr-2 organ-component-wrapper">
-                      <Cardiology  extractedLabData={extractedLabData || {}} />
+                      <Cardiology extractedLabData={extractedLabData || {}} />
                     </div>
                   )}
                   {selectedOrgan === 'liver' && (
                     <div className="h-full overflow-y-auto pr-2 organ-component-wrapper">
-                      <LiverComponent extractedLabData={extractedLabData || {}} />
+                      <LiverComponent
+                        extractedLabData={extractedLabData || {}}
+                      />
                     </div>
                   )}
                   {selectedOrgan === 'brain' && (
                     <div className="h-full overflow-y-hidden pr-2 organ-component-wrapper">
-                      <Neurology  extractedLabData={extractedLabData || {}} />
+                      <Neurology extractedLabData={extractedLabData || {}} />
                     </div>
                   )}
                   {selectedOrgan === 'kidney' && (
                     <div className="h-full overflow-y-hidden pr-2 organ-component-wrapper">
-                      <Kidney  extractedLabData={extractedLabData || {}} />
+                      <Kidney extractedLabData={extractedLabData || {}} />
                     </div>
                   )}
                   {selectedOrgan === 'reproductive' && (
                     <div className="h-full overflow-y-auto pr-2 -mt-8 organ-component-wrapper">
-                      <ReproductiveHealth  extractedLabData={extractedLabData || {}}/>
+                      <ReproductiveHealth
+                        extractedLabData={extractedLabData || {}}
+                      />
                     </div>
                   )}
                 </div>
@@ -567,7 +572,7 @@ useEffect(() => {
             </div>
           ) : activeTab === 'labs' ? (
             // <LabsSection />
-            <CombinedLabsSection  extractedLabData={extractedLabData || {}}/>
+            <CombinedLabsSection extractedLabData={extractedLabData || {}} />
           ) : activeTab === 'upload' ? (
             <Upload />
           ) : activeTab === 'progress' ? (

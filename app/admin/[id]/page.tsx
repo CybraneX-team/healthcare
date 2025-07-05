@@ -31,11 +31,11 @@ import OverlayLoader from '@/components/OverlayLoader'
 
 const Viewer = dynamic(
   () => import('@react-pdf-viewer/core').then((mod) => mod.Viewer),
-  { ssr: false }
+  { ssr: false },
 )
 const Worker = dynamic(
   () => import('@react-pdf-viewer/core').then((mod) => mod.Worker),
-  { ssr: false }
+  { ssr: false },
 )
 
 export default function UserDetailsPage() {
@@ -108,7 +108,7 @@ export default function UserDetailsPage() {
 
   const handleProgramSelect = (program: string, isChecked: boolean) => {
     setSelectedPrograms((prev) =>
-      isChecked ? [...prev, program] : prev.filter((p) => p !== program)
+      isChecked ? [...prev, program] : prev.filter((p) => p !== program),
     )
   }
 
@@ -119,7 +119,7 @@ export default function UserDetailsPage() {
       const userRef = doc(db, 'users', id as string)
       const updates = selectedPrograms.reduce(
         (acc, program) => ({ ...acc, [`assignedPrograms.${program}`]: true }),
-        {}
+        {},
       )
       await updateDoc(userRef, updates)
 
@@ -129,7 +129,7 @@ export default function UserDetailsPage() {
           ...(prev.assignedPrograms || {}),
           ...selectedPrograms.reduce(
             (acc, program) => ({ ...acc, [program]: true }),
-            {}
+            {},
           ),
         },
       }))
@@ -145,97 +145,102 @@ export default function UserDetailsPage() {
     }
   }
 
-const handleMultipleFileUpload = async (files: FileList) => {
-  if (!id) return;
+  const handleMultipleFileUpload = async (files: FileList) => {
+    if (!id) return
 
-  const fileArray = Array.from(files);
-  if (!fileArray.length) return;
+    const fileArray = Array.from(files)
+    if (!fileArray.length) return
 
-  setprocessingText({ active: true, message: "Uploading and extracting all PDFs..." });
-  setUploading(true);
+    setprocessingText({
+      active: true,
+      message: 'Uploading and extracting all PDFs...',
+    })
+    setUploading(true)
 
-  try {
-    // Upload all files to Firebase Storage
-    const storage = getStorage();
-    const uploadedMetadata = await Promise.all(
-      fileArray.map(async (file) => {
-        const timestamp = Date.now();
-        const category = "labs";
-        const fullStorageName = `${timestamp}-${file.name}`;
-        const storageRef = ref(storage, `documents/${id}/${category}/${fullStorageName}`);
-        await uploadBytes(storageRef, file);
-        const downloadURL = await getDownloadURL(storageRef);
-        return {
-          file,
-          fullStorageName,
-          downloadURL,
-          docKey: file.name.split(".")[0],
-          category,
-        };
+    try {
+      // Upload all files to Firebase Storage
+      const storage = getStorage()
+      const uploadedMetadata = await Promise.all(
+        fileArray.map(async (file) => {
+          const timestamp = Date.now()
+          const category = 'labs'
+          const fullStorageName = `${timestamp}-${file.name}`
+          const storageRef = ref(
+            storage,
+            `documents/${id}/${category}/${fullStorageName}`,
+          )
+          await uploadBytes(storageRef, file)
+          const downloadURL = await getDownloadURL(storageRef)
+          return {
+            file,
+            fullStorageName,
+            downloadURL,
+            docKey: file.name.split('.')[0],
+            category,
+          }
+        }),
+      )
+
+      // Send all files to Groq API
+      const formData = new FormData()
+      fileArray.forEach((file) => formData.append('files', file))
+      const res = await fetch('/api/process-pdf', {
+        method: 'POST',
+        body: formData,
       })
-    );
+      // THIS assumes you're only extracting ONE unified object for all files
+      const { extractedJsonArray: rawReply } = await res.json()
 
-    // Send all files to Groq API
-    const formData = new FormData();
-    fileArray.forEach((file) => formData.append("files", file));
-    const res = await fetch("/api/process-pdf", {
-      method: "POST",
-      body: formData,
-    });
-    // THIS assumes you're only extracting ONE unified object for all files
-  const { extractedJsonArray: rawReply } = await res.json();
+      // No need to clean — it's already parsed JSON
+      const extractedJsonObject = rawReply
 
-  // No need to clean — it's already parsed JSON
-  const extractedJsonObject = rawReply;
+      // Construct Firestore updates
+      const userRef = doc(db, 'users', id as string)
+      const updatedDocs: any = {}
+      // const structuredExtractedData: Record<string, any> = {};
 
-    // Construct Firestore updates
-    const userRef = doc(db, "users", id as string);
-    const updatedDocs: any = {};
-    // const structuredExtractedData: Record<string, any> = {};
+      uploadedMetadata.forEach((meta) => {
+        updatedDocs[meta.docKey] = {
+          name: meta.file.name,
+          size: meta.file.size,
+          type: meta.file.type,
+          uploadedAt: new Date().toISOString(),
+          downloadURL: meta.downloadURL,
+          fullStorageName: meta.fullStorageName,
+        }
+      })
 
-  uploadedMetadata.forEach((meta) => {
-  updatedDocs[meta.docKey] = {
-    name: meta.file.name,
-    size: meta.file.size,
-    type: meta.file.type,
-    uploadedAt: new Date().toISOString(),
-    downloadURL: meta.downloadURL,
-    fullStorageName: meta.fullStorageName,
-  };
-});
+      // Store full extracted JSON under a single key like "combined_report"
+      const structuredExtractedData: Record<string, any> = {
+        combined_report: rawReply, // this is your parsed, structured JSON from Groq
+      }
 
-// Store full extracted JSON under a single key like "combined_report"
-const structuredExtractedData: Record<string, any> = {
-  combined_report: rawReply,  // this is your parsed, structured JSON from Groq
-};
+      await updateDoc(userRef, {
+        labs: {
+          ...(userData?.labs || {}),
+          ...updatedDocs,
+        },
+        extractedLabData: rawReply,
+      })
 
+      setUserData((prev: any) => ({
+        ...prev,
+        labs: {
+          ...(prev?.labs || {}),
+          ...updatedDocs,
+        },
+        extractedLabData: rawReply,
+      }))
 
-    await updateDoc(userRef, {
-      labs: {
-        ...(userData?.labs || {}),
-        ...updatedDocs,
-      },
-      extractedLabData: rawReply,
-    });
-
-    setUserData((prev: any) => ({
-      ...prev,
-      labs: {
-        ...(prev?.labs || {}),
-        ...updatedDocs,
-      },
-      extractedLabData: rawReply,
-    }));
-
-    toast.success("All files uploaded and processed!");
-  } catch (err) {
-    console.error("❌ Upload failed:", err);
-    toast.error("Upload or extraction failed.");
-  } finally {
-    setUploading(false);
-    setprocessingText({ active: false, message: "" });
+      toast.success('All files uploaded and processed!')
+    } catch (err) {
+      console.error('❌ Upload failed:', err)
+      toast.error('Upload or extraction failed.')
+    } finally {
+      setUploading(false)
+      setprocessingText({ active: false, message: '' })
+    }
   }
-}
 
   const handleViewPdf = (downloadURL: string) => {
     setSelectedPdf(downloadURL)
@@ -247,7 +252,7 @@ const structuredExtractedData: Record<string, any> = {
   const handleDeleteFile = async (
     category: string,
     fileId: string,
-    fullStorageName: string
+    fullStorageName: string,
   ) => {
     try {
       if (!id) return
@@ -266,7 +271,7 @@ const structuredExtractedData: Record<string, any> = {
       const storage = getStorage()
       const fileRef = ref(
         storage,
-        `documents/${id}/${category}/${fullStorageName}`
+        `documents/${id}/${category}/${fullStorageName}`,
       )
       await deleteObject(fileRef) // Ensure this works depending on your Firebase version
 
@@ -303,7 +308,7 @@ const structuredExtractedData: Record<string, any> = {
       const data = await res.json()
 
       const blob = await pdf(
-        <ClinicalSummaryPdf summary={data.result} />
+        <ClinicalSummaryPdf summary={data.result} />,
       ).toBlob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -373,8 +378,8 @@ const structuredExtractedData: Record<string, any> = {
             pdfLoading.active
               ? pdfLoading.message
               : processingText.active
-              ? processingText.message
-              : 'Downloading file...'
+                ? processingText.message
+                : 'Downloading file...'
           }
         />
       )}
@@ -437,7 +442,7 @@ const structuredExtractedData: Record<string, any> = {
                     <Calendar className="h-5 w-5 text-blue-500" />
                     <span className="text-blue-900 font-medium">
                       {new Date(
-                        userData.dateOfBirth.seconds * 1000
+                        userData.dateOfBirth.seconds * 1000,
                       ).toLocaleDateString()}
                     </span>
                   </div>
@@ -482,20 +487,17 @@ const structuredExtractedData: Record<string, any> = {
                   <p className="text-xl font-semibold text-blue-900">
                     {userData.createdAt
                       ? new Date(
-                          userData.createdAt.seconds * 1000
+                          userData.createdAt.seconds * 1000,
                         ).toLocaleDateString()
                       : 'N/A'}
                   </p>
                 </div>
-                 <div>
+                <div>
                   <h3 className="text-sm font-medium text-blue-500 uppercase tracking-wide mb-2">
                     Gender
                   </h3>
                   <p className="text-xl font-semibold text-blue-900">
-                    {userData.gender
-                      ? 
-                      userData.gender   
-                      : 'N/A'}
+                    {userData.gender ? userData.gender : 'N/A'}
                   </p>
                 </div>
               </div>
@@ -578,7 +580,7 @@ const structuredExtractedData: Record<string, any> = {
                                                         : String(v)}
                                                     </span>
                                                   </div>
-                                                )
+                                                ),
                                               )}
                                             </div>
                                           ) : (
@@ -590,11 +592,11 @@ const structuredExtractedData: Record<string, any> = {
                                       </div>
                                     </div>
                                   </div>
-                                )
+                                ),
                               )}
                             </div>
                           </motion.div>
-                        )
+                        ),
                       )
                     } catch (e) {
                       return (
@@ -657,8 +659,8 @@ const structuredExtractedData: Record<string, any> = {
                         isAlreadyAssigned
                           ? 'bg-blue-50 border-blue-200'
                           : isChecked
-                          ? 'bg-blue-100 border-blue-300 shadow-md'
-                          : 'hover:border-blue-300 hover:bg-blue-50'
+                            ? 'bg-blue-100 border-blue-300 shadow-md'
+                            : 'hover:border-blue-300 hover:bg-blue-50'
                       }`}
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
@@ -718,11 +720,11 @@ const structuredExtractedData: Record<string, any> = {
                         label="Upload Document"
                         multiple
                         accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                           onChange={(e) => {
-                        if (e.target.files && e.target.files.length > 0) {
-                          handleMultipleFileUpload(e.target.files);
-                        }
-                      }}
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files.length > 0) {
+                            handleMultipleFileUpload(e.target.files)
+                          }
+                        }}
                       />
                       <p className="text-sm text-blue-600 mt-6 font-medium">
                         Supported formats: PDF, JPEG, PNG, DOC • Max size: 10MB
@@ -761,7 +763,7 @@ const structuredExtractedData: Record<string, any> = {
                               },
                             })
                           }
-                        }
+                        },
                       )
                     }
                   })
@@ -837,7 +839,7 @@ const structuredExtractedData: Record<string, any> = {
                             handleDeleteFile(
                               data.category || 'labs',
                               id,
-                              data.fullStorageName
+                              data.fullStorageName,
                             )
                           }
                         >

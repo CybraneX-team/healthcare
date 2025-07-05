@@ -104,7 +104,9 @@ export default function Component({ extractedLabData }: any) {
                       Gait Readiness
                     </div>
                     <div className="text-lg font-bold text-gray-900">
-                      {brain?.gait_readiness != null ? `${brain.gait_readiness} ms` : 'N/A'}
+                      {brain?.gait_readiness != null
+                        ? `${brain.gait_readiness} ms`
+                        : 'N/A'}
                     </div>
                   </div>
                   <div className="bg-gray-100 px-4 py-2 h-10 mt-3 rounded-3xl text-gray-600 text-sm font-medium">
@@ -125,7 +127,9 @@ export default function Component({ extractedLabData }: any) {
                       PTau-217
                     </div>
                     <div className="text-lg font-normal text-gray-600">
-                      {brain?.p_tau217 != null ? `${brain.p_tau217} pg/mL` : 'N/A'}
+                      {brain?.p_tau217 != null
+                        ? `${brain.p_tau217} pg/mL`
+                        : 'N/A'}
                     </div>
                   </div>
                 </div>
@@ -186,7 +190,9 @@ export default function Component({ extractedLabData }: any) {
                     Involved in pleasure
                   </div>
                   <div className="text-base mt-12 sm:text-lg font-semibold text-gray-900">
-                    {neurotransmitters?.dopamine != null ? `${neurotransmitters.dopamine} μM` : 'N/A'}
+                    {neurotransmitters?.dopamine != null
+                      ? `${neurotransmitters.dopamine} μM`
+                      : 'N/A'}
                   </div>
                 </div>
 
@@ -199,7 +205,9 @@ export default function Component({ extractedLabData }: any) {
                     Low Levels indicates Depression
                   </div>
                   <div className="text-base mt-12 sm:text-lg font-semibold text-gray-900">
-                    {neurotransmitters?.serotonin != null ? `${neurotransmitters.serotonin} μM` : 'N/A'}
+                    {neurotransmitters?.serotonin != null
+                      ? `${neurotransmitters.serotonin} μM`
+                      : 'N/A'}
                   </div>
                 </div>
 
@@ -212,7 +220,9 @@ export default function Component({ extractedLabData }: any) {
                     Endorphin
                   </div>
                   <div className="text-base mt-12 sm:text-lg font-semibold text-gray-900">
-                    {neurotransmitters?.gaba != null ? `${neurotransmitters.gaba} μM` : 'N/A'}
+                    {neurotransmitters?.gaba != null
+                      ? `${neurotransmitters.gaba} μM`
+                      : 'N/A'}
                   </div>
                 </div>
               </div>

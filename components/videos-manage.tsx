@@ -39,7 +39,12 @@ import { useProgramContext } from '@/hooks/useProgressData'
 import { FileUpload } from './ui/file-upload'
 // Correct usage in your component/page:
 import { ref as dbRef } from 'firebase/database'
-import { ref as storageRef, uploadBytes, getDownloadURL, getStorage } from 'firebase/storage'
+import {
+  ref as storageRef,
+  uploadBytes,
+  getDownloadURL,
+  getStorage,
+} from 'firebase/storage'
 
 interface VideosManagerProps {
   programId: string
@@ -68,10 +73,10 @@ export function VideosManager({
     duration: '00:00',
     order: 1,
     todo: [''],
-    documentUrl : ''
+    documentUrl: '',
   })
   const [uploadingDoc, setUploadingDoc] = useState(false)
-const [uploadError, setUploadError] = useState<string | null>(null)
+  const [uploadError, setUploadError] = useState<string | null>(null)
 
   const { recentActivity, setrecentActivity } = useProgramContext()
   // const [currentModuleForVideo, setCurrentModuleForVideo] = useState<Module | null>(null);
@@ -191,46 +196,46 @@ const [uploadError, setUploadError] = useState<string | null>(null)
     // },
   ])
 
-useEffect(() => {
-  const fetchModuleVideos = async () => {
-    const auth = getAuth();
-    const user = auth.currentUser;
-    if (!user) return;
+  useEffect(() => {
+    const fetchModuleVideos = async () => {
+      const auth = getAuth()
+      const user = auth.currentUser
+      if (!user) return
 
-    const userRef = doc(db, 'users', user.uid);
-    const userSnap = await getDoc(userRef);
-    const userData = userSnap.data();
-    const completedVideos = userData?.completedVideos?.[programId]?.[moduleId] || [];
+      const userRef = doc(db, 'users', user.uid)
+      const userSnap = await getDoc(userRef)
+      const userData = userSnap.data()
+      const completedVideos =
+        userData?.completedVideos?.[programId]?.[moduleId] || []
 
-    const videosRef = ref(
-      rtdb,
-      `courses/thrivemed/programs/${programId}/modules/${moduleId}/videos`
-    );
-    const snapshot = await get(videosRef);
+      const videosRef = ref(
+        rtdb,
+        `courses/thrivemed/programs/${programId}/modules/${moduleId}/videos`,
+      )
+      const snapshot = await get(videosRef)
 
-    if (snapshot.exists()) {
-      const data = snapshot.val();
-      const loadedVideos = Object.entries(data).map(([id, value]: any) => ({
-        id,
-        ...value,
-        completed: completedVideos.includes(id), // ✅ Mark completed
-        createdAt: new Date(value.createdAt).toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-        }),
-      }));
-      setVideos(loadedVideos);
-    } else {
-      setVideos([]);
+      if (snapshot.exists()) {
+        const data = snapshot.val()
+        const loadedVideos = Object.entries(data).map(([id, value]: any) => ({
+          id,
+          ...value,
+          completed: completedVideos.includes(id), // ✅ Mark completed
+          createdAt: new Date(value.createdAt).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          }),
+        }))
+        setVideos(loadedVideos)
+      } else {
+        setVideos([])
+      }
     }
-  };
 
-  if (programId && moduleId) {
-    fetchModuleVideos();
-  }
-}, [programId, moduleId]);
-
+    if (programId && moduleId) {
+      fetchModuleVideos()
+    }
+  }, [programId, moduleId])
 
   const filteredVideos = videos
     .filter(
@@ -321,7 +326,6 @@ useEffect(() => {
       modules: {},
       createdAt: nowISOString,
       updatedAt: nowISOString,
-
     }
 
     try {
@@ -398,13 +402,11 @@ useEffect(() => {
       await updateDoc(userRef, {
         [`programProgress.${programId}`]: programProgressPercent,
       })
-        if (programProgressPercent === 100) {
-      await updateDoc(userRef, {
-        [`programStatus.${programId}`]: 'completed',
-      })
-    }
-
-
+      if (programProgressPercent === 100) {
+        await updateDoc(userRef, {
+          [`programStatus.${programId}`]: 'completed',
+        })
+      }
     } catch (error) {
       console.error('Error saving to Firebase:', error)
     } finally {
@@ -415,7 +417,7 @@ useEffect(() => {
         duration: '00:00',
         order: 1,
         todo: [''],
-        documentUrl : ""
+        documentUrl: '',
       })
       setisAdding(false)
     }
@@ -570,8 +572,9 @@ useEffect(() => {
         [`programProgress.${programId}`]: programProgressPercent,
       })
       await updateDoc(userRef, {
-      [`programStatus.${programId}`]: programProgressPercent === 100 ? 'completed' : 'active',
-    })
+        [`programStatus.${programId}`]:
+          programProgressPercent === 100 ? 'completed' : 'active',
+      })
     } catch (error) {
       console.error('Failed to delete video from Firebase:', error)
     } finally {
@@ -589,75 +592,81 @@ useEffect(() => {
     setIsDeleteDialogOpen(true)
   }
 
-const toggleVideoCompletion = async (videoId: string) => {
-  const auth = getAuth();
-  const user = auth.currentUser;
-  if (!user) return;
+  const toggleVideoCompletion = async (videoId: string) => {
+    const auth = getAuth()
+    const user = auth.currentUser
+    if (!user) return
 
-  const userRef = doc(db, "users", user.uid);
-  const userSnap = await getDoc(userRef);
-  const prevCompletedVideos = userSnap.data()?.completedVideos || {};
-  const programVideos = prevCompletedVideos[programId] || {};
-  const moduleVideos = new Set(programVideos[moduleId] || []);
+    const userRef = doc(db, 'users', user.uid)
+    const userSnap = await getDoc(userRef)
+    const prevCompletedVideos = userSnap.data()?.completedVideos || {}
+    const programVideos = prevCompletedVideos[programId] || {}
+    const moduleVideos = new Set(programVideos[moduleId] || [])
 
-  const isCompleted = moduleVideos.has(videoId);
+    const isCompleted = moduleVideos.has(videoId)
 
-  if (isCompleted) {
-    moduleVideos.delete(videoId); // Mark as Incomplete
-  } else {
-    moduleVideos.add(videoId); // Mark as Complete
-  }
+    if (isCompleted) {
+      moduleVideos.delete(videoId) // Mark as Incomplete
+    } else {
+      moduleVideos.add(videoId) // Mark as Complete
+    }
 
-  const updatedCompletedVideos = {
-    ...prevCompletedVideos,
-    [programId]: {
-      ...programVideos,
-      [moduleId]: Array.from(moduleVideos),
-    },
-  };
+    const updatedCompletedVideos = {
+      ...prevCompletedVideos,
+      [programId]: {
+        ...programVideos,
+        [moduleId]: Array.from(moduleVideos),
+      },
+    }
 
-  const programRefRTDB = ref(rtdb, `courses/thrivemed/programs/${programId}`);
-  const programSnap = await new Promise<any>((resolve) => {
-    onValue(programRefRTDB, (snapshot) => resolve(snapshot.val()), { onlyOnce: true });
-  });
-  const modules = (programSnap.modules || {}) as Record<string, any>;
+    const programRefRTDB = ref(rtdb, `courses/thrivemed/programs/${programId}`)
+    const programSnap = await new Promise<any>((resolve) => {
+      onValue(programRefRTDB, (snapshot) => resolve(snapshot.val()), {
+        onlyOnce: true,
+      })
+    })
+    const modules = (programSnap.modules || {}) as Record<string, any>
 
-  const newModuleProgress: Record<string, number> = {};
-  let totalVideosCount = 0;
-  let totalCompletedCount = 0;
+    const newModuleProgress: Record<string, number> = {}
+    let totalVideosCount = 0
+    let totalCompletedCount = 0
 
-  for (const [modId, modData] of Object.entries(modules)) {
-    const totalVideos = Object.keys(modData.videos || {}).length;
-    const completedCount = updatedCompletedVideos[programId]?.[modId]?.length || 0;
-    const progress = totalVideos === 0 ? 0 : Math.round((completedCount / totalVideos) * 100);
+    for (const [modId, modData] of Object.entries(modules)) {
+      const totalVideos = Object.keys(modData.videos || {}).length
+      const completedCount =
+        updatedCompletedVideos[programId]?.[modId]?.length || 0
+      const progress =
+        totalVideos === 0 ? 0 : Math.round((completedCount / totalVideos) * 100)
 
-    newModuleProgress[modId] = progress;
-    totalVideosCount += totalVideos;
-    totalCompletedCount += completedCount;
-  }
+      newModuleProgress[modId] = progress
+      totalVideosCount += totalVideos
+      totalCompletedCount += completedCount
+    }
 
-  const programProgressPercent =
-    totalVideosCount === 0 ? 0 : Math.round((totalCompletedCount / totalVideosCount) * 100);
+    const programProgressPercent =
+      totalVideosCount === 0
+        ? 0
+        : Math.round((totalCompletedCount / totalVideosCount) * 100)
 
-  await updateDoc(userRef, {
-    [`completedVideos.${programId}`]: updatedCompletedVideos[programId],
-    [`moduleProgress.${programId}`]: newModuleProgress,
-    [`programProgress.${programId}`]: programProgressPercent,
-  });
-
-  if (programProgressPercent === 100) {
     await updateDoc(userRef, {
-    [`programStatus.${programId}`]: programProgressPercent === 100 ? 'completed' : 'active',
-  })
+      [`completedVideos.${programId}`]: updatedCompletedVideos[programId],
+      [`moduleProgress.${programId}`]: newModuleProgress,
+      [`programProgress.${programId}`]: programProgressPercent,
+    })
+
+    if (programProgressPercent === 100) {
+      await updateDoc(userRef, {
+        [`programStatus.${programId}`]:
+          programProgressPercent === 100 ? 'completed' : 'active',
+      })
+    }
+
+    // Update UI
+    const updatedVideos = videos.map((video) =>
+      video.id === videoId ? { ...video, completed: !isCompleted } : video,
+    )
+    setVideos(updatedVideos)
   }
-
-
-  // Update UI
-  const updatedVideos = videos.map((video) =>
-    video.id === videoId ? { ...video, completed: !isCompleted } : video
-  );
-  setVideos(updatedVideos);
-};
 
   return (
     <>
@@ -837,45 +846,58 @@ const toggleVideoCompletion = async (videoId: string) => {
                   </Button>
                 </div>
                 <div className="space-y-2">
-  <label className="text-sm font-medium">Upload Supporting Document (optional)</label>
-        <FileUpload
-          onChange={async (e) => {
-            const file = e.target.files?.[0]
-            if (!file) return
+                  <label className="text-sm font-medium">
+                    Upload Supporting Document (optional)
+                  </label>
+                  <FileUpload
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0]
+                      if (!file) return
 
-            setUploadingDoc(true)
-            setUploadError(null)
+                      setUploadingDoc(true)
+                      setUploadError(null)
 
-            try {
-              const storage = getStorage()
-              const fileRef = storageRef(storage, `videos/${programId}/${moduleId}/${file.name}`)
+                      try {
+                        const storage = getStorage()
+                        const fileRef = storageRef(
+                          storage,
+                          `videos/${programId}/${moduleId}/${file.name}`,
+                        )
 
-              await uploadBytes(fileRef, file)
-              const downloadUrl = await getDownloadURL(fileRef)
+                        await uploadBytes(fileRef, file)
+                        const downloadUrl = await getDownloadURL(fileRef)
 
-              setNewVideo((prev) => ({ ...prev, documentUrl: downloadUrl }))
-            } catch (error) {
-              console.error('Upload failed', error)
-              setUploadError('Failed to upload document. Please try again.')
-            } finally {
-              setUploadingDoc(false)
-            }
-          }}
-          label="Upload Supporting Document"
-        />
+                        setNewVideo((prev) => ({
+                          ...prev,
+                          documentUrl: downloadUrl,
+                        }))
+                      } catch (error) {
+                        console.error('Upload failed', error)
+                        setUploadError(
+                          'Failed to upload document. Please try again.',
+                        )
+                      } finally {
+                        setUploadingDoc(false)
+                      }
+                    }}
+                    label="Upload Supporting Document"
+                  />
+                </div>
+                {uploadingDoc && (
+                  <p className="text-xs text-blue-600 mt-1">
+                    Uploading document...
+                  </p>
+                )}
 
-        </div>
-                  {uploadingDoc && (
-          <p className="text-xs text-blue-600 mt-1">Uploading document...</p>
-        )}
+                {uploadError && (
+                  <p className="text-xs text-red-600 mt-1">{uploadError}</p>
+                )}
 
-        {uploadError && (
-          <p className="text-xs text-red-600 mt-1">{uploadError}</p>
-        )}
-
-        {newVideo.documentUrl && !uploadingDoc && !uploadError && (
-          <p className="text-xs text-green-600 mt-1">Document uploaded successfully ✅</p>
-        )}
+                {newVideo.documentUrl && !uploadingDoc && !uploadError && (
+                  <p className="text-xs text-green-600 mt-1">
+                    Document uploaded successfully ✅
+                  </p>
+                )}
               </div>
               <div className="flex flex-col sm:flex-row justify-end gap-3">
                 <Button
@@ -889,7 +911,7 @@ const toggleVideoCompletion = async (videoId: string) => {
                       duration: '00:00',
                       order: 1,
                       todo: [''],
-                      documentUrl : ""
+                      documentUrl: '',
                     })
                   }}
                   className="w-full sm:w-auto"
@@ -1040,7 +1062,6 @@ const toggleVideoCompletion = async (videoId: string) => {
             </div>
           )}
         </div>
-
 
         {/* Edit Video Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>

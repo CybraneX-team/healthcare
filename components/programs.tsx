@@ -25,7 +25,9 @@ export function ProgramsList({
   const [programs, setPrograms] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [userProgramProgress, setUserProgramProgress] = useState<any>({})
-  const [userProgramStatus, setUserProgramStatus] = useState<Record<string, string>>({})
+  const [userProgramStatus, setUserProgramStatus] = useState<
+    Record<string, string>
+  >({})
 
   useEffect(() => {
     const auth = getAuth()
@@ -56,68 +58,67 @@ export function ProgramsList({
       : Math.round((completedCount / totalVideos) * 100)
   }
 
-useEffect(() => {
-  const fetchData = async () => {
-    setLoading(true)
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
 
-    // 1️⃣ Fetch all programs from RTDB
-    const coursesRef = ref(rtdb, 'courses/thrivemed/programs')
-    onValue(coursesRef, async (snapshot) => {
-      const data = snapshot.val()
-      if (!data) {
-        setPrograms([])
+      // 1️⃣ Fetch all programs from RTDB
+      const coursesRef = ref(rtdb, 'courses/thrivemed/programs')
+      onValue(coursesRef, async (snapshot) => {
+        const data = snapshot.val()
+        if (!data) {
+          setPrograms([])
+          setLoading(false)
+          return
+        }
+
+        const programsArray = Object.keys(data).map((key) => ({
+          id: key,
+          ...data[key],
+        }))
+
+        // 2️⃣ Fetch current user's assigned programs from Firestore
+        const auth = getAuth()
+        const user = auth.currentUser
+        if (!user) {
+          setPrograms([])
+          setLoading(false)
+          return
+        }
+
+        const userRef = doc(db, 'users', user.uid)
+        const snap = await getDoc(userRef)
+
+        if (!snap.exists()) {
+          setPrograms([])
+          setLoading(false)
+          return
+        }
+
+        const userData = snap.data()
+        const userAssignedPrograms = userData.assignedPrograms || {}
+        setUserProgramProgress(userData.programProgress || {})
+        setUserProgramStatus(userData.programStatus || {})
+
+        // 3️⃣ Merge default and user-assigned programs
+        const assignedProgramIds = new Set(
+          Object.entries(userAssignedPrograms)
+            .filter(([_, assigned]) => assigned)
+            .map(([program]) => program),
+        )
+
+        // 4️⃣ Filter programs to only assigned ones
+        const assignedPrograms = programsArray.filter((p) =>
+          assignedProgramIds.has(p.id),
+        )
+
+        setPrograms(assignedPrograms)
         setLoading(false)
-        return
-      }
+      })
+    }
 
-      const programsArray = Object.keys(data).map((key) => ({
-        id: key,
-        ...data[key],
-      }))
-
-      // 2️⃣ Fetch current user's assigned programs from Firestore
-      const auth = getAuth()
-      const user = auth.currentUser
-      if (!user) {
-        setPrograms([])
-        setLoading(false)
-        return
-      }
-
-      const userRef = doc(db, 'users', user.uid)
-      const snap = await getDoc(userRef)
-
-      if (!snap.exists()) {
-        setPrograms([])
-        setLoading(false)
-        return
-      }
-
-      const userData = snap.data()
-      const userAssignedPrograms = userData.assignedPrograms || {}
-      setUserProgramProgress(userData.programProgress || {})
-      setUserProgramStatus(userData.programStatus || {})
-
-      // 3️⃣ Merge default and user-assigned programs
-      const assignedProgramIds = new Set(
-        Object.entries(userAssignedPrograms)
-          .filter(([_, assigned]) => assigned)
-          .map(([program]) => program),
-      )
-
-      // 4️⃣ Filter programs to only assigned ones
-      const assignedPrograms = programsArray.filter((p) =>
-        assignedProgramIds.has(p.id),
-      )
-
-      setPrograms(assignedPrograms)
-      setLoading(false)
-    })
-  }
-
-  fetchData()
-}, [])
-
+    fetchData()
+  }, [])
 
   // const programs = [
   //   {
@@ -136,13 +137,11 @@ useEffect(() => {
   //   },
   // ];
 
-const filteredPrograms = programs.filter((program) => {
-  if (activeTab === 'all') return true
-  const status = userProgramStatus[program.id] || 'active'
-  return status === activeTab
-})
-
-
+  const filteredPrograms = programs.filter((program) => {
+    if (activeTab === 'all') return true
+    const status = userProgramStatus[program.id] || 'active'
+    return status === activeTab
+  })
 
   return (
     <>
@@ -193,7 +192,13 @@ const filteredPrograms = programs.filter((program) => {
                         Active Programs
                       </h2>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-{programs.filter((p) => (userProgramStatus[p.id] || 'active') === 'active')                          .map((program) => {
+                        {programs
+                          .filter(
+                            (p) =>
+                              (userProgramStatus[p.id] || 'active') ===
+                              'active',
+                          )
+                          .map((program) => {
                             const progress =
                               userProgramProgress[program.id] || 0
 
@@ -270,7 +275,12 @@ const filteredPrograms = programs.filter((program) => {
                         Completed Programs
                       </h2>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-{programs.filter((p) => (userProgramStatus[p.id] || 'active') === 'completed')
+                        {programs
+                          .filter(
+                            (p) =>
+                              (userProgramStatus[p.id] || 'active') ===
+                              'completed',
+                          )
                           .map((program) => {
                             const progress =
                               userProgramProgress[program.id] || 0
@@ -356,72 +366,74 @@ const filteredPrograms = programs.filter((program) => {
               {filteredPrograms.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {programs
-          .filter((p) => (userProgramStatus[p.id] || 'active') === 'active')
-          .map((program) => {
-            const progress = userProgramProgress[program.id] || 0
-                    return (
-                      <Card
-                        key={program.id}
-                        className="overflow-hidden rounded-xl shadow-sm border-0 hover:shadow-md transition-shadow text-gray-900"
-                      >
-                        <div className="p-6">
-                          <div className="flex justify-between items-start mb-4">
-                            <div>
-                              <h3 className="text-lg font-semibold">
-                                {program.name}
-                              </h3>
-                              <p className="text-sm text-gray-500">
-                                {program.description}
-                              </p>
-                            </div>
-                            <div className="relative h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center">
-                              <div className="absolute inset-0">
-                                <svg
-                                  viewBox="0 0 100 100"
-                                  className="h-full w-full"
-                                >
-                                  <circle
-                                    cx="50"
-                                    cy="50"
-                                    r="40"
-                                    stroke="#e6e6e6"
-                                    strokeWidth="10"
-                                    fill="none"
-                                  />
-                                  <circle
-                                    cx="50"
-                                    cy="50"
-                                    r="40"
-                                    stroke="#3b82f6"
-                                    strokeWidth="10"
-                                    fill="none"
-                                    strokeDasharray={`${progress * 2.51} 251`}
-                                    strokeDashoffset="0"
-                                    transform="rotate(-90 50 50)"
-                                  />
-                                </svg>
-                              </div>
-                              <span className="text-xs font-medium">
-                                {progress}%
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-1 text-gray-500 text-sm">
-                              <Clock className="h-4 w-4" />
-                              <span>Started</span>
-                            </div>
-                            <Button
-                              onClick={() => onProgramSelect(program.id)}
-                              className="rounded-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 text-sm"
-                            >
-                              View
-                            </Button>
-                          </div>
-                        </div>
-                      </Card>
+                    .filter(
+                      (p) => (userProgramStatus[p.id] || 'active') === 'active',
                     )
-                  })}
+                    .map((program) => {
+                      const progress = userProgramProgress[program.id] || 0
+                      return (
+                        <Card
+                          key={program.id}
+                          className="overflow-hidden rounded-xl shadow-sm border-0 hover:shadow-md transition-shadow text-gray-900"
+                        >
+                          <div className="p-6">
+                            <div className="flex justify-between items-start mb-4">
+                              <div>
+                                <h3 className="text-lg font-semibold">
+                                  {program.name}
+                                </h3>
+                                <p className="text-sm text-gray-500">
+                                  {program.description}
+                                </p>
+                              </div>
+                              <div className="relative h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center">
+                                <div className="absolute inset-0">
+                                  <svg
+                                    viewBox="0 0 100 100"
+                                    className="h-full w-full"
+                                  >
+                                    <circle
+                                      cx="50"
+                                      cy="50"
+                                      r="40"
+                                      stroke="#e6e6e6"
+                                      strokeWidth="10"
+                                      fill="none"
+                                    />
+                                    <circle
+                                      cx="50"
+                                      cy="50"
+                                      r="40"
+                                      stroke="#3b82f6"
+                                      strokeWidth="10"
+                                      fill="none"
+                                      strokeDasharray={`${progress * 2.51} 251`}
+                                      strokeDashoffset="0"
+                                      transform="rotate(-90 50 50)"
+                                    />
+                                  </svg>
+                                </div>
+                                <span className="text-xs font-medium">
+                                  {progress}%
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-1 text-gray-500 text-sm">
+                                <Clock className="h-4 w-4" />
+                                <span>Started</span>
+                              </div>
+                              <Button
+                                onClick={() => onProgramSelect(program.id)}
+                                className="rounded-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 text-sm"
+                              >
+                                View
+                              </Button>
+                            </div>
+                          </div>
+                        </Card>
+                      )
+                    })}
                 </div>
               ) : (
                 <div className="text-center py-12">
@@ -430,80 +442,85 @@ const filteredPrograms = programs.filter((program) => {
               )}
             </TabsContent>
 
-<TabsContent value="completed" className="mt-0">
-  <h2 className="text-xl font-semibold mb-4 text-gray-900">
-    Completed Programs
-  </h2>
-  {programs.filter((p) => userProgramStatus[p.id] === 'completed').length > 0 ? (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {programs.filter((p) => userProgramStatus[p.id] === 'completed')
-        .map((program) => {
-          const progress = userProgramProgress[program.id] || 0
-          return (
-            <Card
-              key={program.id}
-              className="overflow-hidden rounded-xl shadow-sm border-0 hover:shadow-md transition-shadow text-gray-900"
-            >
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="text-lg font-semibold">{program.name}</h3>
-                    <p className="text-sm text-gray-500">
-                      {program.description}
-                    </p>
-                  </div>
-                  <div className="relative h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center">
-                    <div className="absolute inset-0">
-                      <svg viewBox="0 0 100 100" className="h-full w-full">
-                        <circle
-                          cx="50"
-                          cy="50"
-                          r="40"
-                          stroke="#e6e6e6"
-                          strokeWidth="10"
-                          fill="none"
-                        />
-                        <circle
-                          cx="50"
-                          cy="50"
-                          r="40"
-                          stroke="#10b981"
-                          strokeWidth="10"
-                          fill="none"
-                          strokeDasharray="251 251"
-                          strokeDashoffset="0"
-                          transform="rotate(-90 50 50)"
-                        />
-                      </svg>
-                    </div>
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                  </div>
+            <TabsContent value="completed" className="mt-0">
+              <h2 className="text-xl font-semibold mb-4 text-gray-900">
+                Completed Programs
+              </h2>
+              {programs.filter((p) => userProgramStatus[p.id] === 'completed')
+                .length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {programs
+                    .filter((p) => userProgramStatus[p.id] === 'completed')
+                    .map((program) => {
+                      const progress = userProgramProgress[program.id] || 0
+                      return (
+                        <Card
+                          key={program.id}
+                          className="overflow-hidden rounded-xl shadow-sm border-0 hover:shadow-md transition-shadow text-gray-900"
+                        >
+                          <div className="p-6">
+                            <div className="flex justify-between items-start mb-4">
+                              <div>
+                                <h3 className="text-lg font-semibold">
+                                  {program.name}
+                                </h3>
+                                <p className="text-sm text-gray-500">
+                                  {program.description}
+                                </p>
+                              </div>
+                              <div className="relative h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center">
+                                <div className="absolute inset-0">
+                                  <svg
+                                    viewBox="0 0 100 100"
+                                    className="h-full w-full"
+                                  >
+                                    <circle
+                                      cx="50"
+                                      cy="50"
+                                      r="40"
+                                      stroke="#e6e6e6"
+                                      strokeWidth="10"
+                                      fill="none"
+                                    />
+                                    <circle
+                                      cx="50"
+                                      cy="50"
+                                      r="40"
+                                      stroke="#10b981"
+                                      strokeWidth="10"
+                                      fill="none"
+                                      strokeDasharray="251 251"
+                                      strokeDashoffset="0"
+                                      transform="rotate(-90 50 50)"
+                                    />
+                                  </svg>
+                                </div>
+                                <CheckCircle className="h-5 w-5 text-green-500" />
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-1 text-green-500 text-sm">
+                                <CheckCircle className="h-4 w-4" />
+                                <span>Completed</span>
+                              </div>
+                              <Button
+                                onClick={() => onProgramSelect(program.id)}
+                                className="rounded-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 text-sm"
+                              >
+                                View
+                              </Button>
+                            </div>
+                          </div>
+                        </Card>
+                      )
+                    })}
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1 text-green-500 text-sm">
-                    <CheckCircle className="h-4 w-4" />
-                    <span>Completed</span>
-                  </div>
-                  <Button
-                    onClick={() => onProgramSelect(program.id)}
-                    className="rounded-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 text-sm"
-                  >
-                    View
-                  </Button>
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-gray-500">No completed programs found</p>
                 </div>
-              </div>
-            </Card>
-          )
-        })}
-    </div>
-  ) : (
-    <div className="text-center py-12">
-      <p className="text-gray-500">No completed programs found</p>
-    </div>
-  )}
-</TabsContent>
-
-
+              )}
+            </TabsContent>
           </Tabs>
         </div>
       </div>

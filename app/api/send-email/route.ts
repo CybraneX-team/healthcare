@@ -1,12 +1,12 @@
 // app/api/send-email/route.ts
-import { NextRequest, NextResponse } from "next/server";
-import nodemailer from "nodemailer";
+import { NextRequest, NextResponse } from 'next/server'
+import nodemailer from 'nodemailer'
 
 export async function POST(req: NextRequest) {
-  const { to, subject, text } = await req.json();
+  const { to, subject, text } = await req.json()
 
   const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
+    host: 'smtp.gmail.com',
     port: 587,
     secure: false,
     auth: {
@@ -14,9 +14,9 @@ export async function POST(req: NextRequest) {
       pass: process.env.APP_pass,
     },
     tls: {
-        rejectUnauthorized: false
-    }
-  });
+      rejectUnauthorized: false,
+    },
+  })
 
   try {
     await transporter.sendMail({
@@ -24,10 +24,10 @@ export async function POST(req: NextRequest) {
       to,
       subject,
       text,
-    });
+    })
 
-    return NextResponse.json({ message: "Email sent successfully" });
+    return NextResponse.json({ message: 'Email sent successfully' })
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

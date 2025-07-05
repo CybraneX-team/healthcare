@@ -94,7 +94,6 @@ export const signInWithApple = async (): Promise<UserCredential> => {
   return result
 }
 
-
 // Sign out
 export const signOut = async (): Promise<void> => {
   return auth.signOut()
@@ -194,7 +193,7 @@ export const signInWithGoogle = async (): Promise<UserCredential> => {
   if (!existing) {
     await createUserProfile(user.uid, {
       email: user.email,
-      fullName : user.displayName,
+      fullName: user.displayName,
       photoURL: user.photoURL,
       provider: 'google',
     })
@@ -202,7 +201,6 @@ export const signInWithGoogle = async (): Promise<UserCredential> => {
 
   return result
 }
-
 
 export const saveUserProgress = async (
   userId: string,
@@ -247,21 +245,20 @@ export const giveLoggedInUser = async () => {
   return user
 }
 
-
 export async function checkUserExists(email: string) {
-  const usersRef = collection(db, "users");
-  const q = query(usersRef, where("email", "==", email));
-  const snapshot = await getDocs(q);
+  const usersRef = collection(db, 'users')
+  const q = query(usersRef, where('email', '==', email))
+  const snapshot = await getDocs(q)
 
   if (!snapshot.empty) {
-    const doc = snapshot.docs[0];
+    const doc = snapshot.docs[0]
     return {
       uid: doc.id,
-      data: doc.data()
-    };
+      data: doc.data(),
+    }
   }
 
-  return null;
+  return null
 }
 
 export const rtdb = getDatabase(app)

@@ -1,18 +1,21 @@
-"use client";
+'use client'
 
-import React from 'react';
-import { motion } from 'framer-motion';
-import Image from 'next/image';
+import React from 'react'
+import { motion } from 'framer-motion'
+import Image from 'next/image'
 
 interface WaterIntakeModelProps {
-  waterLevel: number; // 0-100
+  waterLevel: number // 0-100
 }
 
 const WaterIntakeModel: React.FC<WaterIntakeModelProps> = ({ waterLevel }) => {
-  const level = Math.max(0, Math.min(100, waterLevel));
+  const level = Math.max(0, Math.min(100, waterLevel))
 
   return (
-    <div className="relative w-full max-w-xs mx-auto flex items-center justify-center" style={{ height: '500px' }}>
+    <div
+      className="relative w-full max-w-xs mx-auto flex items-center justify-center"
+      style={{ height: '500px' }}
+    >
       <div
         className="relative flex items-center justify-center bg-gradient-to-b from-blue-50 to-white rounded-3xl shadow-xl border border-blue-100"
         style={{ width: '320px', height: '440px', padding: '16px' }}
@@ -64,7 +67,10 @@ const WaterIntakeModel: React.FC<WaterIntakeModelProps> = ({ waterLevel }) => {
           />
         </div>
         {/* Body outline - always visible */}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none" style={{ zIndex: 4 }}>
+        <div
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none"
+          style={{ zIndex: 4 }}
+        >
           <Image
             src="/human_body.svg"
             alt="Human Body Outline"
@@ -77,7 +83,7 @@ const WaterIntakeModel: React.FC<WaterIntakeModelProps> = ({ waterLevel }) => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default WaterIntakeModel;
+export default WaterIntakeModel

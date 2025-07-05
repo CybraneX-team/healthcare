@@ -190,7 +190,6 @@ export default function EnhancedAnatomy({
         </div>
 
         {/* Overlay SVG for lines and dots */}
-        
 
         {/* Organ labels */}
         {isLoaded &&

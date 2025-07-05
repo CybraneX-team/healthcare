@@ -86,29 +86,29 @@ export function ModuleOverview({
   }, [])
 
   const calculateOverallProgress = () => {
-  const modules = Object.values(programData.modules ?? {});
-  if (modules.length === 0) return 0;
+    const modules = Object.values(programData.modules ?? {})
+    if (modules.length === 0) return 0
 
-  let totalProgress = 0;
-  let moduleCount = 0;
+    let totalProgress = 0
+    let moduleCount = 0
 
-  modules.forEach((module: any) => {
-    const videoIds = Object.keys(module.videos ?? {});
-    const completedVideoIds =
-      userCompletedVideos[programId]?.[module.id] || [];
+    modules.forEach((module: any) => {
+      const videoIds = Object.keys(module.videos ?? {})
+      const completedVideoIds =
+        userCompletedVideos[programId]?.[module.id] || []
 
-    const completedCount = completedVideoIds.length;
-    const totalCount = videoIds.length;
+      const completedCount = completedVideoIds.length
+      const totalCount = videoIds.length
 
-    const progress =
-      totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
+      const progress =
+        totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100)
 
-    totalProgress += progress;
-    moduleCount++;
-  });
+      totalProgress += progress
+      moduleCount++
+    })
 
-  return Math.round(totalProgress / moduleCount);
-};
+    return Math.round(totalProgress / moduleCount)
+  }
 
   return (
     <div className="min-h-screen -ml-3 text-black">
@@ -290,7 +290,7 @@ export function ModuleOverview({
                           Overall Completion
                         </span>
                         <span className="font-medium text-gray-900">
-                           {calculateOverallProgress()}%
+                          {calculateOverallProgress()}%
                         </span>
                       </div>
                       <div className="flex justify-between mb-1">

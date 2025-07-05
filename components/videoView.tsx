@@ -2,16 +2,40 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Circle, CheckCircle, Clock, ArrowLeft, ThumbsUp, FileText, Eye, Download, Trash2 } from 'lucide-react'
+import {
+  Circle,
+  CheckCircle,
+  Clock,
+  ArrowLeft,
+  ThumbsUp,
+  FileText,
+  Eye,
+  Download,
+  Trash2,
+} from 'lucide-react'
 import { YouTubePlayer } from './ytPlayer'
 import { FileUpload } from './ui/file-upload'
-import { db, giveLoggedInUser, uploadUserDocument, deleteUserFile } from '@/utils/firebase'
+import {
+  db,
+  giveLoggedInUser,
+  uploadUserDocument,
+  deleteUserFile,
+} from '@/utils/firebase'
 import { ClipboardList } from 'lucide-react'
 import { getStorage, ref, deleteObject } from 'firebase/storage'
-import { getFirestore, collection, query, where, getDocs, deleteDoc, setDoc, doc, getDoc } from 'firebase/firestore'
+import {
+  getFirestore,
+  collection,
+  query,
+  where,
+  getDocs,
+  deleteDoc,
+  setDoc,
+  doc,
+  getDoc,
+} from 'firebase/firestore'
 
 import { toast } from 'react-toastify'
-
 
 interface VideoPlayerViewProps {
   programId: string
@@ -45,9 +69,9 @@ export function VideoPlayerView({
 
   // console.log( "programId",  programId , "moduleId" , moduleId, "videoId" , videoId, "video-title" ,videoTitle  ,"module-title", moduleTitle)
   // Update current video when videoId changes
-    const moduleData = programData.modules[moduleId]
+  const moduleData = programData.modules[moduleId]
 
-  const moduleVideos : any = Object.values(moduleData?.videos || {})
+  const moduleVideos: any = Object.values(moduleData?.videos || {})
   const currentVideo: any =
     moduleVideos.find((v: any) => v.id === currentVideoId) || moduleVideos[0]
   const currentYoutubeId = currentVideo.youtubeId
@@ -74,105 +98,98 @@ export function VideoPlayerView({
     }
   }
 
- const validTodos = currentVideo?.todo?.filter((t: string) => t.trim() !== "") || []
+  const validTodos =
+    currentVideo?.todo?.filter((t: string) => t.trim() !== '') || []
 
-const getFileName = (url: string) => {
-  try {
-    const decodedPath = decodeURIComponent(url.split("/o/")[1]?.split("?")[0] || "")
-    return decodedPath.split("/").pop() || "Document"
-  } catch {
-    return "Document"
+  const getFileName = (url: string) => {
+    try {
+      const decodedPath = decodeURIComponent(
+        url.split('/o/')[1]?.split('?')[0] || '',
+      )
+      return decodedPath.split('/').pop() || 'Document'
+    } catch {
+      return 'Document'
+    }
   }
-}
-
 
   useEffect(() => {
     setCurrentVideoId(videoId)
   }, [videoId])
-useEffect(() => {
-  if (!currentVideoId) return
-  setTodoChecks({})
+  useEffect(() => {
+    if (!currentVideoId) return
+    setTodoChecks({})
 
-  const fetchTodoChecks = async () => {
+    const fetchTodoChecks = async () => {
+      const user = await giveLoggedInUser()
+      if (!user) return
+
+      const userRef = doc(getFirestore(), 'users', user.uid)
+      const userSnap = await getDoc(userRef)
+      const userData = userSnap.exists() ? userSnap.data() : {}
+      const allTodos = userData.todoChecks || []
+
+      const checks: Record<number, boolean> = {}
+
+      validTodos.forEach((todoText: any, idx: any) => {
+        const existingIndex = allTodos.findIndex(
+          (t: any) =>
+            t.todoText === todoText &&
+            t.checkedVideo === currentVideoId && // ✅ not videoId
+            t.moduleId === moduleId,
+        )
+
+        if (existingIndex !== -1 && allTodos[existingIndex].isChecked) {
+          checks[idx] = true
+        }
+      })
+
+      setTodoChecks(checks)
+    }
+
+    fetchTodoChecks()
+  }, [currentVideoId, moduleId])
+
+  const handleToggleTodo = async (index: number) => {
+    // const todoText = validTodos[index]
+
     const user = await giveLoggedInUser()
     if (!user) return
 
-    const userRef = doc(getFirestore(), "users", user.uid)
+    const todoText = validTodos[index]
+    if (!todoText) return // Prevent invalid entry
+    const userRef = doc(getFirestore(), 'users', user.uid)
     const userSnap = await getDoc(userRef)
-    const userData = userSnap.exists() ? userSnap.data() : {}
-    const allTodos = userData.todoChecks || []
+    const currentData = userSnap.exists()
+      ? userSnap.data().todoChecks || []
+      : []
 
-
-    const checks: Record<number, boolean> = {}
-
-    validTodos.forEach((todoText  : any, idx : any ) => {
-     const existingIndex = allTodos.findIndex(
+    const newTodos = [...currentData]
+    const existingIndex = newTodos.findIndex(
       (t: any) =>
         t.todoText === todoText &&
-        t.checkedVideo === currentVideoId && // ✅ not videoId
-        t.moduleId === moduleId
+        t.checkedVideo === videoId &&
+        t.moduleId === moduleId,
     )
 
+    if (existingIndex >= 0) {
+      newTodos[existingIndex].isChecked = !newTodos[existingIndex].isChecked
+    } else {
+      newTodos.push({
+        index,
+        todoText,
+        isChecked: true,
+        checkedVideo: currentVideoId, // ✅
+        moduleId,
+      })
+    }
 
-if (existingIndex !== -1 && allTodos[existingIndex].isChecked) {
-        checks[idx] = true
-      }
-    })
+    await setDoc(userRef, { todoChecks: newTodos }, { merge: true })
 
-    setTodoChecks(checks)
+    setTodoChecks((prev) => ({
+      ...prev,
+      [index]: !prev[index],
+    }))
   }
-
-  fetchTodoChecks()
-}, [currentVideoId, moduleId])
-
-
-
-
-
-const handleToggleTodo = async (index: number) => {
-
-// const todoText = validTodos[index]
-
-  const user = await giveLoggedInUser()
-  if (!user) return
-
-  const todoText = validTodos[index]
-  if (!todoText) return // Prevent invalid entry
-  const userRef = doc(getFirestore(), "users", user.uid)
-  const userSnap = await getDoc(userRef)
-  const currentData = userSnap.exists() ? userSnap.data().todoChecks || [] : []
-
-  const newTodos = [...currentData]
-  const existingIndex = newTodos.findIndex(
-    (t: any) =>
-      t.todoText === todoText &&
-      t.checkedVideo === videoId &&
-      t.moduleId === moduleId
-  )
-
-  if (existingIndex >= 0) {
-    newTodos[existingIndex].isChecked = !newTodos[existingIndex].isChecked
-  } else {
-    newTodos.push({
-       index,
-      todoText,
-      isChecked: true,
-      checkedVideo: currentVideoId, // ✅
-      moduleId
-    })
-  }
-
-  await setDoc(userRef, { todoChecks: newTodos }, { merge: true })
-
-  setTodoChecks((prev) => ({
-    ...prev,
-    [index]: !prev[index]
-  }))
-}
-
-
-
-
 
   // Get module and video data from programData
 
@@ -335,83 +352,84 @@ const handleToggleTodo = async (index: number) => {
                 {/* ... more comments */}
             {/* </div> */}
             {/* </div> */}
-<div className="mt-10 space-y-6">
-  <h2 className="text-2xl font-bold text-gray-900">Lesson Checklist</h2>
+            <div className="mt-10 space-y-6">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Lesson Checklist
+              </h2>
 
-  
-<div className="bg-white rounded-xl shadow-sm p-6 border">
-  <h3 className="text-lg font-semibold text-gray-800 mb-4">
-    Video: {currentVideo.title}
-  </h3>
-{
+              <div className="bg-white rounded-xl shadow-sm p-6 border">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                  Video: {currentVideo.title}
+                </h3>
+                {validTodos.length > 0 ? (
+                  <ul className="divide-y divide-gray-200">
+                    {validTodos.map((item: string, idx: number) => (
+                      <li
+                        key={idx}
+                        className="flex items-center gap-3 py-3 group hover:bg-gray-50 px-2 rounded-md transition cursor-pointer"
+                        onClick={() => handleToggleTodo(idx)}
+                      >
+                        {todoChecks[idx] ? (
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                        ) : (
+                          <Circle className="h-5 w-5 text-gray-400" />
+                        )}
+                        <span className="text-gray-800 text-sm">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-8 text-center text-gray-500">
+                    <ClipboardList className="w-10 h-10 mb-3 text-gray-400" />
+                    <p className="text-sm font-medium">
+                      No to-do items are available for this lesson.
+                    </p>
+                  </div>
+                )}
+              </div>
+              {currentVideo.documentUrl && (
+                <div className="mt-6 p-6 bg-white border rounded-xl shadow-sm flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <FileText className="w-6 h-6 text-blue-500" />
+                    <div>
+                      <p className="text-gray-900 font-medium text-sm">
+                        {getFileName(currentVideo.documentUrl)}
+                      </p>
 
-validTodos.length > 0 ? (
-  <ul className="divide-y divide-gray-200">
-    {validTodos.map((item: string, idx: number) => (
-
-          <li
-      key={idx}
-      className="flex items-center gap-3 py-3 group hover:bg-gray-50 px-2 rounded-md transition cursor-pointer"
-      onClick={() => handleToggleTodo(idx)}
-    >
-      {todoChecks[idx] ? (
-        <CheckCircle className="h-5 w-5 text-green-500" />
-      ) : (
-        <Circle className="h-5 w-5 text-gray-400" />
-      )}
-      <span className="text-gray-800 text-sm">{item}</span>
-    </li>
-
-    ))}
-  </ul>
-) : (
-  <div className="flex flex-col items-center justify-center py-8 text-center text-gray-500">
-    <ClipboardList className="w-10 h-10 mb-3 text-gray-400" />
-    <p className="text-sm font-medium">
-      No to-do items are available for this lesson.
-    </p>
-  </div>
-)}
-
-
-</div>
-  {currentVideo.documentUrl && (
-  <div className="mt-6 p-6 bg-white border rounded-xl shadow-sm flex items-center justify-between">
-    <div className="flex items-center gap-4">
-      <FileText className="w-6 h-6 text-blue-500" />
-      <div>
-<p className="text-gray-900 font-medium text-sm">
-  {getFileName(currentVideo.documentUrl)}
-</p>
-
-        <p className="text-gray-500 text-xs">
-          Click to view or download
-        </p>
-      </div>
-    </div>
-    <div className="flex items-center gap-2">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => window.open(currentVideo.documentUrl, '_blank')}
-      >
-        <Eye className="h-4 w-4 mr-2" />
-        View
-      </Button>
-      <a href={currentVideo.documentUrl} download target="_blank" rel="noopener noreferrer">
-        <Button variant="ghost" size="sm">
-          <Download className="h-4 w-4 mr-2" />
-          Download
-        </Button>
-      </a>
-    </div>
-  </div>
-)}
-</div>
-
+                      <p className="text-gray-500 text-xs">
+                        Click to view or download
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        window.open(currentVideo.documentUrl, '_blank')
+                      }
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      View
+                    </Button>
+                    <a
+                      href={currentVideo.documentUrl}
+                      download
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Button variant="ghost" size="sm">
+                        <Download className="h-4 w-4 mr-2" />
+                        Download
+                      </Button>
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-    </div>
-</div>
+      </div>
     </div>
   )
 }

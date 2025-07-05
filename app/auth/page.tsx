@@ -34,13 +34,11 @@ export default function AuthPage() {
       className="rounded-2xl p-8 text-center"
     >
       <div className="mb-6">
-
-        <h1 className="text-3xl font-bold text-gray-800 mb-2 tracking-tight">
-          Healthcare Dashboard
-        </h1>
-        <p className="text-gray-600 mb-2">
-          Your personal health information center
-        </p>
+        <img
+          src="/logo.svg"
+          alt="logo"
+          className="text-3xl font-bold text-gray-800 mb-2 tracking-tight"
+        />
         <div className="flex items-center justify-center gap-1.5 mb-6">
           <span className="w-2 h-2 rounded-full bg-blue-600"></span>
           <span className="w-2 h-2 rounded-full bg-blue-400"></span>
@@ -48,7 +46,7 @@ export default function AuthPage() {
         </div>
       </div>
 
-      <div className="mb-10 relative">
+      {/* <div className="mb-10 relative">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -64,7 +62,7 @@ export default function AuthPage() {
             className="mx-auto"
           />
         </motion.div>
-      </div>
+      </div> */}
 
       {/* Feature highlights */}
       <div className="grid grid-cols-3 gap-4 mb-8">
@@ -114,7 +112,7 @@ export default function AuthPage() {
           <Button
             variant="default"
             size="lg"
-            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 font-medium h-12 text-base shadow-sm"
+            className="w-full bg-gradient-to-r from-[#2a80b3] to-[#034c85] hover:from-[#034c85] hover:to-[#2a80b3] font-medium h-12 text-base shadow-sm"
             onClick={() => router.push('/auth/login')}
           >
             Login

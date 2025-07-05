@@ -105,7 +105,6 @@ export function ProfileDropdown() {
                 <span>My Account</span>
               </Button>
 
-
               <Button
                 variant="ghost"
                 className="w-full justify-start px-2 py-1.5 text-gray-700 hover:bg-gray-100 rounded-lg mb-1"

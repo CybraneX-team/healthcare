@@ -41,7 +41,7 @@ const extractUnifiedJson = (groqRawOutput: string) => {
 }
 
 async function sendToGroqLLM(allText: string): Promise<any> {
-   const prompt = `
+  const prompt = `
 You are a medical report parser.
 
 Your job is to extract structured data from multiple medical reports. Below is the combined raw text.
@@ -84,8 +84,7 @@ ${JSON.stringify(samplePdfData, null, 2)}
 
 Combined Reports:
 ${allText}
-`;
-
+`
 
   // console.log("🧠 Prompt sent to Groq:\n", prompt.slice(0, 1000), "...[truncated]");
 
@@ -139,14 +138,18 @@ export async function POST(req: NextRequest) {
   const rawReply = await sendToGroqLLM(combinedText)
 
   try {
-    const cleaned = rawReply.replace(/```json|```/gi, '').trim();
-    const finalData = extractUnifiedJson(cleaned);
+    const cleaned = rawReply.replace(/```json|```/gi, '').trim()
+    const finalData = extractUnifiedJson(cleaned)
 
-    const parsed = samplePdfSchema.parse(finalData); // ✅ Zod validation
+    const parsed = samplePdfSchema.parse(finalData) // ✅ Zod validation
 
-    return NextResponse.json({ extractedJsonArray: parsed });
+    return NextResponse.json({ extractedJsonArray: parsed })
   } catch (err) {
-    console.error('❌ Failed to parse JSON from Groq or validate with Zod:', err, rawReply);
-    return NextResponse.json({ extractedJsonArray: [] }, { status: 400 });
+    console.error(
+      '❌ Failed to parse JSON from Groq or validate with Zod:',
+      err,
+      rawReply,
+    )
+    return NextResponse.json({ extractedJsonArray: [] }, { status: 400 })
   }
 }

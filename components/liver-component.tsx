@@ -40,7 +40,7 @@ const itemVariants = {
 
 const barVariants = {
   hidden: { scaleY: 0 },
-  visible: (i : any) => ({
+  visible: (i: any) => ({
     scaleY: 1,
     transition: {
       duration: 0.6,
@@ -67,43 +67,43 @@ export const LiverComponent = ({ extractedLabData }: any) => {
     {
       name: 'Amylase',
       value: enzymes?.amylase ?? 0,
-      height: Math.min((enzymes?.amylase ?? 0), 100),
+      height: Math.min(enzymes?.amylase ?? 0, 100),
       color: 'bg-blue-500',
     },
     {
       name: 'Maltase',
       value: enzymes?.maltase ?? 0,
-      height: Math.min((enzymes?.maltase ?? 0), 100),
+      height: Math.min(enzymes?.maltase ?? 0, 100),
       color: 'bg-blue-600',
     },
     {
       name: 'Protease',
       value: enzymes?.protease ?? 0,
-      height: Math.min((enzymes?.protease ?? 0), 100),
+      height: Math.min(enzymes?.protease ?? 0, 100),
       color: 'bg-blue-200',
     },
     {
       name: 'Lactase',
       value: enzymes?.lactase ?? 0,
-      height: Math.min((enzymes?.lactase ?? 0), 100),
+      height: Math.min(enzymes?.lactase ?? 0, 100),
       color: 'bg-blue-500',
     },
     {
       name: 'Lipase',
       value: enzymes?.lipase ?? 0,
-      height: Math.min((enzymes?.lipase ?? 0), 100),
+      height: Math.min(enzymes?.lipase ?? 0, 100),
       color: 'bg-blue-300',
     },
     {
       name: 'Sucrase',
       value: enzymes?.sucrase ?? 0,
-      height: Math.min((enzymes?.sucrase ?? 0), 100),
+      height: Math.min(enzymes?.sucrase ?? 0, 100),
       color: 'bg-blue-600',
     },
     {
       name: 'Occult Blood',
       value: enzymes?.occult_blood ?? 0,
-      height: Math.min((enzymes?.occult_blood ?? 0), 100),
+      height: Math.min(enzymes?.occult_blood ?? 0, 100),
       color: 'bg-blue-200',
     },
   ]
@@ -126,7 +126,9 @@ export const LiverComponent = ({ extractedLabData }: any) => {
               {/* Bilirubin Card */}
               <h3 className="text-gray-800 text-xs mb-2">Bilirubin</h3>
               <div className="text-2xl md:text-xs font-semibold">
-                {liverData?.bilirubin != null ? `${liverData.bilirubin} mg/dl` : 'N/A'}
+                {liverData?.bilirubin != null
+                  ? `${liverData.bilirubin} mg/dl`
+                  : 'N/A'}
               </div>
               <div className="mt-8 md:mt-20">
                 <div className="text-gray-500 text-sm">Fatty Liver</div>

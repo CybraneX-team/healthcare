@@ -88,62 +88,60 @@ const Kidney = ({ data, extractedLabData }: KidneyProps) => {
   }
 
   const eGFR = extractedLabData?.kidney?.egfr ?? findTest('eGFR')?.value ?? null
-const eGFRUnit = findTest('eGFR')?.unit || 'mL/min/1.73m²'
+  const eGFRUnit = findTest('eGFR')?.unit || 'mL/min/1.73m²'
 
-const creatinine = findTest('Creatinine')?.value ?? 1.2
-const creatinineUnit = findTest('Creatinine')?.unit || 'mg/dL'
+  const creatinine = findTest('Creatinine')?.value ?? 1.2
+  const creatinineUnit = findTest('Creatinine')?.unit || 'mg/dL'
 
-const bun = extractedLabData?.kidney?.bun ?? findTest('BUN')?.value ?? null
-const bunUnit = findTest('BUN')?.unit || 'mg/dL'
+  const bun = extractedLabData?.kidney?.bun ?? findTest('BUN')?.value ?? null
+  const bunUnit = findTest('BUN')?.unit || 'mg/dL'
 
-// ⚠️ Safe division to avoid NaN/Infinity
-const bunCreatinineRatio =
-  creatinine && bun ? Math.round((bun / creatinine) * 10) / 10 : null
+  // ⚠️ Safe division to avoid NaN/Infinity
+  const bunCreatinineRatio =
+    creatinine && bun ? Math.round((bun / creatinine) * 10) / 10 : null
 
-const uricAcid =
-  extractedLabData?.kidney?.uric_acid != null
-    ? extractedLabData.kidney.uric_acid
-    : "null"
+  const uricAcid =
+    extractedLabData?.kidney?.uric_acid != null
+      ? extractedLabData.kidney.uric_acid
+      : 'null'
 
-const urineAlbumin =
-  extractedLabData?.kidney?.random_urine_albumin != null
-    ? extractedLabData.kidney.random_urine_albumin
-    : "null"
+  const urineAlbumin =
+    extractedLabData?.kidney?.random_urine_albumin != null
+      ? extractedLabData.kidney.random_urine_albumin
+      : 'null'
 
-const urinePH =
-  extractedLabData?.kidney?.urine_ph != null
-    ? extractedLabData.kidney.urine_ph
-    : "null"
+  const urinePH =
+    extractedLabData?.kidney?.urine_ph != null
+      ? extractedLabData.kidney.urine_ph
+      : 'null'
 
-const toxicBurden = "null" // No field for this yet
+  const toxicBurden = 'null' // No field for this yet
 
-const mercury =
-  extractedLabData?.kidney?.heavy_metals?.mercury != null
-    ? extractedLabData.kidney.heavy_metals.mercury
-    : "null"
+  const mercury =
+    extractedLabData?.kidney?.heavy_metals?.mercury != null
+      ? extractedLabData.kidney.heavy_metals.mercury
+      : 'null'
 
-const cadmium =
-  extractedLabData?.kidney?.heavy_metals?.cadmium != null
-    ? extractedLabData.kidney.heavy_metals.cadmium
-    : "null"
+  const cadmium =
+    extractedLabData?.kidney?.heavy_metals?.cadmium != null
+      ? extractedLabData.kidney.heavy_metals.cadmium
+      : 'null'
 
-const lead =
-  extractedLabData?.kidney?.heavy_metals?.lead != null
-    ? extractedLabData.kidney.heavy_metals.lead
-    : "null"
+  const lead =
+    extractedLabData?.kidney?.heavy_metals?.lead != null
+      ? extractedLabData.kidney.heavy_metals.lead
+      : 'null'
 
-const bpa =
-  extractedLabData?.kidney?.bpa != null
-    ? extractedLabData.kidney.bpa
-    : "null"
+  const bpa =
+    extractedLabData?.kidney?.bpa != null ? extractedLabData.kidney.bpa : 'null'
 
-const hydrationLevelRaw = extractedLabData?.kidney?.hydration;
-const hydrationLevel: number = isNaN(Number(hydrationLevelRaw))
-  ? 0
-  : Number(hydrationLevelRaw);
+  const hydrationLevelRaw = extractedLabData?.kidney?.hydration
+  const hydrationLevel: number = isNaN(Number(hydrationLevelRaw))
+    ? 0
+    : Number(hydrationLevelRaw)
 
   const getKidneyStatus = (egfr: number): { status: string; color: string } => {
-    console.log("egfr-egfr", egfr)
+    console.log('egfr-egfr', egfr)
     if (egfr >= 90)
       return { status: 'Healthy', color: 'bg-green-100 text-green-800' }
     if (egfr >= 60)
@@ -189,11 +187,14 @@ const hydrationLevel: number = isNaN(Number(hydrationLevelRaw))
                 <p className="text-gray-500">Urine PH</p>
                 <p className="text-3xl font-semibold">{urinePH}</p>
                 <div className="mt-2">
-                  <span className={`inline-block px-2 py-1 rounded-full text-xs ${
-                    urinePH >= 6.0 && urinePH <= 7.0 ? "bg-green-100 text-green-800" :
-                    "bg-yellow-100 text-yellow-800"
-                  }`}>
-                    {urinePH >= 6.0 && urinePH <= 7.0 ? "Normal" : "Monitor"}
+                  <span
+                    className={`inline-block px-2 py-1 rounded-full text-xs ${
+                      urinePH >= 6.0 && urinePH <= 7.0
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-yellow-100 text-yellow-800'
+                    }`}
+                  >
+                    {urinePH >= 6.0 && urinePH <= 7.0 ? 'Normal' : 'Monitor'}
                   </span>
                 </div>
               </div>

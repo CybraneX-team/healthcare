@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { Droplet } from 'lucide-react'
 import { sampleDataType } from '@/data/sample-data-type'
 
-const Card = ({ children , className = '' }) => (
+const Card = ({ children, className = '' }) => (
   <div className={`bg-white border border-gray-200 ${className}`}>
     {children}
   </div>
@@ -46,7 +46,11 @@ const itemVariants = {
   },
 }
 
-const Cardiology = ({ extractedLabData }: { extractedLabData: sampleDataType }) => {
+const Cardiology = ({
+  extractedLabData,
+}: {
+  extractedLabData: sampleDataType
+}) => {
   const heart = extractedLabData.heart
 
   return (
@@ -67,7 +71,9 @@ const Cardiology = ({ extractedLabData }: { extractedLabData: sampleDataType }) 
               <div className="space-y-4">
                 <div>
                   <p className="text-gray-500">Heart Rate</p>
-                  <p className="text-lg font-semibold">{heart.heart_rate ?? 'Null'} BPM</p>
+                  <p className="text-lg font-semibold">
+                    {heart.heart_rate ?? 'Null'} BPM
+                  </p>
                 </div>
                 <div>
                   <p className="text-gray-500">Cardiac Output</p>
@@ -100,7 +106,8 @@ const Cardiology = ({ extractedLabData }: { extractedLabData: sampleDataType }) 
                 <div>
                   <p className="text-gray-500">Blood Pressure</p>
                   <p className="text-lg font-semibold">
-                    {heart.blood_pressure?.systolic !== null && heart.blood_pressure?.diastolic !== null
+                    {heart.blood_pressure?.systolic !== null &&
+                    heart.blood_pressure?.diastolic !== null
                       ? `${heart.blood_pressure.systolic}/${heart.blood_pressure.diastolic} mm Hg`
                       : 'Null'}
                   </p>
@@ -196,7 +203,9 @@ const Cardiology = ({ extractedLabData }: { extractedLabData: sampleDataType }) 
               <div className="space-y-4 -mb-10">
                 <div>
                   <p className="text-gray-500">Heart Rate</p>
-                  <p className="text-lg font-semibold">{heart.heart_rate ?? 'Null'} BPM</p>
+                  <p className="text-lg font-semibold">
+                    {heart.heart_rate ?? 'Null'} BPM
+                  </p>
                 </div>
                 <div>
                   <p className="text-gray-500">Cardiac Output</p>
@@ -210,7 +219,10 @@ const Cardiology = ({ extractedLabData }: { extractedLabData: sampleDataType }) 
             </Card>
           </motion.div>
 
-          <motion.div variants={itemVariants} className="col-span-7 col-start-6">
+          <motion.div
+            variants={itemVariants}
+            className="col-span-7 col-start-6"
+          >
             <Card className="rounded-3xl shadow-sm h-full p-8">
               <div className="flex flex-col md:flex-row justify-between items-start">
                 <div>
@@ -228,7 +240,9 @@ const Cardiology = ({ extractedLabData }: { extractedLabData: sampleDataType }) 
                   <div className="space-y-6 mt-6">
                     <div>
                       <p className="text-gray-500">Homocysteine</p>
-                      <p className="text-lg font-semibold">{heart.homocysteine ?? 'Null'} mcmol/L</p>
+                      <p className="text-lg font-semibold">
+                        {heart.homocysteine ?? 'Null'} mcmol/L
+                      </p>
                     </div>
                     <div className="flex justify-between">
                       <div>
@@ -242,7 +256,8 @@ const Cardiology = ({ extractedLabData }: { extractedLabData: sampleDataType }) 
                   <div className="mb-20">
                     <p className="text-gray-500">Blood Pressure</p>
                     <p className="text-lg font-semibold">
-                      {heart.blood_pressure?.systolic !== null && heart.blood_pressure?.diastolic !== null
+                      {heart.blood_pressure?.systolic !== null &&
+                      heart.blood_pressure?.diastolic !== null
                         ? `${heart.blood_pressure.systolic}/${heart.blood_pressure.diastolic} mm Hg`
                         : 'Null'}
                     </p>
@@ -256,15 +271,22 @@ const Cardiology = ({ extractedLabData }: { extractedLabData: sampleDataType }) 
             </Card>
           </motion.div>
 
-          <motion.div variants={itemVariants} className="col-span-6 col-start-1">
+          <motion.div
+            variants={itemVariants}
+            className="col-span-6 col-start-1"
+          >
             <Card className="rounded-3xl shadow-sm h-full p-8">
               <div>
                 <p className="text-gray-500">Troponin Levels</p>
-                <p className="text-lg font-semibold">{heart.troponin ?? 'Null'} ng/mL</p>
+                <p className="text-lg font-semibold">
+                  {heart.troponin ?? 'Null'} ng/mL
+                </p>
               </div>
               <div className="mt-6">
                 <p className="text-gray-500">Aortic compliance</p>
-                <p className="text-lg font-semibold">{heart.aortic_compliance ?? 'Null'} mL/mmHg</p>
+                <p className="text-lg font-semibold">
+                  {heart.aortic_compliance ?? 'Null'} mL/mmHg
+                </p>
               </div>
               <div className="flex justify-between mt-10">
                 <div>
@@ -273,18 +295,28 @@ const Cardiology = ({ extractedLabData }: { extractedLabData: sampleDataType }) 
                 </div>
                 <div className="text-right">
                   <p className="text-gray-500">NT- BNP</p>
-                  <p className="text-lg font-semibold">{heart.nt_bnp ?? 'Null'} pg/mL</p>
+                  <p className="text-lg font-semibold">
+                    {heart.nt_bnp ?? 'Null'} pg/mL
+                  </p>
                 </div>
               </div>
             </Card>
           </motion.div>
 
-          <motion.div variants={itemVariants} className="col-span-6 col-start-7">
+          <motion.div
+            variants={itemVariants}
+            className="col-span-6 col-start-7"
+          >
             <Card className="rounded-3xl shadow-sm h-full p-3">
               <div className="flex flex-col md:flex-row w-full items-center mb-4">
-                <h2 className="text-xl font-semibold text-gray-900 ">Vessels and Performance</h2>
+                <h2 className="text-xl font-semibold text-gray-900 ">
+                  Vessels and Performance
+                </h2>
                 <div className="flex justify-between w-full items-center bg-gray-100 px-5 py-4 rounded-3xl ml-2">
-                  <p className="text-gray-500 text-sm">Stroke<br /> Volume</p>
+                  <p className="text-gray-500 text-sm">
+                    Stroke
+                    <br /> Volume
+                  </p>
                   <p className="text-xs font-semibold">Null</p>
                 </div>
                 <div className="flex justify-between w-full items-center bg-gray-100 px-5 py-4 mt-4 md:mt-0 ml-2 rounded-3xl">

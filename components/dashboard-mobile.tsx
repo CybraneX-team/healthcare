@@ -152,7 +152,9 @@ export default function DashboardMobile() {
   const [activeTab, setActiveTab] = useState('overview')
   const [selectedOrgan, setSelectedOrgan] = useState('heart')
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [extractedLabData, setExtractedLabData] = useState<any>(defaultExtractedLabData);
+  const [extractedLabData, setExtractedLabData] = useState<any>(
+    defaultExtractedLabData,
+  )
   const weightTrendData = generateWeightTrendData()
   const searchParams = useSearchParams()
   const { user, logout } = useAuth()
@@ -241,41 +243,39 @@ export default function DashboardMobile() {
       label: 'Tracker',
     },
   ]
-      useEffect(() => {
-      const tabParam = searchParams.get('tab')
+  useEffect(() => {
+    const tabParam = searchParams.get('tab')
     const fetchUserData = async () => {
-      const auth = getAuth();
-      const user = auth.currentUser;
-  
-      
-  
+      const auth = getAuth()
+      const user = auth.currentUser
+
       try {
-        const userRef = doc(db, "users", user && user.uid ? user.uid : "");
-        const userSnap = await getDoc(userRef);
-  
+        const userRef = doc(db, 'users', user && user.uid ? user.uid : '')
+        const userSnap = await getDoc(userRef)
+
         if (userSnap.exists()) {
-          const userData = userSnap.data();
+          const userData = userSnap.data()
           // setIsAdmin(userData.role === "admin");
-  
+
           // 👇 Assuming lab data is stored under `labData` in Firestore
-          console.log("userData.extractedLabData", userData.extractedLabData)
+          console.log('userData.extractedLabData', userData.extractedLabData)
           if (userData.extractedLabData) {
-            setExtractedLabData(userData.extractedLabData);
+            setExtractedLabData(userData.extractedLabData)
           }
         }
       } catch (error) {
-        console.error("Error fetching user data:", error);
+        console.error('Error fetching user data:', error)
       }
-    };
-  
-    fetchUserData();
-  }, [activeTab, selectedOrgan]);
+    }
+
+    fetchUserData()
+  }, [activeTab, selectedOrgan])
   return (
     <div className="min-h-screen bg-gray-200">
       {/* Minimal header */}
       <header className="flex justify-center z-20 w-auto px-5 py-4 bg-transparent">
         <div className="flex items-center">
-          <img src="/logo.png" alt="Logo" className="h-20 w-auto" />
+          <img src="/logo.svg" alt="Logo" className="h-20 w-auto" />
         </div>
         {/* <div className="flex items-center space-x-3">
           <ProfileDropdown />
@@ -385,7 +385,7 @@ export default function DashboardMobile() {
                   </div>
                 ) : selectedOrgan === 'lungs' ? (
                   <div className="">
-                    <Cardiology  extractedLabData={extractedLabData} />
+                    <Cardiology extractedLabData={extractedLabData} />
                   </div>
                 ) : selectedOrgan === 'liver' ? (
                   <div className="px-2">

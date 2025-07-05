@@ -40,72 +40,74 @@ const itemVariants = {
 
 type HormonalReproductive = {
   general: {
-    hormones_panel: string;
-    igf_1: number | null;
-    hba1c: number | null;
+    hormones_panel: string
+    igf_1: number | null
+    hba1c: number | null
     snps: {
-      comt: any | null;
-      cyps: any | null;
-    };
-  };
+      comt: any | null
+      cyps: any | null
+    }
+  }
   women: {
-    vitamin_d_25oh_total: number | null;
-    progesterone: number | null;
-    ldh: number | null;
-    insulin_fasting: number | null;
-    transferrin: number | null;
-    thyroid_panel_comprehensive: string;
+    vitamin_d_25oh_total: number | null
+    progesterone: number | null
+    ldh: number | null
+    insulin_fasting: number | null
+    transferrin: number | null
+    thyroid_panel_comprehensive: string
     testosterone_bioavailable: {
-      total: number | null;
-      free: number | null;
-      bio_available: number | null;
-      shbg: number | null;
-    };
-    t4_total: number | null;
-    t3_total: number | null;
-    a1c: number | null;
-    ggt: number | null;
-    fsh: number | null;
-    lh: number | null;
-    estradiol_e2: number | null;
-    dhea_sulfate: number | null;
-    cortisol: number | null;
-    androstenedione: number | null;
-    igf_1: number | null;
-  };
+      total: number | null
+      free: number | null
+      bio_available: number | null
+      shbg: number | null
+    }
+    t4_total: number | null
+    t3_total: number | null
+    a1c: number | null
+    ggt: number | null
+    fsh: number | null
+    lh: number | null
+    estradiol_e2: number | null
+    dhea_sulfate: number | null
+    cortisol: number | null
+    androstenedione: number | null
+    igf_1: number | null
+  }
   men: {
-    testosterone_total: number | null;
-    testosterone_free: number | null;
-    shbg: number | null;
-    estradiol: number | null;
-    estrone: number | null;
-    dhea_s: number | null;
-    fsh: number | null;
-    lh: number | null;
-    dht: number | null;
-    prolactin: number | null;
-    progesterone: number | null;
-    psa: number | null;
-    tsh: number | null;
-    ft4: number | null;
-    ft3: number | null;
-    vitamin_d_25oh: number | null;
-    parathyroid_hormone: number | null;
-    cmp: number | null;
-    lipids: number | null;
-    insulin: number | null;
-    hba1c: number | null;
-    hs_crp: number | null;
-    homocysteine: number | null;
-    androstenedione: number | null;
-    igf_1: number | null;
-  };
-};
+    testosterone_total: number | null
+    testosterone_free: number | null
+    shbg: number | null
+    estradiol: number | null
+    estrone: number | null
+    dhea_s: number | null
+    fsh: number | null
+    lh: number | null
+    dht: number | null
+    prolactin: number | null
+    progesterone: number | null
+    psa: number | null
+    tsh: number | null
+    ft4: number | null
+    ft3: number | null
+    vitamin_d_25oh: number | null
+    parathyroid_hormone: number | null
+    cmp: number | null
+    lipids: number | null
+    insulin: number | null
+    hba1c: number | null
+    hs_crp: number | null
+    homocysteine: number | null
+    androstenedione: number | null
+    igf_1: number | null
+  }
+}
 
-export default function ReproductiveHealth({extractedLabData} : any) {
-  console.log("extractedLabData", extractedLabData)
-  const  hormonal_reproductive :  HormonalReproductive = extractedLabData.hormonal_reproductive ? 
-  extractedLabData.hormonal_reproductive : {} 
+export default function ReproductiveHealth({ extractedLabData }: any) {
+  console.log('extractedLabData', extractedLabData)
+  const hormonal_reproductive: HormonalReproductive =
+    extractedLabData.hormonal_reproductive
+      ? extractedLabData.hormonal_reproductive
+      : {}
 
   return (
     <motion.div
@@ -139,16 +141,20 @@ export default function ReproductiveHealth({extractedLabData} : any) {
                 <div>
                   <h2 className="text-sm text-gray-500">Transferrin</h2>
                   <div className="text-lg font-semibold text-gray-900">
-                    {hormonal_reproductive?.women?.transferrin ? hormonal_reproductive.women.transferrin : "Null" }
-                     <span className="text-sm text-gray-500">mg/dL</span>
+                    {hormonal_reproductive?.women?.transferrin
+                      ? hormonal_reproductive.women.transferrin
+                      : 'Null'}
+                    <span className="text-sm text-gray-500">mg/dL</span>
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row justify-between gap-2 mt-12">
                   <div>
                     <h2 className="text-sm text-gray-500">Insulin (Fasting)</h2>
                     <div className="text-lg font-semibold text-gray-900">
-                    {hormonal_reproductive?.men?.insulin ? hormonal_reproductive.men.insulin : "Null" }
-                    <span className="text-sm text-gray-500">μIU/mL</span>
+                      {hormonal_reproductive?.men?.insulin
+                        ? hormonal_reproductive.men.insulin
+                        : 'Null'}
+                      <span className="text-sm text-gray-500">μIU/mL</span>
                     </div>
                   </div>
                   <div>
@@ -156,7 +162,7 @@ export default function ReproductiveHealth({extractedLabData} : any) {
                       IGF-1
                     </h2>
                     <div className="text-lg font-normal text-gray-900">
-                      Null 
+                      Null
                     </div>
                   </div>
                 </div>
@@ -174,7 +180,9 @@ export default function ReproductiveHealth({extractedLabData} : any) {
                     Cortisol
                   </h2>
                   <div className="text-xl font-bold text-gray-900">
-                {hormonal_reproductive?.women?.cortisol ? hormonal_reproductive.women.cortisol : "Null" }
+                    {hormonal_reproductive?.women?.cortisol
+                      ? hormonal_reproductive.women.cortisol
+                      : 'Null'}
                     <span className="text-base font-normal text-gray-700">
                       µg/dL
                     </span>
@@ -247,7 +255,9 @@ export default function ReproductiveHealth({extractedLabData} : any) {
                         Androstenedione
                       </h3>
                       <p className="text-xl font-bold text-gray-900">
-                        {hormonal_reproductive?.women?.androstenedione ? hormonal_reproductive.women.androstenedione : "Null" }
+                        {hormonal_reproductive?.women?.androstenedione
+                          ? hormonal_reproductive.women.androstenedione
+                          : 'Null'}
                         <span className="text-sm font-normal text-gray-700">
                           ng/mL
                         </span>
@@ -258,7 +268,9 @@ export default function ReproductiveHealth({extractedLabData} : any) {
                         Progesterone
                       </h3>
                       <p className="text-xl font-bold text-gray-900">
-                      {hormonal_reproductive?.women?.progesterone ? hormonal_reproductive.women.progesterone : "Null" }  
+                        {hormonal_reproductive?.women?.progesterone
+                          ? hormonal_reproductive.women.progesterone
+                          : 'Null'}
                         <span className="text-sm font-normal text-gray-700">
                           ng/mL
                         </span>
@@ -273,7 +285,9 @@ export default function ReproductiveHealth({extractedLabData} : any) {
                           Testosterone
                         </h3>
                         <p className="text-xl font-bold text-gray-900">
-                          {hormonal_reproductive.men.testosterone_total ? hormonal_reproductive.men.testosterone_total  : "Null" }
+                          {hormonal_reproductive.men.testosterone_total
+                            ? hormonal_reproductive.men.testosterone_total
+                            : 'Null'}
                           <span className="text-sm font-normal text-gray-700">
                             ng/dL
                           </span>
@@ -284,8 +298,9 @@ export default function ReproductiveHealth({extractedLabData} : any) {
                           DHT
                         </h3>
                         <p className="text-xl font-bold text-gray-900">
-                          {hormonal_reproductive.men.dht ? 
-                          hormonal_reproductive.men.dht  : "Null" }
+                          {hormonal_reproductive.men.dht
+                            ? hormonal_reproductive.men.dht
+                            : 'Null'}
                         </p>
                       </div>
                     </div>
@@ -294,8 +309,9 @@ export default function ReproductiveHealth({extractedLabData} : any) {
                         Vitamin D 25–OH
                       </h3>
                       <p className="text-xl font-bold text-gray-900">
-                        {hormonal_reproductive.men.vitamin_d_25oh ? 
-                          hormonal_reproductive.men.vitamin_d_25oh  : "Null" }
+                        {hormonal_reproductive.men.vitamin_d_25oh
+                          ? hormonal_reproductive.men.vitamin_d_25oh
+                          : 'Null'}
                         <span className="text-sm font-normal text-gray-700">
                           ng/mL
                         </span>
@@ -307,8 +323,9 @@ export default function ReproductiveHealth({extractedLabData} : any) {
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">TSH</h3>
                       <p className="text-xl font-bold text-gray-900">
-                           {hormonal_reproductive.men.tsh ? 
-                          hormonal_reproductive.men.tsh  : "Null" }
+                        {hormonal_reproductive.men.tsh
+                          ? hormonal_reproductive.men.tsh
+                          : 'Null'}
                         <span className="text-sm font-normal text-gray-700">
                           mIU/L
                         </span>
@@ -319,8 +336,9 @@ export default function ReproductiveHealth({extractedLabData} : any) {
                         DHEA-S
                       </h3>
                       <p className="text-xl font-bold text-gray-900">
-                          {hormonal_reproductive.men.dhea_s ? 
-                          hormonal_reproductive.men.dhea_s  : "Null" }
+                        {hormonal_reproductive.men.dhea_s
+                          ? hormonal_reproductive.men.dhea_s
+                          : 'Null'}
                         <span className="text-sm font-normal text-gray-700">
                           µg/dL
                         </span>
@@ -337,8 +355,9 @@ export default function ReproductiveHealth({extractedLabData} : any) {
                         Estrone
                       </h3>
                       <p className="text-xl font-bold text-gray-900">
-                          {hormonal_reproductive.men.estrone ? 
-                          hormonal_reproductive.men.estrone  : "Null" }
+                        {hormonal_reproductive.men.estrone
+                          ? hormonal_reproductive.men.estrone
+                          : 'Null'}
                       </p>
                     </div>
                     <div>
@@ -346,8 +365,9 @@ export default function ReproductiveHealth({extractedLabData} : any) {
                         Prolactin
                       </h3>
                       <p className="text-xl font-bold text-gray-900">
-                          {hormonal_reproductive.men.prolactin ? 
-                          hormonal_reproductive.men.prolactin  : "Null" }
+                        {hormonal_reproductive.men.prolactin
+                          ? hormonal_reproductive.men.prolactin
+                          : 'Null'}
                         <span className="text-sm font-normal text-gray-700">
                           ng/mL
                         </span>
@@ -361,8 +381,9 @@ export default function ReproductiveHealth({extractedLabData} : any) {
                         Estradiol
                       </h3>
                       <p className="text-xl font-bold text-gray-900">
-                        {hormonal_reproductive.men.estradiol ? 
-                          hormonal_reproductive.men.estradiol  : "Null" }
+                        {hormonal_reproductive.men.estradiol
+                          ? hormonal_reproductive.men.estradiol
+                          : 'Null'}
                         <span className="text-sm font-normal text-gray-700">
                           pg/mL
                         </span>
@@ -373,8 +394,9 @@ export default function ReproductiveHealth({extractedLabData} : any) {
                         Total T3
                       </h3>
                       <p className="text-xl font-bold text-gray-900">
-                        {hormonal_reproductive?.women?.t3_total ? 
-                          hormonal_reproductive?.women?.t3_total  : "Null" }
+                        {hormonal_reproductive?.women?.t3_total
+                          ? hormonal_reproductive?.women?.t3_total
+                          : 'Null'}
                         <span className="text-sm font-normal text-gray-700">
                           ng/dL
                         </span>
@@ -388,8 +410,9 @@ export default function ReproductiveHealth({extractedLabData} : any) {
                         Free T3
                       </h3>
                       <p className="text-xl font-bold text-gray-900">
-                        {hormonal_reproductive.men.ft3 ? 
-                          hormonal_reproductive.men.ft3  : "Null" }
+                        {hormonal_reproductive.men.ft3
+                          ? hormonal_reproductive.men.ft3
+                          : 'Null'}
                         <span className="text-sm font-normal text-gray-700">
                           pg/mL
                         </span>
@@ -400,8 +423,9 @@ export default function ReproductiveHealth({extractedLabData} : any) {
                         Total T3
                       </h3>
                       <p className="text-xl font-bold text-gray-900">
-                        {hormonal_reproductive?.women?.t3_total ? 
-                          hormonal_reproductive?.women?.t3_total  : "Null" }
+                        {hormonal_reproductive?.women?.t3_total
+                          ? hormonal_reproductive?.women?.t3_total
+                          : 'Null'}
                         <span className="text-sm font-normal text-gray-700">
                           ng/dL
                         </span>
@@ -415,8 +439,9 @@ export default function ReproductiveHealth({extractedLabData} : any) {
                         Free T4
                       </h3>
                       <p className="text-xl font-bold text-gray-900">
-                        {hormonal_reproductive?.women?.t4_total ? 
-                          hormonal_reproductive?.women?.t4_total  : "Null" }
+                        {hormonal_reproductive?.women?.t4_total
+                          ? hormonal_reproductive?.women?.t4_total
+                          : 'Null'}
                         <span className="text-sm font-normal text-gray-700">
                           ng/dL
                         </span>
@@ -427,8 +452,9 @@ export default function ReproductiveHealth({extractedLabData} : any) {
                         Total T4
                       </h3>
                       <p className="text-xl font-bold text-gray-900">
-                        {hormonal_reproductive?.women?.t4_total ? 
-                          hormonal_reproductive?.women?.t4_total  : "Null" }
+                        {hormonal_reproductive?.women?.t4_total
+                          ? hormonal_reproductive?.women?.t4_total
+                          : 'Null'}
                         <span className="text-sm font-normal text-gray-700">
                           µg/dL
                         </span>
@@ -440,8 +466,9 @@ export default function ReproductiveHealth({extractedLabData} : any) {
                     <div>
                       <h3 className="text-sm font-medium text-gray-500">LDH</h3>
                       <p className="text-xl font-bold text-gray-900">
-                        {hormonal_reproductive?.women?.ldh ? 
-                          hormonal_reproductive?.women?.ldh  : "Null" }
+                        {hormonal_reproductive?.women?.ldh
+                          ? hormonal_reproductive?.women?.ldh
+                          : 'Null'}
                         <span className="text-sm font-normal text-gray-700">
                           U/L
                         </span>
@@ -452,8 +479,9 @@ export default function ReproductiveHealth({extractedLabData} : any) {
                         HbA1c
                       </h3>
                       <p className="text-xl font-bold text-gray-900">
-                        {hormonal_reproductive.general.hba1c ? 
-                          hormonal_reproductive.general.hba1c  : "Null" }{ ' '}
+                        {hormonal_reproductive.general.hba1c
+                          ? hormonal_reproductive.general.hba1c
+                          : 'Null'}{' '}
                         <span className="text-sm font-normal text-gray-700">
                           %
                         </span>

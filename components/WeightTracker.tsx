@@ -1,8 +1,8 @@
-"use client";
+'use client'
 
-import { motion } from "framer-motion";
-import { Card, CardContent } from "@/components/ui/card";
-import { db } from "@/utils/firebase";
+import { motion } from 'framer-motion'
+import { Card, CardContent } from '@/components/ui/card'
+import { db } from '@/utils/firebase'
 import {
   BarChart,
   Bar,
@@ -11,28 +11,38 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-} from "recharts";
-import { useEffect, useState } from "react";
-import { TrendingUp, Droplets, Zap, Beef, Target } from "lucide-react";
-import { useAuth, User } from "@/hooks/useAuth";
-import { doc, DocumentData, getDoc, collection, query, orderBy, limit, getDocs, where } from "firebase/firestore";
+} from 'recharts'
+import { useEffect, useState } from 'react'
+import { TrendingUp, Droplets, Zap, Beef, Target } from 'lucide-react'
+import { useAuth, User } from '@/hooks/useAuth'
+import {
+  doc,
+  DocumentData,
+  getDoc,
+  collection,
+  query,
+  orderBy,
+  limit,
+  getDocs,
+  where,
+} from 'firebase/firestore'
 
 interface WeightTooltipProps {
-  active?: boolean;
+  active?: boolean
   payload?: Array<{
-    value: number;
-    dataKey: string;
-  }>;
-  label?: string;
+    value: number
+    dataKey: string
+  }>
+  label?: string
 }
 
 const WeightTooltip = ({ active, payload, label }: WeightTooltipProps) => {
   if (active && payload && payload.length) {
-    const weightData = payload.find((p) => p.dataKey === "weight");
-    const targetData = payload.find((p) => p.dataKey === "target");
-    const weight = weightData?.value;
-    const target = targetData?.value;
-    const difference = weight && target ? (weight - target).toFixed(1) : "0";
+    const weightData = payload.find((p) => p.dataKey === 'weight')
+    const targetData = payload.find((p) => p.dataKey === 'target')
+    const weight = weightData?.value
+    const target = targetData?.value
+    const difference = weight && target ? (weight - target).toFixed(1) : '0'
 
     return (
       <div className="bg-white p-3 rounded-xl shadow-lg border border-gray-100">
@@ -43,21 +53,21 @@ const WeightTooltip = ({ active, payload, label }: WeightTooltipProps) => {
           <p
             className={`text-xs font-medium ${
               Number.parseFloat(difference) > 0
-                ? "text-red-500"
+                ? 'text-red-500'
                 : Number.parseFloat(difference) < 0
-                ? "text-green-500"
-                : "text-gray-500"
+                  ? 'text-green-500'
+                  : 'text-gray-500'
             }`}
           >
-            {Number.parseFloat(difference) > 0 ? `+${difference}` : difference}{" "}
+            {Number.parseFloat(difference) > 0 ? `+${difference}` : difference}{' '}
             kg from target
           </p>
         </div>
       </div>
-    );
+    )
   }
-  return null;
-};
+  return null
+}
 
 // Animation variants
 const containerVariants = {
@@ -66,219 +76,235 @@ const containerVariants = {
     opacity: 1,
     transition: {
       duration: 0.3,
-      when: "beforeChildren",
+      when: 'beforeChildren',
       staggerChildren: 0.05,
     },
   },
-};
+}
 
 const itemVariants = {
   hidden: { y: 10, opacity: 0 },
   visible: {
     y: 0,
     opacity: 1,
-    transition: { duration: 0.25, ease: "easeOut" },
+    transition: { duration: 0.25, ease: 'easeOut' },
   },
-};
+}
 
-export const WeightTrackingComponent = ({user}: {user: User}) => {
-  
+export const WeightTrackingComponent = ({ user }: { user: User }) => {
   const [selectedPeriod, setSelectedPeriod] = useState<
-    "weekly" | "monthly" | "yearly"
-  >("weekly");
-  const [weightData, setWeightData] = useState<any[]>([]);
-  const [userData, setUserData] = useState<DocumentData | null>(null);
-  const [loading, setLoading] = useState(true);
+    'weekly' | 'monthly' | 'yearly'
+  >('weekly')
+  const [weightData, setWeightData] = useState<any[]>([])
+  const [userData, setUserData] = useState<DocumentData | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  const currentWeight = weightData[weightData.length - 1]?.weight || 0;
-  const targetWeight = 70.0;
-  const startWeight = weightData[0]?.weight || 0;
-  const weightChange = currentWeight - startWeight;
+  const currentWeight = weightData[weightData.length - 1]?.weight || 0
+  const targetWeight = 70.0
+  const startWeight = weightData[0]?.weight || 0
+  const weightChange = currentWeight - startWeight
 
   // Calculate BMI (assuming height of 1.75m as default, you can make this configurable)
   const calculateBMI = (weight: number, height: number = 1.75) => {
-    if (!weight || weight === 0) return 0;
-    return Number((weight / (height * height)).toFixed(1));
-  };
+    if (!weight || weight === 0) return 0
+    return Number((weight / (height * height)).toFixed(1))
+  }
 
   const getBMICategory = (bmi: number) => {
-    if (bmi < 18.5) return { category: "Underweight", color: "text-blue-600" };
-    if (bmi < 25) return { category: "Normal Range", color: "text-green-600" };
-    if (bmi < 30) return { category: "Overweight", color: "text-yellow-600" };
-    return { category: "Obese", color: "text-red-600" };
-  };
+    if (bmi < 18.5) return { category: 'Underweight', color: 'text-blue-600' }
+    if (bmi < 25) return { category: 'Normal Range', color: 'text-green-600' }
+    if (bmi < 30) return { category: 'Overweight', color: 'text-yellow-600' }
+    return { category: 'Obese', color: 'text-red-600' }
+  }
 
-  const currentBMI = calculateBMI(currentWeight);
-  const bmiInfo = getBMICategory(currentBMI);
+  const currentBMI = calculateBMI(currentWeight)
+  const bmiInfo = getBMICategory(currentBMI)
 
   const fetchUserData = async (id: any) => {
-    const today = new Date().toISOString().split('T')[0];
-    const docRef = doc(db, "users", user.id, "dailySummaries", today);
-    const docSnap = await getDoc(docRef);
+    const today = new Date().toISOString().split('T')[0]
+    const docRef = doc(db, 'users', user.id, 'dailySummaries', today)
+    const docSnap = await getDoc(docRef)
     if (docSnap.exists()) {
-      console.log("User data:", docSnap.data());
-  return docSnap.data();
-} else {
-  return null;
-}
+      console.log('User data:', docSnap.data())
+      return docSnap.data()
+    } else {
+      return null
+    }
   }
 
   // Fetch weight data from database
-  const fetchWeightData = async (period: "weekly" | "monthly" | "yearly") => {
-    if (!user?.id) return [];
+  const fetchWeightData = async (period: 'weekly' | 'monthly' | 'yearly') => {
+    if (!user?.id) return []
 
     try {
-      const currentDate = new Date();
-      let startDate = new Date();
-      let dateFormat = '';
-      
+      const currentDate = new Date()
+      let startDate = new Date()
+      let dateFormat = ''
+
       // Calculate date range based on period
       switch (period) {
-        case "weekly":
-          startDate.setDate(currentDate.getDate() - 7);
-          dateFormat = 'day';
-          break;
-        case "monthly":
-          startDate.setDate(currentDate.getDate() - 30);
-          dateFormat = 'week';
-          break;
-        case "yearly":
-          startDate.setFullYear(currentDate.getFullYear() - 1);
-          dateFormat = 'month';
-          break;
+        case 'weekly':
+          startDate.setDate(currentDate.getDate() - 7)
+          dateFormat = 'day'
+          break
+        case 'monthly':
+          startDate.setDate(currentDate.getDate() - 30)
+          dateFormat = 'week'
+          break
+        case 'yearly':
+          startDate.setFullYear(currentDate.getFullYear() - 1)
+          dateFormat = 'month'
+          break
       }
 
-      const startDateStr = startDate.toISOString().split('T')[0];
-      const endDateStr = currentDate.toISOString().split('T')[0];
+      const startDateStr = startDate.toISOString().split('T')[0]
+      const endDateStr = currentDate.toISOString().split('T')[0]
 
       // Query weight data from Firestore
-      const weightCollection = collection(db, 'users', user.id, 'dailyWeight');
+      const weightCollection = collection(db, 'users', user.id, 'dailyWeight')
       const q = query(
         weightCollection,
         where('date', '>=', startDateStr),
         where('date', '<=', endDateStr),
-        orderBy('date', 'asc')
-      );
+        orderBy('date', 'asc'),
+      )
 
-      const querySnapshot = await getDocs(q);
-      const rawWeightData: any[] = [];
-      
+      const querySnapshot = await getDocs(q)
+      const rawWeightData: any[] = []
+
       querySnapshot.forEach((doc) => {
-        const data = doc.data();
+        const data = doc.data()
         rawWeightData.push({
           date: data.date,
           weight: data.weight,
           originalWeight: data.originalWeight,
-          unit: data.unit
-        });
-      });
+          unit: data.unit,
+        })
+      })
 
       // Process data based on period
-      return processWeightDataByPeriod(rawWeightData, period);
+      return processWeightDataByPeriod(rawWeightData, period)
     } catch (error) {
-      console.error('Error fetching weight data:', error);
-      return [];
+      console.error('Error fetching weight data:', error)
+      return []
     }
-  };
+  }
 
   // Process weight data based on selected period
-  const processWeightDataByPeriod = (data: any[], period: "weekly" | "monthly" | "yearly") => {
-    if (data.length === 0) return [];
+  const processWeightDataByPeriod = (
+    data: any[],
+    period: 'weekly' | 'monthly' | 'yearly',
+  ) => {
+    if (data.length === 0) return []
 
     switch (period) {
-      case "weekly":
+      case 'weekly':
         // Show daily data for the last 7 days
         return data.map((item) => {
-          const date = new Date(item.date);
-          const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
-          const monthDay = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-          
+          const date = new Date(item.date)
+          const dayName = date.toLocaleDateString('en-US', { weekday: 'short' })
+          const monthDay = date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+          })
+
           return {
             name: dayName,
             weight: Math.round(item.weight * 10) / 10,
             target: targetWeight,
-            date: monthDay
-          };
-        });
-        
-      case "monthly":
-        // Group by weeks for the last month
-        const weeklyData: { [key: string]: { weights: number[], dates: string[] } } = {};
-        
-        data.forEach((item) => {
-          const date = new Date(item.date);
-          const weekStart = new Date(date);
-          weekStart.setDate(date.getDate() - date.getDay());
-          const weekKey = weekStart.toISOString().split('T')[0];
-          
-          if (!weeklyData[weekKey]) {
-            weeklyData[weekKey] = { weights: [], dates: [] };
+            date: monthDay,
           }
-          weeklyData[weekKey].weights.push(item.weight);
-          weeklyData[weekKey].dates.push(item.date);
-        });
-        
+        })
+
+      case 'monthly':
+        // Group by weeks for the last month
+        const weeklyData: {
+          [key: string]: { weights: number[]; dates: string[] }
+        } = {}
+
+        data.forEach((item) => {
+          const date = new Date(item.date)
+          const weekStart = new Date(date)
+          weekStart.setDate(date.getDate() - date.getDay())
+          const weekKey = weekStart.toISOString().split('T')[0]
+
+          if (!weeklyData[weekKey]) {
+            weeklyData[weekKey] = { weights: [], dates: [] }
+          }
+          weeklyData[weekKey].weights.push(item.weight)
+          weeklyData[weekKey].dates.push(item.date)
+        })
+
         return Object.entries(weeklyData).map(([weekStart, data], index) => {
-          const avgWeight = data.weights.reduce((sum, w) => sum + w, 0) / data.weights.length;
-          const weekStartDate = new Date(weekStart);
-          const weekLabel = `Week ${index + 1}`;
-          const monthLabel = weekStartDate.toLocaleDateString('en-US', { month: 'short' });
-          
+          const avgWeight =
+            data.weights.reduce((sum, w) => sum + w, 0) / data.weights.length
+          const weekStartDate = new Date(weekStart)
+          const weekLabel = `Week ${index + 1}`
+          const monthLabel = weekStartDate.toLocaleDateString('en-US', {
+            month: 'short',
+          })
+
           return {
             name: weekLabel,
             weight: Math.round(avgWeight * 10) / 10,
             target: targetWeight,
-            date: `${monthLabel} W${index + 1}`
-          };
-        });
-        
-      case "yearly":
-        // Group by months for the last year
-        const monthlyData: { [key: string]: { weights: number[], dates: string[] } } = {};
-        
-        data.forEach((item) => {
-          const date = new Date(item.date);
-          const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-          
-          if (!monthlyData[monthKey]) {
-            monthlyData[monthKey] = { weights: [], dates: [] };
+            date: `${monthLabel} W${index + 1}`,
           }
-          monthlyData[monthKey].weights.push(item.weight);
-          monthlyData[monthKey].dates.push(item.date);
-        });
-        
+        })
+
+      case 'yearly':
+        // Group by months for the last year
+        const monthlyData: {
+          [key: string]: { weights: number[]; dates: string[] }
+        } = {}
+
+        data.forEach((item) => {
+          const date = new Date(item.date)
+          const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+
+          if (!monthlyData[monthKey]) {
+            monthlyData[monthKey] = { weights: [], dates: [] }
+          }
+          monthlyData[monthKey].weights.push(item.weight)
+          monthlyData[monthKey].dates.push(item.date)
+        })
+
         return Object.entries(monthlyData).map(([monthKey, data]) => {
-          const avgWeight = data.weights.reduce((sum, w) => sum + w, 0) / data.weights.length;
-          const [year, month] = monthKey.split('-');
-          const monthName = new Date(parseInt(year), parseInt(month) - 1).toLocaleDateString('en-US', { month: 'short' });
-          
+          const avgWeight =
+            data.weights.reduce((sum, w) => sum + w, 0) / data.weights.length
+          const [year, month] = monthKey.split('-')
+          const monthName = new Date(
+            parseInt(year),
+            parseInt(month) - 1,
+          ).toLocaleDateString('en-US', { month: 'short' })
+
           return {
             name: monthName,
             weight: Math.round(avgWeight * 10) / 10,
             target: targetWeight,
-            date: year
-          };
-        });
-        
-      default:
-        return [];
-    }
-  };
+            date: year,
+          }
+        })
 
-  useEffect(()=>{
+      default:
+        return []
+    }
+  }
+
+  useEffect(() => {
     const loadData = async () => {
-      try{
-        const data = await fetchUserData(user.id);
-        setUserData(data);
-        const weightData = await fetchWeightData(selectedPeriod);
-        setWeightData(weightData);
-      }catch (error) {
-        console.error("Error fetching user data:", error);
+      try {
+        const data = await fetchUserData(user.id)
+        setUserData(data)
+        const weightData = await fetchWeightData(selectedPeriod)
+        setWeightData(weightData)
+      } catch (error) {
+        console.error('Error fetching user data:', error)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
     }
-    loadData();
+    loadData()
   }, [user?.id, selectedPeriod])
 
   return (
@@ -310,20 +336,20 @@ export const WeightTrackingComponent = ({user}: {user: User}) => {
 
                   {/* Period Selector */}
                   <div className="flex bg-gray-100 rounded-full p-1">
-                    {(["weekly", "monthly", "yearly"] as const).map(
+                    {(['weekly', 'monthly', 'yearly'] as const).map(
                       (period) => (
                         <button
                           key={period}
                           onClick={() => setSelectedPeriod(period)}
                           className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
                             selectedPeriod === period
-                              ? "bg-blue-500 text-white shadow-sm"
-                              : "text-gray-600 hover:text-gray-900"
+                              ? 'bg-blue-500 text-white shadow-sm'
+                              : 'text-gray-600 hover:text-gray-900'
                           }`}
                         >
                           {period.charAt(0).toUpperCase() + period.slice(1)}
                         </button>
-                      )
+                      ),
                     )}
                   </div>
                 </div>
@@ -342,8 +368,12 @@ export const WeightTrackingComponent = ({user}: {user: User}) => {
                       <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
                         <span className="text-gray-400 text-xl">⚖️</span>
                       </div>
-                      <p className="text-sm text-center">No weight data available</p>
-                      <p className="text-xs text-center mt-1">Start logging your weight to see progress</p>
+                      <p className="text-sm text-center">
+                        No weight data available
+                      </p>
+                      <p className="text-xs text-center mt-1">
+                        Start logging your weight to see progress
+                      </p>
                     </div>
                   ) : (
                     <ResponsiveContainer width="100%" height="100%">
@@ -387,13 +417,13 @@ export const WeightTrackingComponent = ({user}: {user: User}) => {
                           dataKey="name"
                           axisLine={false}
                           tickLine={false}
-                          tick={{ fontSize: 11, fill: "#6b7280" }}
+                          tick={{ fontSize: 11, fill: '#6b7280' }}
                         />
                         <YAxis
-                          domain={["dataMin - 1", "dataMax + 1"]}
+                          domain={['dataMin - 1', 'dataMax + 1']}
                           axisLine={false}
                           tickLine={false}
-                          tick={{ fontSize: 11, fill: "#6b7280" }}
+                          tick={{ fontSize: 11, fill: '#6b7280' }}
                           tickFormatter={(value) => `${value}kg`}
                           width={45}
                         />
@@ -433,7 +463,7 @@ export const WeightTrackingComponent = ({user}: {user: User}) => {
                   </h3>
                   <TrendingUp
                     className={`w-5 h-5 ${
-                      weightChange < 0 ? "text-green-500" : "text-red-500"
+                      weightChange < 0 ? 'text-green-500' : 'text-red-500'
                     }`}
                   />
                 </div>
@@ -447,10 +477,10 @@ export const WeightTrackingComponent = ({user}: {user: User}) => {
                       <>
                         <span
                           className={`text-sm font-medium ${
-                            weightChange < 0 ? "text-green-600" : "text-red-600"
+                            weightChange < 0 ? 'text-green-600' : 'text-red-600'
                           }`}
                         >
-                          {weightChange > 0 ? "+" : ""}
+                          {weightChange > 0 ? '+' : ''}
                           {weightChange.toFixed(1)} kg
                         </span>
                         <span className="text-sm text-gray-500">
@@ -478,10 +508,10 @@ export const WeightTrackingComponent = ({user}: {user: User}) => {
                             0,
                             100 -
                               Math.abs(
-                                (currentWeight - targetWeight) / targetWeight
+                                (currentWeight - targetWeight) / targetWeight,
                               ) *
-                                100
-                          )
+                                100,
+                          ),
                         )}%`,
                       }}
                     />
@@ -508,7 +538,9 @@ export const WeightTrackingComponent = ({user}: {user: User}) => {
                     {currentBMI > 0 ? currentBMI : 'No data'}
                   </div>
                   <div className={`text-sm ${bmiInfo.color} font-medium mb-4`}>
-                    {currentBMI > 0 ? bmiInfo.category : 'Log weight to see BMI'}
+                    {currentBMI > 0
+                      ? bmiInfo.category
+                      : 'Log weight to see BMI'}
                   </div>
                 </div>
 
@@ -539,12 +571,16 @@ export const WeightTrackingComponent = ({user}: {user: User}) => {
                 <h4 className="text-lg font-semibold text-orange-900 mb-1">
                   Calories
                 </h4>
-                <div className="text-2xl font-bold text-orange-800">{userData?.totalCalories || 0} kcal</div>
+                <div className="text-2xl font-bold text-orange-800">
+                  {userData?.totalCalories || 0} kcal
+                </div>
                 <p className="text-sm text-orange-600">of 2,200 kcal</p>
                 <div className="w-full bg-orange-200 rounded-full h-2 mt-3">
                   <div
                     className="bg-orange-500 h-2 rounded-full"
-                    style={{ width: `${Math.min(100, (userData?.totalCalories/2200)*100 || 0)}%`}}
+                    style={{
+                      width: `${Math.min(100, (userData?.totalCalories / 2200) * 100 || 0)}%`,
+                    }}
                   ></div>
                 </div>
               </CardContent>
@@ -563,12 +599,18 @@ export const WeightTrackingComponent = ({user}: {user: User}) => {
                 <h4 className="text-lg font-semibold text-blue-900 mb-1">
                   Water Intake
                 </h4>
-                <div className="text-2xl font-bold text-blue-800">{(userData?.waterIntake / 1000).toFixed(2) || 0}L</div>
-                <p className="text-sm text-blue-600">of {((userData?.waterGoal || 2500)/1000).toFixed(2) || 2.5}L</p>
+                <div className="text-2xl font-bold text-blue-800">
+                  {(userData?.waterIntake / 1000).toFixed(2) || 0}L
+                </div>
+                <p className="text-sm text-blue-600">
+                  of {((userData?.waterGoal || 2500) / 1000).toFixed(2) || 2.5}L
+                </p>
                 <div className="w-full bg-blue-200 rounded-full h-2 mt-3">
                   <div
                     className="bg-blue-500 h-2 rounded-full"
-                    style={{ width: `${Math.min(100, (userData?.waterIntake/(userData?.waterGoal || 2500))*100 || 0)}%` }}
+                    style={{
+                      width: `${Math.min(100, (userData?.waterIntake / (userData?.waterGoal || 2500)) * 100 || 0)}%`,
+                    }}
                   ></div>
                 </div>
               </CardContent>
@@ -587,12 +629,16 @@ export const WeightTrackingComponent = ({user}: {user: User}) => {
                 <h4 className="text-lg font-semibold text-red-900 mb-1">
                   Protein Intake
                 </h4>
-                <div className="text-2xl font-bold text-red-800">{userData?.totalProtein || 0}g</div>
+                <div className="text-2xl font-bold text-red-800">
+                  {userData?.totalProtein || 0}g
+                </div>
                 <p className="text-sm text-red-600">of 120g</p>
                 <div className="w-full bg-red-200 rounded-full h-2 mt-3">
                   <div
                     className="bg-red-500 h-2 rounded-full"
-                    style={{ width: `${Math.min(100, (userData?.totalProtein/120)*100 || 0)}%` }}
+                    style={{
+                      width: `${Math.min(100, (userData?.totalProtein / 120) * 100 || 0)}%`,
+                    }}
                   ></div>
                 </div>
               </CardContent>
@@ -601,7 +647,7 @@ export const WeightTrackingComponent = ({user}: {user: User}) => {
         </div>
       </motion.div>
     </div>
-  );
-};
+  )
+}
 
-export default WeightTrackingComponent;
+export default WeightTrackingComponent

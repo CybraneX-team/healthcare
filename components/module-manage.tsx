@@ -72,11 +72,8 @@ export function ModulesManager({
   const [userCompletedVideos, setUserCompletedVideos] = useState<
     Record<string, Record<string, string[]>>
   >({})
-  const [newModule, setNewModule] = useState({
-    title: '',
-    description: '',
-    order: 1,
-  })
+  const [modules, setModules] = useState<Module[]>([])
+
 
   // Mock program data
   const program = {
@@ -86,7 +83,6 @@ export function ModulesManager({
   }
 
   // Mock data for modules
-  const [modules, setModules] = useState<Module[]>([])
   const { recentActivity, setrecentActivity } = useProgramContext()
   useEffect(() => {
     const fetchModules = async () => {
@@ -118,6 +114,13 @@ export function ModulesManager({
       fetchModules()
     }
   }, [programId])
+
+
+    const [newModule, setNewModule] = useState({
+    title: '',
+    description: '',
+    order: modules.length
+  })
 
   useEffect(() => {
     const fetchUserCompletion = async () => {
@@ -245,20 +248,33 @@ export function ModulesManager({
     }
 
     try {
-      // Firebase Realtime DB POST
+      const newModules  = [...modules].map((mod)=>{
+        if(mod.order === moduleData.order ||  mod.order > moduleData.order  ){
+          mod.order += 1
+        }
+        return mod
+      })
+      newModules.push(moduleData)
+
       const moduleRef = ref(
         rtdb,
-        `courses/thrivemed/programs/${programId}/modules/${id}`,
+        `courses/thrivemed/programs/${programId}/modules/`,
       )
 
-      await set(moduleRef, moduleData)
+      const modulesObject : any= {}
+      newModules.forEach((mod) => {
+        modulesObject[mod.id] = mod
+      })
+
+      await set(moduleRef, modulesObject)
+      // await set(moduleRef, newModules)
       await recalculateAllProgramProgressForUser(programId)
       // Update local state
       setModules([...modules, moduleData])
 
       // Reset form & close dialog
-      setNewModule({ title: '', description: '', order: modules.length + 1 })
-      // setIsAddDialogOpen(false);
+      setNewModule({ title: '', description: '', order: modules.length  })
+      setIsAddDialogOpen(false);
     } catch (error) {
       console.error('Failed to add module:', error)
     } finally {
@@ -337,7 +353,6 @@ export function ModulesManager({
     })
 
     if (!selectedModule) return
-
     try {
       const moduleRef = ref(
         rtdb,
@@ -405,7 +420,22 @@ export function ModulesManager({
             </div>
           </div>
 
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
+            setIsAddDialogOpen(open);
+            if (open) {
+              // ⚠️ Ensure `modules` is sorted before getting order
+              const maxOrder =
+                modules.length > 0
+                  ? Math.max(...modules.map((mod) => mod.order  || 0)) + 1 
+                  : 1;
+
+              setNewModule({
+                title: '',
+                description: '',
+                order: maxOrder ,
+              });
+            }
+          }}>
             <DialogTrigger asChild>
               <Button className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg w-full sm:w-auto flex-shrink-0">
                 <Plus className="mr-2 h-4 w-4" />
@@ -455,13 +485,14 @@ export function ModulesManager({
                     id="order"
                     type="number"
                     min="1"
+                    max={modules.length + 1}
                     value={newModule.order}
-                    onChange={(e) =>
-                      setNewModule({
-                        ...newModule,
-                        order: Number.parseInt(e.target.value),
-                      })
-                    }
+                   onChange={(e) =>
+                    setNewModule({
+                      ...newModule,
+                      order: Number(e.target.value),
+                    })
+                  }
                   />
                 </div>
               </div>
@@ -469,7 +500,7 @@ export function ModulesManager({
                 <Button
                   variant="outline"
                   onClick={() => setIsAddDialogOpen(false)}
-                  className="text-black w-full sm:w-auto"
+                  className="text-white w-full sm:w-auto"
                 >
                   Cancel
                 </Button>

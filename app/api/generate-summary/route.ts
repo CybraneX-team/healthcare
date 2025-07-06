@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import removeMd from 'remove-markdown'
 
-function flattenAndFilter(
+export function flattenAndFilter(
   data: Record<string, any>,
   prefix = '',
   result: Record<string, any> = {},
@@ -20,7 +20,7 @@ function flattenAndFilter(
 
 export async function POST(req: NextRequest) {
   const body = await req.json()
-  const { extractedText, type } = body
+  const { extractedText, type, promptText } = body
 
   if (!extractedText || !type) {
     return NextResponse.json({ error: 'Missing data' }, { status: 400 })
@@ -33,18 +33,19 @@ export async function POST(req: NextRequest) {
 
   const flattened = flattenAndFilter(data)
 
-  const prompt = `
-You are a medical assistant. Based on the following medical data, generate a concise ${
-    type === 'summary'
-      ? 'clinical summary with key findings and recommended action items'
-      : 'personalized sales script for a sales rep to speak with the patient about their report'
-  }.
+  const prompt = promptText.trim().length === 0 ?  
+      `
+    You are a medical assistant. Based on the following medical data, generate a concise ${
+        type === 'summary'
+          ? 'clinical summary with key findings and recommended action items'
+          : 'personalized sales script for a sales rep to speak with the patient about their report'
+      }.
 
-Data:
-${JSON.stringify(flattened, null, 2)}
+    Data:
+    ${JSON.stringify(flattened, null, 2)}
 
-Your response should be plain text, easy to read, and tailored to the user's context.
-`
+    Your response should be plain text, easy to read, and tailored to the user's context.
+    ` : promptText
 
   try {
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -63,6 +64,7 @@ Your response should be plain text, easy to read, and tailored to the user's con
     const json = await res.json()
     const responseText = json.choices?.[0]?.message?.content ?? 'No response.'
     const cleanedText = removeMd(responseText)
+
 
     return NextResponse.json({ result: cleanedText })
   } catch (err) {

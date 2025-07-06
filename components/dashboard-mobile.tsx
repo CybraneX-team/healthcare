@@ -258,7 +258,6 @@ export default function DashboardMobile() {
           // setIsAdmin(userData.role === "admin");
 
           // 👇 Assuming lab data is stored under `labData` in Firestore
-          console.log('userData.extractedLabData', userData.extractedLabData)
           if (userData.extractedLabData) {
             setExtractedLabData(userData.extractedLabData)
           }

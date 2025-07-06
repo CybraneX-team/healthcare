@@ -141,7 +141,7 @@ const Kidney = ({ data, extractedLabData }: KidneyProps) => {
     : Number(hydrationLevelRaw)
 
   const getKidneyStatus = (egfr: number): { status: string; color: string } => {
-    console.log('egfr-egfr', egfr)
+    // console.log('egfr-egfr', egfr)
     if (egfr >= 90)
       return { status: 'Healthy', color: 'bg-green-100 text-green-800' }
     if (egfr >= 60)

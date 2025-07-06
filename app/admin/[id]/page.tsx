@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { doc, getDoc, updateDoc } from 'firebase/firestore'
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'
@@ -28,6 +28,7 @@ import { pdf } from '@react-pdf/renderer'
 import { ClinicalSummaryPdf } from '@/components/ClinicalReport'
 import { SalesScriptPdf } from '@/components/SalesScriptPdf'
 import OverlayLoader from '@/components/OverlayLoader'
+import { getPromptClinicalAndSalesScript } from '@/data/export-prompts'
 
 const Viewer = dynamic(
   () => import('@react-pdf-viewer/core').then((mod) => mod.Viewer),
@@ -37,6 +38,7 @@ const Worker = dynamic(
   () => import('@react-pdf-viewer/core').then((mod) => mod.Worker),
   { ssr: false },
 )
+
 
 export default function UserDetailsPage() {
   const { id } = useParams()
@@ -48,8 +50,10 @@ export default function UserDetailsPage() {
   const [availablePrograms, setAvailablePrograms] = useState<string[]>([])
   const viewerRef = useRef<HTMLDivElement>(null)
   const [selectedPrograms, setSelectedPrograms] = useState<string[]>([])
+  const [activePromptType, setActivePromptType] = useState<'summary' | 'sales' | null>(null)
   const [assigning, setAssigning] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
+  const [promptText, setPromptText] = useState<string>('')
   const [pdfLoading, setPdfLoading] = useState<{
     active: boolean
     message: string
@@ -67,6 +71,22 @@ export default function UserDetailsPage() {
   const [downloadingFile, setDownloadingFile] = useState(false)
 
   const [showLabData, setShowLabData] = useState(false)
+
+  const openPromptModal = (type: 'summary' | 'sales') => {
+  setActivePromptType(type)
+
+  const promptValue =
+    type === 'summary' ? 
+    getPromptClinicalAndSalesScript("summary", userData?.extractedLabData ) || "" : 
+    getPromptClinicalAndSalesScript("sales", userData?.extractedLabData ) || ""
+    setPromptText(promptValue)
+}
+
+  const closePromptModal = () => {
+    setActivePromptType(null)
+  }
+
+
 
   const defaultPrograms = [
     'thrivemed-apollo',
@@ -302,6 +322,7 @@ export default function UserDetailsPage() {
         body: JSON.stringify({
           extractedText: userData.extractedLabData,
           type: 'summary',
+          promptText : promptText
         }),
       })
 
@@ -337,6 +358,7 @@ export default function UserDetailsPage() {
         body: JSON.stringify({
           extractedText: userData.extractedLabData,
           type: 'sales',
+          promptText : promptText
         }),
       })
 
@@ -612,23 +634,59 @@ export default function UserDetailsPage() {
 
             {/* Clinical Tools Section */}
             <Card className="p-8 bg-white shadow-lg rounded-2xl border border-blue-100 lg:col-span-3">
-              <h2 className="text-2xl font-bold text-blue-900 mb-6">
-                Generate Reports
-              </h2>
-              <div className="flex flex-wrap gap-4">
-                <Button
-                  className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700"
-                  onClick={handleDownloadClinicalSummary}
-                >
-                  Download Clinical Summary PDF
-                </Button>
-                <Button
-                  className="bg-green-600 text-white px-6 py-3 rounded-xl hover:bg-green-700"
-                  onClick={handleDownloadSalesScript}
-                >
-                  Download Sales Script PDF
-                </Button>
-              </div>
+              <h2 className="text-2xl font-bold text-blue-900 mb-6">Generate Reports</h2>
+
+<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+  {/* Clinical Summary */}
+  <div className="p-6 bg-gradient-to-br from-blue-50 to-white border border-blue-200 rounded-2xl shadow-md">
+    <h3 className="text-lg font-semibold text-blue-800 mb-2">Clinical Summary</h3>
+    <div className="flex items-center gap-3">
+      <Button
+        className="bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700"
+        onClick={handleDownloadClinicalSummary}
+        title="Download Clinical Summary PDF"
+      >
+        <Download className="w-4 h-4 mr-2" />
+        Download PDF
+      </Button>
+    <Button
+  className="bg-blue-100 text-blue-700 hover:bg-blue-200 px-4 py-2 rounded-xl font-medium"
+  onClick={() => openPromptModal('summary')}
+  title="Edit the clinical summary prompt"
+>
+  <FileText className="w-4 h-4 mr-2" />
+  Edit Prompt
+</Button>
+
+    </div>
+  </div>
+
+  {/* Sales Script */}
+  <div className="p-6 bg-gradient-to-br from-green-50 to-white border border-green-200 rounded-2xl shadow-md">
+    <h3 className="text-lg font-semibold text-green-800 mb-2">Sales Script</h3>
+    <div className="flex items-center gap-3">
+      <Button
+        className="bg-green-600 text-white px-4 py-2 rounded-xl hover:bg-green-700"
+        onClick={handleDownloadSalesScript}
+        title="Download Sales Script PDF"
+      >
+        <Download className="w-4 h-4 mr-2" />
+        Download PDF
+      </Button>
+      <Button
+  className="bg-green-100 text-green-700 hover:bg-green-200 px-4 py-2 rounded-xl font-medium"
+  onClick={() => openPromptModal('sales')}
+  title="Edit the sales script prompt"
+>
+  <FileText className="w-4 h-4 mr-2" />
+  Edit Prompt
+</Button>
+
+    </div>
+  </div>
+</div>
+
+
             </Card>
 
             {/* Programs Section */}
@@ -880,7 +938,64 @@ export default function UserDetailsPage() {
             </AnimatePresence>
           </div>
         </div>
+{activePromptType && (
+  <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex items-center justify-center">
+    <div className="bg-white p-6 rounded-2xl shadow-xl max-w-2xl w-full">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-xl font-bold text-blue-900">
+          {activePromptType === 'summary'
+            ? 'Edit Clinical Summary Prompt'
+            : 'Edit Sales Script Prompt'}
+        </h3>
+        <button onClick={closePromptModal} className="text-gray-500 hover:text-red-500">
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+
+      <textarea
+        rows={8}
+        value={promptText}
+        onChange={(e) => setPromptText(e.target.value)}
+        className="w-full p-4 border border-blue-200 rounded-xl 
+        bg-white text-gray-900 focus:outline-none focus:ring-2
+        shadow-inner focus:shadow-md transition-shadow duration-200
+         focus:ring-blue-500 font-mono text-sm"
+        placeholder="Enter your custom prompt here..."
+      />
+
+
+      <div className="mt-4 flex justify-end space-x-3">
+        <Button variant="ghost" onClick={closePromptModal}>
+          Cancel
+        </Button>
+        <Button
+          className="bg-blue-600 text-white hover:bg-blue-700"
+          onClick={async () => {
+            if (!id) return
+            const userRef = doc(db, 'users', id as string)
+            const field = activePromptType === 'summary' ? 'clinicalPrompt' : 'salesPrompt'
+
+            await updateDoc(userRef, { [field]: promptText })
+
+            setUserData((prev: any) => ({
+              ...prev,
+              [field]: promptText,
+            }))
+
+            toast.success('Prompt updated successfully.')
+            closePromptModal()
+          }}
+        >
+          Save Prompt
+        </Button>
+      </div>
+    </div>
+  </div>
+)}
+
+
       </div>
     </>
+    
   )
 }

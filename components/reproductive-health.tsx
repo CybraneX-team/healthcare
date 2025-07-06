@@ -103,7 +103,6 @@ type HormonalReproductive = {
 }
 
 export default function ReproductiveHealth({ extractedLabData }: any) {
-  console.log('extractedLabData', extractedLabData)
   const hormonal_reproductive: HormonalReproductive =
     extractedLabData.hormonal_reproductive
       ? extractedLabData.hormonal_reproductive

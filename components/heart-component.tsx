@@ -56,7 +56,6 @@ type HeartData = {
   aortic_compliance: number | null
 }
 export const HeartComponent = ({ extractedLabData }: any) => {
-  console.log('inisde comp', extractedLabData)
   const heartData: HeartData = extractedLabData
     ? extractedLabData.heart
     : {
@@ -75,7 +74,6 @@ export const HeartComponent = ({ extractedLabData }: any) => {
         },
         aortic_compliance: null,
       }
-  console.log('heartData', heartData)
 
   const {
     imt,

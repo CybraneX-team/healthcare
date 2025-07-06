@@ -337,7 +337,6 @@ export default function Dashboard() {
           // setIsAdmin(userData.role === "admin");
 
           // 👇 Assuming lab data is stored under `labData` in Firestore
-          console.log('userData.extractedLabData', userData.extractedLabData)
           if (userData.extractedLabData) {
             setExtractedLabData(userData.extractedLabData)
           }
@@ -497,7 +496,7 @@ export default function Dashboard() {
                 <Link href="/admin">
                   <Button
                     variant="ghost"
-                    className={`rounded-xl px-8 py-2 bg-blue-500 text-white hover:bg-blue-600 absolute left-36 bottom-1 font-medium`}
+                    className={`rounded-xl px-8 py-2 bg-blue-500 text-white hover:bg-blue-600 absolute left-52 bottom-1 font-medium`}
                   >
                     Admin
                   </Button>

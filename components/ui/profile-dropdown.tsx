@@ -47,7 +47,7 @@ export function ProfileDropdown() {
   }
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative z-[60]" ref={dropdownRef}>
       <Button
         variant="ghost"
         className="rounded-full p-0 w-14 h-14"

@@ -78,7 +78,6 @@ const FileUpload = React.forwardRef<HTMLInputElement, FileUploadProps>(
             ref={inputRef}
             style={{ position: 'absolute', left: '-9999px' }} // NOT display:none
             onChange={(e) => {
-              console.log('✅ File input change triggered', e.target.files) // Add this for Safari test
               onChange?.(e)
             }}
             multiple={multiple}

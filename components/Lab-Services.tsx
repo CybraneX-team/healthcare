@@ -60,7 +60,7 @@ export const CombinedLabsSection = ({ extractedLabData }: any) => {
   const totalProgress = totalKeys > 0 ? (totalNonNull / totalKeys) * 100 : 0
 
   return (
-    <div className="flex flex-col gap-6 mt-14 mb-8 md:px-10 px-0">
+    <div className="flex flex-col gap-6 mt-14 mb-8 md:px-10 px-0 z-10">
       {/* Header Row */}
       <div className="flex items-center md:justify-between justify-center flex-wrap gap-4 md:px-10 px-0">
         {/* Tabs */}

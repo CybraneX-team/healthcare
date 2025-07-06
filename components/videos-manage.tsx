@@ -759,7 +759,7 @@ export function VideosManager({
                       placeholder="e.g. dQw4w9WgXcQ or full YouTube URL"
                     />
 
-                    <Button variant="outline" className="flex-shrink-0">
+                    <Button  variant="outline" className="flex-shrink-0 text-white">
                       <Youtube className="h-4 w-4 mr-2" />
                       Test
                     </Button>
@@ -820,6 +820,7 @@ export function VideosManager({
                       <Button
                         variant="outline"
                         size="icon"
+                        className="text-white"
                         onClick={() => {
                           const updatedTodos = newVideo.todo.filter(
                             (_, i) => i !== index,
@@ -835,6 +836,7 @@ export function VideosManager({
                     type="button"
                     variant="outline"
                     size="sm"
+                    className="text-white"
                     onClick={() =>
                       setNewVideo({
                         ...newVideo,
@@ -914,7 +916,7 @@ export function VideosManager({
                       documentUrl: '',
                     })
                   }}
-                  className="w-full sm:w-auto"
+                  className="w-full text-white sm:w-auto"
                 >
                   Cancel
                 </Button>
@@ -1128,7 +1130,7 @@ export function VideosManager({
                     />
                     <Button
                       variant="outline"
-                      className="flex-shrink-0"
+                      className="flex-shrink-0 text-white"
                       onClick={() =>
                         window.open(
                           `https://youtube.com/watch?v=${selectedVideo.youtubeId}`,
@@ -1200,6 +1202,7 @@ export function VideosManager({
                       <Button
                         variant="outline"
                         size="icon"
+                        className="text-white"
                         onClick={() => {
                           const updatedTodos = selectedVideo.todo.filter(
                             (_: any, i: any) => i !== index,
@@ -1217,6 +1220,7 @@ export function VideosManager({
                   <Button
                     type="button"
                     variant="outline"
+                    className="text-white"
                     size="sm"
                     onClick={() =>
                       setSelectedVideo({

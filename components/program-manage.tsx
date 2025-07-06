@@ -52,6 +52,7 @@ export function ProgramsManager({
   const [isLoading, setisLoading] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [selectedProgram, setSelectedProgram] = useState<any>(null)
+  const [selectedStatus, setSelectedStatus] = useState('all')
   const [loadingText, setloadingText] = useState<any>('Adding Programme')
   const [newProgram, setNewProgram] = useState({
     name: '',
@@ -101,11 +102,16 @@ export function ProgramsManager({
     fetchPrograms()
   }, [])
 
-  const filteredPrograms = programs.filter(
-    (program: any) =>
-      program.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      program.description.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+const filteredPrograms = programs.filter((program: any) => {
+  const matchesSearch =
+    program.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    program.description.toLowerCase().includes(searchQuery.toLowerCase())
+
+  const matchesStatus =
+    selectedStatus === 'all' || program.status === selectedStatus
+
+  return matchesSearch && matchesStatus
+})
 
   const handleAddProgram = async () => {
     setisLoading(true)
@@ -338,25 +344,24 @@ export function ProgramsManager({
                   <label htmlFor="status" className="text-sm font-medium">
                     Status
                   </label>
-                  <select
-                    id="status"
-                    className="w-full rounded-md border border-gray-300 p-2 bg-white"
-                    value={newProgram.status}
-                    onChange={(e) =>
-                      setNewProgram({ ...newProgram, status: e.target.value })
-                    }
-                  >
-                    <option value="active">Active</option>
-                    <option value="draft">Draft</option>
-                    <option value="completed">Completed</option>
-                  </select>
+                <select
+                className="rounded-md border border-gray-300 p-2 w-full sm:w-auto"
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+              >
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="draft">Draft</option>
+                <option value="completed">Completed</option>
+              </select>
+
                 </div>
               </div>
               <div className="flex flex-col sm:flex-row justify-end gap-3">
                 <Button
                   variant="outline"
                   onClick={() => setIsAddDialogOpen(false)}
-                  className="w-full sm:w-auto"
+                  className="w-full sm:w-auto text-white"
                 >
                   Cancel
                 </Button>

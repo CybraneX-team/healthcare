@@ -72,7 +72,7 @@ const Cardiology = ({
                 <div>
                   <p className="text-gray-500">Heart Rate</p>
                   <p className="text-lg font-semibold">
-                    {heart.heart_rate ?? 'Null'} BPM
+                    {heart.heart_rate ? heart.heart_rate : 'Null'} BPM
                   </p>
                 </div>
                 <div>

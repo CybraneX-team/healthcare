@@ -125,7 +125,6 @@ export const WeightTrackingComponent = ({ user }: { user: User }) => {
     const docRef = doc(db, 'users', user.id, 'dailySummaries', today)
     const docSnap = await getDoc(docRef)
     if (docSnap.exists()) {
-      console.log('User data:', docSnap.data())
       return docSnap.data()
     } else {
       return null

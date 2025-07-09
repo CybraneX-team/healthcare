@@ -35,6 +35,7 @@ import {
   Legend,
 } from 'recharts'
 import { Card, CardContent } from '@/components/ui/card'
+import Watch from '@/components/timer/Watch'
 
 interface FoodIntakeModalProps {
   isOpen: boolean
@@ -378,6 +379,7 @@ export default function FoodIntakeModal({
     'Body Transformation',
     'Log Weight',
     'Comparison', // New tab added
+    'Workout'
   ]
 
   function parseQuantity(qty: string): { num: number; unit: string } {
@@ -2578,7 +2580,12 @@ export default function FoodIntakeModal({
             renderLogWeightContent()
           ) : selectedTab === 'Comparison' ? (
             renderComparisonContent()
-          ) : (
+          ) : selectedTab === 'Workout' ? (
+            <div className="overflow-x-hidden">
+            <Watch />
+          </div>
+          )
+          : (
             renderMealIntakeContent()
           )}
         </div>

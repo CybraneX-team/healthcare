@@ -486,12 +486,11 @@ export default function Dashboard() {
               {/* Calorie Tracker Button */}
               <Button
                 variant="ghost"
-                className="rounded-full px-6 py-5 border border-4 bg-gray-100  border-blue-500 text-gray-700 ml-3 font-medium"
+                className="rounded-full px-6 py-5  border-4 bg-gray-100  border-blue-500 text-gray-700 ml-3 font-medium"
                 onClick={() => setIsFoodModalOpen(true)}
               >
                 Tracker
               </Button>
-
               {isAdmin && (
                 <Link href="/admin">
                   <Button

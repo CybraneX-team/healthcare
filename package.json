@@ -84,6 +84,7 @@
     "react-hook-form": "^7.54.1",
     "react-pdf": "^9.2.1",
     "react-resizable-panels": "^2.1.7",
+    "react-timer-hook": "^4.0.5",
     "react-toastify": "^11.0.5",
     "recharts": "^2.15.0",
     "remove-markdown": "^0.6.2",

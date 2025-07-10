@@ -102,16 +102,16 @@ export function ProgramsManager({
     fetchPrograms()
   }, [])
 
-const filteredPrograms = programs.filter((program: any) => {
-  const matchesSearch =
-    program.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    program.description.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredPrograms = programs.filter((program: any) => {
+    const matchesSearch =
+      program.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      program.description.toLowerCase().includes(searchQuery.toLowerCase())
 
-  const matchesStatus =
-    selectedStatus === 'all' || program.status === selectedStatus
+    const matchesStatus =
+      selectedStatus === 'all' || program.status === selectedStatus
 
-  return matchesSearch && matchesStatus
-})
+    return matchesSearch && matchesStatus
+  })
 
   const handleAddProgram = async () => {
     setisLoading(true)
@@ -344,17 +344,16 @@ const filteredPrograms = programs.filter((program: any) => {
                   <label htmlFor="status" className="text-sm font-medium">
                     Status
                   </label>
-                <select
-                className="rounded-md border border-gray-300 p-2 w-full sm:w-auto"
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-              >
-                <option value="all">All Status</option>
-                <option value="active">Active</option>
-                <option value="draft">Draft</option>
-                <option value="completed">Completed</option>
-              </select>
-
+                  <select
+                    className="rounded-md border border-gray-300 p-2 w-full sm:w-auto"
+                    value={selectedStatus}
+                    onChange={(e) => setSelectedStatus(e.target.value)}
+                  >
+                    <option value="all">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="draft">Draft</option>
+                    <option value="completed">Completed</option>
+                  </select>
                 </div>
               </div>
               <div className="flex flex-col sm:flex-row justify-end gap-3">

@@ -379,7 +379,7 @@ export default function FoodIntakeModal({
     'Body Transformation',
     'Log Weight',
     'Comparison', // New tab added
-    'Workout'
+    'Workout',
   ]
 
   function parseQuantity(qty: string): { num: number; unit: string } {
@@ -2582,10 +2582,9 @@ export default function FoodIntakeModal({
             renderComparisonContent()
           ) : selectedTab === 'Workout' ? (
             <div className="overflow-x-hidden">
-            <Watch />
-          </div>
-          )
-          : (
+              <Watch />
+            </div>
+          ) : (
             renderMealIntakeContent()
           )}
         </div>

@@ -1,72 +1,93 @@
 // Final updated code for stopwatch-based session tracker
 
-"use client";
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  doc,
-  getDoc,
-  updateDoc,
-  arrayRemove
-} from "firebase/firestore";
-import { getAuth } from "firebase/auth";
-import { db } from "@/utils/firebase";
-import { toast } from "react-toastify";
-import MyStopwatch from "./MyStopwatch";
+'use client'
+import React, { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { doc, getDoc, updateDoc, arrayRemove } from 'firebase/firestore'
+import { getAuth } from 'firebase/auth'
+import { db } from '@/utils/firebase'
+import { toast } from 'react-toastify'
+import MyStopwatch from './MyStopwatch'
 
 const presetActivities = [
-  "Jump Rope", "Meditation", "Workout", "Study", "Yoga", "Stretching",
-  "Pushups", "HIIT", "Deep Breathing", "Walking", "Reading", "Cycling",
-  "Running", "Boxing", "Dancing", "Plank", "Jogging", "Mindfulness",
-  "Pilates", "Tai Chi", "Breathwork", "Balance Practice", "Foam Rolling",
-  "Zumba", "Skipping", "Resistance Training", "Tai-Bo", "Martial Arts",
-  "Aerobics", "Power Yoga", "Strength Circuit", "Cardio Burn"
-];
+  'Jump Rope',
+  'Meditation',
+  'Workout',
+  'Study',
+  'Yoga',
+  'Stretching',
+  'Pushups',
+  'HIIT',
+  'Deep Breathing',
+  'Walking',
+  'Reading',
+  'Cycling',
+  'Running',
+  'Boxing',
+  'Dancing',
+  'Plank',
+  'Jogging',
+  'Mindfulness',
+  'Pilates',
+  'Tai Chi',
+  'Breathwork',
+  'Balance Practice',
+  'Foam Rolling',
+  'Zumba',
+  'Skipping',
+  'Resistance Training',
+  'Tai-Bo',
+  'Martial Arts',
+  'Aerobics',
+  'Power Yoga',
+  'Strength Circuit',
+  'Cardio Burn',
+]
 
 function formatDuration(duration: number) {
-  if (typeof duration !== "number") return "";
-  const min = Math.floor(duration / 60);
-  const sec = duration % 60;
-  return `${min ? `${min} min` : ""}${sec ? ` ${sec} sec` : ""}`.trim();
+  if (typeof duration !== 'number') return ''
+  const min = Math.floor(duration / 60)
+  const sec = duration % 60
+  return `${min ? `${min} min` : ''}${sec ? ` ${sec} sec` : ''}`.trim()
 }
 
 export default function Watch() {
-  const [activity, setActivity] = useState("");
-  const [showTimer, setShowTimer] = useState(false);
-  const [activities, setActivities] = useState([]);
-  const [reloadKey, setReloadKey] = useState(0);
+  const [activity, setActivity] = useState('')
+  const [showTimer, setShowTimer] = useState(false)
+  const [activities, setActivities] = useState([])
+  const [reloadKey, setReloadKey] = useState(0)
 
   useEffect(() => {
     const fetchActivities = async () => {
-      const user = getAuth().currentUser;
+      const user = getAuth().currentUser
       if (user) {
-        const userRef = doc(db, "users", user.uid);
-        const userSnap = await getDoc(userRef);
+        const userRef = doc(db, 'users', user.uid)
+        const userSnap = await getDoc(userRef)
         if (userSnap.exists()) {
-          const data = userSnap.data();
-          setActivities(data.activities || []);
+          const data = userSnap.data()
+          setActivities(data.activities || [])
         }
       }
-    };
-    fetchActivities();
-  }, [reloadKey]);
+    }
+    fetchActivities()
+  }, [reloadKey])
 
   const deleteActivity = async (item: any) => {
-    const user = getAuth().currentUser;
-    if (!user) return;
-    const userRef = doc(db, "users", user.uid);
+    const user = getAuth().currentUser
+    if (!user) return
+    const userRef = doc(db, 'users', user.uid)
     await updateDoc(userRef, {
       activities: arrayRemove(item),
-    });
-    setActivities((prev) => prev.filter((a) => a !== item));
-    toast.success("Activity deleted successfully!");
-  };
+    })
+    setActivities((prev) => prev.filter((a) => a !== item))
+    toast.success('Activity deleted successfully!')
+  }
 
   const handleSubmit = (e: any) => {
-    e.preventDefault();
-    if (!activity.trim()) return alert("Please enter a valid activity.");
-    setShowTimer(true);
-  };
+    e.preventDefault()
+    if (!activity.trim()) return alert('Please enter a valid activity.')
+    setShowTimer(true)
+  }
 
   return (
     <div className=" min-h-screen w-auto bg-[#f7faff]  overflow-hidden">
@@ -82,10 +103,14 @@ export default function Watch() {
               transition={{ duration: 0.8 }}
               className="w-full h-full px-12 py-16 flex flex-col justify-center items-center gap-10"
             >
-              <h1 className="text-4xl font-extrabold text-[#1e3a8a]">Start Stopwatch</h1>
+              <h1 className="text-4xl font-extrabold text-[#1e3a8a]">
+                Start Stopwatch
+              </h1>
 
               <div className="w-full max-w-4xl">
-                <label className="text-lg font-medium text-gray-700">Activity</label>
+                <label className="text-lg font-medium text-gray-700">
+                  Activity
+                </label>
                 <input
                   type="text"
                   value={activity}
@@ -120,9 +145,13 @@ export default function Watch() {
 
             <div className="w-full flex justify-center mt-12 px-4">
               <div className="w-full max-w-2xl">
-                <h3 className="text-2xl font-semibold mb-6 text-center text-gray-800">Your Activity History</h3>
+                <h3 className="text-2xl font-semibold mb-6 text-center text-gray-800">
+                  Your Activity History
+                </h3>
                 {activities.length === 0 ? (
-                  <p className="text-gray-500 text-center">No activities logged yet.</p>
+                  <p className="text-gray-500 text-center">
+                    No activities logged yet.
+                  </p>
                 ) : (
                   <ul className="space-y-6">
                     {activities
@@ -134,9 +163,14 @@ export default function Watch() {
                           className="flex items-center justify-between p-5 bg-white border border-gray-300 rounded-xl shadow-sm hover:shadow-md transition-all"
                         >
                           <div>
-                            <div className="font-semibold text-lg text-gray-800">{act.name}</div>
+                            <div className="font-semibold text-lg text-gray-800">
+                              {act.name}
+                            </div>
                             <div className="text-sm text-gray-500">
-                              {formatDuration(act.duration)} · {new Date(act.completedAt?.seconds * 1000).toLocaleString()}
+                              {formatDuration(act.duration)} ·{' '}
+                              {new Date(
+                                act.completedAt?.seconds * 1000,
+                              ).toLocaleString()}
                             </div>
                           </div>
                           <button
@@ -156,13 +190,13 @@ export default function Watch() {
           <MyStopwatch
             activity={activity}
             goBack={() => {
-              setShowTimer(false);
-              setReloadKey((prev) => prev + 1);
-              setActivity("");
+              setShowTimer(false)
+              setReloadKey((prev) => prev + 1)
+              setActivity('')
             }}
           />
         )}
       </AnimatePresence>
     </div>
-  );
+  )
 }

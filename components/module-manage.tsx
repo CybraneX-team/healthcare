@@ -74,7 +74,6 @@ export function ModulesManager({
   >({})
   const [modules, setModules] = useState<Module[]>([])
 
-
   // Mock program data
   const program = {
     id: programId,
@@ -115,11 +114,10 @@ export function ModulesManager({
     }
   }, [programId])
 
-
-    const [newModule, setNewModule] = useState({
+  const [newModule, setNewModule] = useState({
     title: '',
     description: '',
-    order: modules.length
+    order: modules.length,
   })
 
   useEffect(() => {
@@ -248,8 +246,8 @@ export function ModulesManager({
     }
 
     try {
-      const newModules  = [...modules].map((mod)=>{
-        if(mod.order === moduleData.order ||  mod.order > moduleData.order  ){
+      const newModules = [...modules].map((mod) => {
+        if (mod.order === moduleData.order || mod.order > moduleData.order) {
           mod.order += 1
         }
         return mod
@@ -261,7 +259,7 @@ export function ModulesManager({
         `courses/thrivemed/programs/${programId}/modules/`,
       )
 
-      const modulesObject : any= {}
+      const modulesObject: any = {}
       newModules.forEach((mod) => {
         modulesObject[mod.id] = mod
       })
@@ -273,8 +271,8 @@ export function ModulesManager({
       setModules([...modules, moduleData])
 
       // Reset form & close dialog
-      setNewModule({ title: '', description: '', order: modules.length  })
-      setIsAddDialogOpen(false);
+      setNewModule({ title: '', description: '', order: modules.length })
+      setIsAddDialogOpen(false)
     } catch (error) {
       console.error('Failed to add module:', error)
     } finally {
@@ -420,22 +418,25 @@ export function ModulesManager({
             </div>
           </div>
 
-          <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
-            setIsAddDialogOpen(open);
-            if (open) {
-              // ⚠️ Ensure `modules` is sorted before getting order
-              const maxOrder =
-                modules.length > 0
-                  ? Math.max(...modules.map((mod) => mod.order  || 0)) + 1 
-                  : 1;
+          <Dialog
+            open={isAddDialogOpen}
+            onOpenChange={(open) => {
+              setIsAddDialogOpen(open)
+              if (open) {
+                // ⚠️ Ensure `modules` is sorted before getting order
+                const maxOrder =
+                  modules.length > 0
+                    ? Math.max(...modules.map((mod) => mod.order || 0)) + 1
+                    : 1
 
-              setNewModule({
-                title: '',
-                description: '',
-                order: maxOrder ,
-              });
-            }
-          }}>
+                setNewModule({
+                  title: '',
+                  description: '',
+                  order: maxOrder,
+                })
+              }
+            }}
+          >
             <DialogTrigger asChild>
               <Button className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg w-full sm:w-auto flex-shrink-0">
                 <Plus className="mr-2 h-4 w-4" />
@@ -487,12 +488,12 @@ export function ModulesManager({
                     min="1"
                     max={modules.length + 1}
                     value={newModule.order}
-                   onChange={(e) =>
-                    setNewModule({
-                      ...newModule,
-                      order: Number(e.target.value),
-                    })
-                  }
+                    onChange={(e) =>
+                      setNewModule({
+                        ...newModule,
+                        order: Number(e.target.value),
+                      })
+                    }
                   />
                 </div>
               </div>

@@ -1,88 +1,88 @@
-"use client";
-import React, { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { doc, updateDoc, arrayUnion, Timestamp } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
-import { db } from "@/utils/firebase";
+'use client'
+import React, { useEffect, useRef, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { doc, updateDoc, arrayUnion, Timestamp } from 'firebase/firestore'
+import { getAuth } from 'firebase/auth'
+import { db } from '@/utils/firebase'
 
 function formatDuration(seconds: number) {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins > 0 ? `${mins} min` : ""} ${secs} sec`.trim();
+  const mins = Math.floor(seconds / 60)
+  const secs = seconds % 60
+  return `${mins > 0 ? `${mins} min` : ''} ${secs} sec`.trim()
 }
 
 export default function MyStopwatch({ activity, goBack }: any) {
-  const [elapsed, setElapsed] = useState(0);
-  const [isRunning, setIsRunning] = useState(false);
-  const [showCountdown, setShowCountdown] = useState(true);
-  const [countdown, setCountdown] = useState(3);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const startTimeRef = useRef<number>(0);
+  const [elapsed, setElapsed] = useState(0)
+  const [isRunning, setIsRunning] = useState(false)
+  const [showCountdown, setShowCountdown] = useState(true)
+  const [countdown, setCountdown] = useState(3)
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const startTimeRef = useRef<number>(0)
 
   useEffect(() => {
     if (showCountdown) {
-      setCountdown(3);
-      let count = 3;
+      setCountdown(3)
+      let count = 3
       const countdownInterval = setInterval(() => {
-        count -= 1;
+        count -= 1
         if (count <= 0) {
-          clearInterval(countdownInterval);
-          setShowCountdown(false);
-          setIsRunning(true);
-          startTimeRef.current = Date.now();
+          clearInterval(countdownInterval)
+          setShowCountdown(false)
+          setIsRunning(true)
+          startTimeRef.current = Date.now()
         }
-        setCountdown(count);
-      }, 1000);
-      setCountdown(count);
+        setCountdown(count)
+      }, 1000)
+      setCountdown(count)
     }
-  }, [showCountdown]);
+  }, [showCountdown])
 
   useEffect(() => {
     if (isRunning) {
       intervalRef.current = setInterval(() => {
-        setElapsed((Date.now() - startTimeRef.current) / 1000);
-      }, 10);
+        setElapsed((Date.now() - startTimeRef.current) / 1000)
+      }, 10)
     } else if (intervalRef.current) {
-      clearInterval(intervalRef.current);
+      clearInterval(intervalRef.current)
     }
-    return () => clearInterval(intervalRef.current as NodeJS.Timeout);
-  }, [isRunning]);
+    return () => clearInterval(intervalRef.current as NodeJS.Timeout)
+  }, [isRunning])
 
   const handleStop = async () => {
-    setIsRunning(false);
+    setIsRunning(false)
     try {
-      const user = getAuth().currentUser;
+      const user = getAuth().currentUser
       if (user) {
-        const userRef = doc(db, "users", user.uid);
+        const userRef = doc(db, 'users', user.uid)
         await updateDoc(userRef, {
           activities: arrayUnion({
             name: activity,
             duration: formatDuration(elapsed),
             completedAt: Timestamp.now(),
           }),
-        });
+        })
       }
     } catch (error) {
-      console.error("Error saving activity:", error);
+      console.error('Error saving activity:', error)
     }
-    goBack();
-  };
+    goBack()
+  }
 
   const togglePause = () => {
     if (isRunning) {
-      setIsRunning(false);
+      setIsRunning(false)
     } else {
-      setIsRunning(true);
-      startTimeRef.current = Date.now() - elapsed * 1000;
+      setIsRunning(true)
+      startTimeRef.current = Date.now() - elapsed * 1000
     }
-  };
+  }
 
-  const ms = Math.floor((elapsed % 1) * 1000);
-  const totalSecs = Math.floor(elapsed);
-  const hrs = Math.floor(totalSecs / 3600);
-  const mins = Math.floor((totalSecs % 3600) / 60);
-  const secs = totalSecs % 60;
-  const progress = (elapsed % 60) / 60 * 283;
+  const ms = Math.floor((elapsed % 1) * 1000)
+  const totalSecs = Math.floor(elapsed)
+  const hrs = Math.floor(totalSecs / 3600)
+  const mins = Math.floor((totalSecs % 3600) / 60)
+  const secs = totalSecs % 60
+  const progress = ((elapsed % 60) / 60) * 283
 
   return (
     <motion.div
@@ -101,7 +101,9 @@ export default function MyStopwatch({ activity, goBack }: any) {
       </div>
 
       <motion.div className="text-center z-10 flex flex-col items-center gap-6">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-6">{activity}</h2>
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-6">
+          {activity}
+        </h2>
 
         {showCountdown ? (
           <AnimatePresence mode="wait">
@@ -112,13 +114,23 @@ export default function MyStopwatch({ activity, goBack }: any) {
               exit={{ scale: 0, opacity: 0 }}
               className="text-6xl md:text-7xl font-extrabold text-blue-600"
             >
-              {countdown === 0 ? "Start!" : countdown}
+              {countdown === 0 ? 'Start!' : countdown}
             </motion.div>
           </AnimatePresence>
         ) : (
           <div className="relative w-[260px] h-[260px]">
-            <svg className="absolute top-0 left-0 w-full h-full rotate-[-90deg]" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="45" stroke="#e5e7eb" strokeWidth="4" fill="none" />
+            <svg
+              className="absolute top-0 left-0 w-full h-full rotate-[-90deg]"
+              viewBox="0 0 100 100"
+            >
+              <circle
+                cx="50"
+                cy="50"
+                r="45"
+                stroke="#e5e7eb"
+                strokeWidth="4"
+                fill="none"
+              />
               <circle
                 cx="50"
                 cy="50"
@@ -133,10 +145,10 @@ export default function MyStopwatch({ activity, goBack }: any) {
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <div className="text-3xl md:text-4xl font-mono mb-1 text-gray-900">
-                {`${String(hrs).padStart(2, "0")}:${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`}
+                {`${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`}
               </div>
               <div className="text-lg md:text-xl font-mono text-blue-500">
-                .{String(ms).padStart(3, "0")}
+                .{String(ms).padStart(3, '0')}
               </div>
             </div>
           </div>
@@ -148,7 +160,7 @@ export default function MyStopwatch({ activity, goBack }: any) {
               onClick={togglePause}
               className="px-6 py-2 text-base rounded-md bg-blue-100 text-blue-800 hover:bg-blue-200 transition"
             >
-              {isRunning ? "Pause" : "Resume"}
+              {isRunning ? 'Pause' : 'Resume'}
             </button>
             <button
               onClick={handleStop}
@@ -160,5 +172,5 @@ export default function MyStopwatch({ activity, goBack }: any) {
         )}
       </motion.div>
     </motion.div>
-  );
+  )
 }

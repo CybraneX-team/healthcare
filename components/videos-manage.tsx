@@ -759,7 +759,10 @@ export function VideosManager({
                       placeholder="e.g. dQw4w9WgXcQ or full YouTube URL"
                     />
 
-                    <Button  variant="outline" className="flex-shrink-0 text-white">
+                    <Button
+                      variant="outline"
+                      className="flex-shrink-0 text-white"
+                    >
                       <Youtube className="h-4 w-4 mr-2" />
                       Test
                     </Button>

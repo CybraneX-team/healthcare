@@ -273,7 +273,10 @@ export default function DashboardMobile() {
     <div className="min-h-screen bg-gray-200">
       {/* Minimal header */}
       <header className="flex justify-center z-20 w-auto px-5 py-4 bg-transparent">
-        <div className="flex items-center">
+        <div
+          className="flex items-center"
+          onClick={() => (window.location.href = '/dashboard')}
+        >
           <img src="/logo.svg" alt="Logo" className="h-20 w-auto" />
         </div>
         {/* <div className="flex items-center space-x-3">

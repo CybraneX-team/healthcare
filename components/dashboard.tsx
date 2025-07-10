@@ -442,7 +442,10 @@ export default function Dashboard() {
           <div className="px-6 py-4 flex-shrink-0">
             <div className="flex justify-center items-center w-full mb-2 relative">
               {/* Logo on the left */}
-              <div className="absolute left-0 top-1/2 transform -translate-y-1/2">
+              <div
+                className="absolute left-0 top-1/2 transform -translate-y-1/2 cursor-pointer"
+                onClick={() => (window.location.href = '/dashboard')}
+              >
                 <img src="/logo.svg" alt="Logo" className="h-10 w-auto" />
               </div>
 

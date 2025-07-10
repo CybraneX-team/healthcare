@@ -33,19 +33,21 @@ export async function POST(req: NextRequest) {
 
   const flattened = flattenAndFilter(data)
 
-  const prompt = promptText.trim().length === 0 ?  
-      `
+  const prompt =
+    promptText.trim().length === 0
+      ? `
     You are a medical assistant. Based on the following medical data, generate a concise ${
-        type === 'summary'
-          ? 'clinical summary with key findings and recommended action items'
-          : 'personalized sales script for a sales rep to speak with the patient about their report'
-      }.
+      type === 'summary'
+        ? 'clinical summary with key findings and recommended action items'
+        : 'personalized sales script for a sales rep to speak with the patient about their report'
+    }.
 
     Data:
     ${JSON.stringify(flattened, null, 2)}
 
     Your response should be plain text, easy to read, and tailored to the user's context.
-    ` : promptText
+    `
+      : promptText
 
   try {
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -64,7 +66,6 @@ export async function POST(req: NextRequest) {
     const json = await res.json()
     const responseText = json.choices?.[0]?.message?.content ?? 'No response.'
     const cleanedText = removeMd(responseText)
-
 
     return NextResponse.json({ result: cleanedText })
   } catch (err) {

@@ -183,7 +183,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (userData) {
         const { avatar, ...userDataWithoutAvatar } = userData
 
-
         await createUserProfile(user.uid, {
           email: user.email,
           displayName: userData.displayName || '',

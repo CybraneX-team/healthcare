@@ -47,7 +47,7 @@ import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/utils/firebase'
 import Cardiology from './cardiology'
 import Kidney from './kidney'
-import { defaultExtractedLabData } from '@/sameple-text-json'
+import { defaultExtractedLabData, samplePdfData } from '@/sameple-text-json'
 
 // Other organ components will be imported here as they are created
 
@@ -337,8 +337,10 @@ export default function Dashboard() {
           // setIsAdmin(userData.role === "admin");
 
           // 👇 Assuming lab data is stored under `labData` in Firestore
+          
           if (userData.extractedLabData) {
-            setExtractedLabData(userData.extractedLabData)
+            setExtractedLabData([].length > 0 ? 
+            userData.extractedLabData : samplePdfData  )
           }
         }
       } catch (error) {
@@ -428,6 +430,7 @@ export default function Dashboard() {
     router.push(url.pathname + url.search)
   }
 
+  // console.log("extractedText-extractedText", )
   return (
     <div className="h-screen bg-gray-200">
       <style jsx>{organSwitcherStyle}</style>

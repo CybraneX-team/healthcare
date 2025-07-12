@@ -35,6 +35,7 @@ import { ClinicalSummaryPdf } from '@/components/ClinicalReport'
 import { SalesScriptPdf } from '@/components/SalesScriptPdf'
 import OverlayLoader from '@/components/OverlayLoader'
 import { getPromptClinicalAndSalesScript } from '@/data/export-prompts'
+import PromptChatbotModal from '@/components/PromptChatbotModal';
 
 const Viewer = dynamic(
   () => import('@react-pdf-viewer/core').then((mod) => mod.Viewer),
@@ -54,6 +55,7 @@ export default function UserDetailsPage() {
   const [uploading, setUploading] = useState(false)
   const [availablePrograms, setAvailablePrograms] = useState<string[]>([])
   const viewerRef = useRef<HTMLDivElement>(null)
+  const [chatOpen, setChatOpen] = useState(false);
   const [selectedPrograms, setSelectedPrograms] = useState<string[]>([])
   const [activePromptType, setActivePromptType] = useState<
     'summary' | 'sales' | null
@@ -79,21 +81,34 @@ export default function UserDetailsPage() {
 
   const [showLabData, setShowLabData] = useState(false)
 
-  const openPromptModal = (type: 'summary' | 'sales') => {
-    setActivePromptType(type)
+  // const openPromptModal = (type: 'summary' | 'sales') => {
+  //   setActivePromptType(type)
 
-    const promptValue =
-      type === 'summary'
-        ? getPromptClinicalAndSalesScript(
-            'summary',
-            userData?.extractedLabData,
-          ) || ''
-        : getPromptClinicalAndSalesScript(
-            'sales',
-            userData?.extractedLabData,
-          ) || ''
-    setPromptText(promptValue)
-  }
+  //   const promptValue =
+  //     type === 'summary'
+  //       ? getPromptClinicalAndSalesScript(
+  //           'summary',
+  //           userData?.extractedLabData,
+  //         ) || ''
+  //       : getPromptClinicalAndSalesScript(
+  //           'sales',
+  //           userData?.extractedLabData,
+  //         ) || ''
+  //   setPromptText(promptValue)
+  // }
+
+const openPromptModal = (type: 'summary' | 'sales') => {
+  if (!userData) return;
+  setActivePromptType(type);
+
+  const promptValue =
+    type === 'summary'
+      ? getPromptClinicalAndSalesScript('summary', userData.extractedLabData)
+      : getPromptClinicalAndSalesScript('sales',    userData.extractedLabData);
+
+  setPromptText(promptValue.trim());
+  setChatOpen(true);
+};
 
   const closePromptModal = () => {
     setActivePromptType(null)
@@ -951,7 +966,7 @@ export default function UserDetailsPage() {
             </AnimatePresence>
           </div>
         </div>
-        {activePromptType && (
+        {/* {activePromptType && (
           <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex items-center justify-center">
             <div className="bg-white p-6 rounded-2xl shadow-xl max-w-2xl w-full">
               <div className="flex justify-between items-center mb-4">
@@ -968,16 +983,21 @@ export default function UserDetailsPage() {
                 </button>
               </div>
 
-              <textarea
-                rows={8}
-                value={promptText}
-                onChange={(e) => setPromptText(e.target.value)}
-                className="w-full p-4 border border-blue-200 rounded-xl 
-        bg-white text-gray-900 focus:outline-none focus:ring-2
-        shadow-inner focus:shadow-md transition-shadow duration-200
-         focus:ring-blue-500 font-mono text-sm"
-                placeholder="Enter your custom prompt here..."
-              />
+             <PromptChatbotModal
+              isOpen={chatOpen}
+              initialPrompt={promptText}       // same value you already derive
+              userName={userData.fullName || 'You'}
+              onClose={() => setChatOpen(false)}
+              onSave={async (newPrompt) => {
+                if (!id) return;
+                const userRef = doc(db, 'users', id as string);
+                const field =
+                  activePromptType === 'summary' ? 'clinicalPrompt' : 'salesPrompt';
+                await updateDoc(userRef, { [field]: newPrompt });
+                setUserData((p: any) => ({ ...p, [field]: newPrompt }));
+                toast.success('Prompt updated successfully.');
+              }}
+            />
 
               <div className="mt-4 flex justify-end space-x-3">
                 <Button variant="ghost" onClick={closePromptModal}>
@@ -1009,7 +1029,29 @@ export default function UserDetailsPage() {
               </div>
             </div>
           </div>
-        )}
+        )} */}
+
+        {chatOpen && (
+     <PromptChatbotModal
+       isOpen={chatOpen}
+       initialPrompt={promptText}
+       userName={userData.fullName || 'You'}
+       onClose={() => {
+         setChatOpen(false)
+         setActivePromptType(null)
+       }}
+       onSave={async (newPrompt) => {
+         if (!id) return
+         const field =
+        activePromptType === 'summary' ? 'clinicalPrompt' : 'salesPrompt'
+         await updateDoc(doc(db, 'users', id as string), { [field]: newPrompt })
+         setUserData((p: any) => ({ ...p, [field]: newPrompt }))
+         setPromptText(newPrompt)
+         toast.success('Prompt updated successfully.')
+
+       }}
+     />
+   )}
       </div>
     </>
   )

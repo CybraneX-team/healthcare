@@ -1259,7 +1259,7 @@ export function VideosManager({
               <Button
                 variant="outline"
                 onClick={() => setIsEditDialogOpen(false)}
-                className="w-full sm:w-auto"
+                className="w-full text-white sm:w-auto"
               >
                 Cancel
               </Button>
@@ -1289,7 +1289,7 @@ export function VideosManager({
               <Button
                 variant="outline"
                 onClick={() => setIsDeleteDialogOpen(false)}
-                className="w-full sm:w-auto"
+                className="w-full text-white sm:w-auto"
               >
                 Cancel
               </Button>

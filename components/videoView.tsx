@@ -66,7 +66,6 @@ export function VideoPlayerView({
   const [videoProgress, setVideoProgress] = useState(0)
   const [todoChecks, setTodoChecks] = useState<Record<number, boolean>>({})
   const [comments, setComments] = useState<any[]>([])
-
   // console.log( "programId",  programId , "moduleId" , moduleId, "videoId" , videoId, "video-title" ,videoTitle  ,"module-title", moduleTitle)
   // Update current video when videoId changes
   const moduleData = programData.modules[moduleId]
@@ -192,6 +191,7 @@ export function VideoPlayerView({
   }
 
   // Get module and video data from programData
+  console.log("current viode , ", currentVideo)
 
   return (
     <div className="min-h-screen">
@@ -307,10 +307,11 @@ export function VideoPlayerView({
                   About This Lesson
                 </h3>
                 <p className="text-gray-700 mb-6">
-                  In this lesson, you will learn about{' '}
+                  {/* In this lesson, you will learn about{' '}
                   {currentVideo.title.toLowerCase()}. This is an important
                   concept that will help you understand the overall framework
-                  and approach to health optimization.
+                  and approach to health optimization. */}
+                  {currentVideo.description ?  currentVideo.description : ""}
                 </p>
               </div>
             </div>

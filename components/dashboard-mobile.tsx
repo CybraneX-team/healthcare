@@ -60,7 +60,7 @@ import Kidney from './kidney'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/utils/firebase'
 import { getAuth } from 'firebase/auth'
-import { defaultExtractedLabData } from '@/sameple-text-json'
+import { defaultExtractedLabData, samplePdfData } from '@/sameple-text-json'
 
 // Define types for weight trend data
 interface WeightTrendData {
@@ -259,7 +259,8 @@ export default function DashboardMobile() {
 
           // 👇 Assuming lab data is stored under `labData` in Firestore
           if (userData.extractedLabData) {
-            setExtractedLabData(userData.extractedLabData)
+            setExtractedLabData(Object.keys(userData.extractedLabData).length > 0 ? 
+            userData.extractedLabData : samplePdfData  )
           }
         }
       } catch (error) {

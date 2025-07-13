@@ -191,7 +191,7 @@ export function VideoPlayerView({
   }
 
   // Get module and video data from programData
-  console.log("current viode , ", currentVideo)
+  // console.log("current viode , ", currentVideo)
 
   return (
     <div className="min-h-screen">

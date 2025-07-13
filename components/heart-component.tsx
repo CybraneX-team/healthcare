@@ -54,6 +54,7 @@ type HeartData = {
     diastolic: number | null
   }
   aortic_compliance: number | null
+  CtChestImpression : any
 }
 export const HeartComponent = ({ extractedLabData }: any) => {
   const heartData: HeartData = extractedLabData
@@ -74,7 +75,7 @@ export const HeartComponent = ({ extractedLabData }: any) => {
         },
         aortic_compliance: null,
       }
-
+    
   const {
     imt,
     troponin,
@@ -86,6 +87,7 @@ export const HeartComponent = ({ extractedLabData }: any) => {
 
   const systolic = blood_pressure?.systolic
   const diastolic = blood_pressure?.diastolic
+  // console.log("heartttData", heartData)
   return (
     <motion.div
       variants={containerVariants}
@@ -306,7 +308,7 @@ export const HeartComponent = ({ extractedLabData }: any) => {
                     Impressions
                   </div>
 
-                  <div className="space-y-2">
+                  {/* <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <div className="w-1.5 h-1.5 bg-red-500 rounded-full flex-shrink-0"></div>
                       <span className="text-sm text-gray-700">
@@ -328,7 +330,14 @@ export const HeartComponent = ({ extractedLabData }: any) => {
                         discreet mass or pneumothorax.
                       </span>
                     </div>
-                  </div>
+                  </div> */}
+                      <span className="text-sm text-gray-700">
+                       {
+                       heartData?.CtChestImpression ? 
+                       heartData?.CtChestImpression  
+                       : "no data for CT chest" 
+                       }
+                    </span>
                 </div>
               </CardContent>
             </Card>

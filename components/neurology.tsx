@@ -41,7 +41,7 @@ const itemVariants = {
 export default function Component({ extractedLabData }: any) {
   const brain = extractedLabData?.brain || {}
   const neurotransmitters = brain?.neurotransmitters || {}
-
+  // console.log("brain is : ", brain )
   return (
     <div className="h-full overflow-y-auto md:overflow-y-hidden p-3 sm:p-4">
       <motion.div
@@ -147,7 +147,7 @@ export default function Component({ extractedLabData }: any) {
                   symptoms log
                 </h3>
 
-                <div className="space-y-3 sm:space-y-4">
+                {/* <div className="space-y-3 sm:space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 bg-red-500 rounded-full flex-shrink-0"></div>
                     <span className="text-gray-700 text-xs sm:text-sm">
@@ -166,7 +166,10 @@ export default function Component({ extractedLabData }: any) {
                       Rythmic heartbeat
                     </span>
                   </div>
-                </div>
+                </div> */}
+                <span className="text-gray-700 text-xs sm:text-sm">
+                {brain?.brain_impression_log ? brain?.brain_impression_log  : "" }
+                </span>
               </CardContent>
             </Card>
           </motion.div>

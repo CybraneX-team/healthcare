@@ -339,7 +339,7 @@ export default function Dashboard() {
           // 👇 Assuming lab data is stored under `labData` in Firestore
           
           if (userData.extractedLabData) {
-            setExtractedLabData([].length > 0 ? 
+            setExtractedLabData(Object.keys(userData.extractedLabData).length > 0 ? 
             userData.extractedLabData : samplePdfData  )
           }
         }
@@ -460,7 +460,10 @@ export default function Dashboard() {
                       ? 'bg-blue-500 text-white'
                       : 'text-gray-700'
                   } text-sm`}
-                  onClick={() => setActiveTab('overview')}
+
+                  onClick={() => {{setActiveTab('overview')
+                    router.push('/dashboard')
+                  }}}
                 >
                   Digital Twin
                 </Button>
@@ -471,7 +474,10 @@ export default function Dashboard() {
                       ? 'bg-blue-500 text-white'
                       : 'text-gray-700'
                   } text-sm`}
-                  onClick={() => setActiveTab('courses')}
+                  onClick={() => {
+                    router.push('/dashboard')
+                    setActiveTab('courses')
+                  }}
                 >
                   Courses
                 </Button>
@@ -483,7 +489,10 @@ export default function Dashboard() {
                       ? 'bg-blue-500 text-white'
                       : 'text-gray-700'
                   } text-sm`}
-                  onClick={() => setActiveTab('labs')}
+                  onClick={() => {
+                    router.push('/dashboard')
+                    setActiveTab('labs')
+                  }}
                 >
                   Directories
                 </Button>

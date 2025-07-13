@@ -259,12 +259,12 @@ export default function UploadPage() {
         const formData = new FormData()
         formData.append('files', actualFile)
 
-        const res = await fetch('/api/process-pdf', {
-          method: 'POST',
-          body: formData,
-        })
+        // const res = await fetch('/api/process-pdf', {
+        //   method: 'POST',
+        //   body: formData,
+        // })
 
-        const result = await res.json()
+        // const result = await res.json()
 
         await updateUserProfile(user.uid, {
           [file.category]: {

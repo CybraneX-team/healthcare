@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
 } from 'react'
+import * as Tooltip from '@radix-ui/react-tooltip'
 import { useRouter, useParams } from 'next/navigation'
 import { doc, getDoc, updateDoc } from 'firebase/firestore'
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'
@@ -23,6 +24,8 @@ import {
   Calendar,
   Eye,
   Download,
+  ScanLine,
+  UploadCloud,
 } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -62,6 +65,7 @@ export default function UserDetailsPage() {
   >(null)
   const [assigning, setAssigning] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
+  const [analyzing, setAnalyzing] = useState(false)
   const [promptText, setPromptText] = useState<string>('')
   const [pdfLoading, setPdfLoading] = useState<{
     active: boolean
@@ -199,7 +203,7 @@ const openPromptModal = (type: 'summary' | 'sales') => {
 
     setprocessingText({
       active: true,
-      message: 'Uploading and extracting all PDFs...',
+      message: 'Uploading  PDFs...',
     })
     setUploading(true)
 
@@ -257,17 +261,18 @@ const openPromptModal = (type: 'summary' | 'sales') => {
       })
 
       // Store full extracted JSON under a single key like "combined_report"
-      const structuredExtractedData: Record<string, any> = {
-        combined_report: rawReply, // this is your parsed, structured JSON from Groq
-      }
+        const updatePayload: any = {
+          labs: {
+            ...(userData?.labs || {}),
+            ...updatedDocs,
+          },
+        }
 
-      await updateDoc(userRef, {
-        labs: {
-          ...(userData?.labs || {}),
-          ...updatedDocs,
-        },
-        extractedLabData: rawReply,
-      })
+        if (rawReply !== undefined) {
+          updatePayload.extractedLabData = rawReply
+        }
+
+      await updateDoc(userRef, updatePayload)
 
       setUserData((prev: any) => ({
         ...prev,
@@ -407,6 +412,63 @@ const openPromptModal = (type: 'summary' | 'sales') => {
     }
   }
 
+  const handleAnalyzeDocuments = async () => {
+    if (!id) return
+    const labs = userData?.labs || {}
+    const filesMeta = Object.values(labs) as any[]
+
+    if (!filesMeta.length) {
+      toast.info('No documents to analyze.')
+      return
+    }
+
+    setAnalyzing(true)
+    setprocessingText({ active: true, message: 'Analyzing documents…' })
+
+    try {
+      const formData = new FormData()
+
+      /* download each stored file and re-append as File */
+      for (const meta of filesMeta) {
+        const res = await fetch(meta.downloadURL)
+        const blob = await res.blob()
+        const file = new File([blob], meta.name, { type: blob.type })
+        formData.append('files', file)
+      }
+
+      const res = await fetch('/api/process-pdf', {
+        method: 'POST',
+        headers: { 'x-user-id': id as string },
+        body: formData,
+      })
+
+      if (!res.ok) throw new Error('LLM extraction failed')
+      const { extractedJsonArray } = await res.json()
+
+      if (extractedJsonArray !== undefined) {
+  await updateDoc(doc(db, 'users', id as string), {
+    extractedLabData: extractedJsonArray,
+  })
+  setUserData((p: any) => ({
+    ...p,
+    extractedLabData: extractedJsonArray,
+  }))
+}
+
+      setUserData((p: any) => ({
+        ...p,
+        extractedLabData: extractedJsonArray,
+      }))
+
+      toast.success('Documents analyzed!')
+    } catch (err) {
+      console.error(err)
+      toast.error('Analysis failed.')
+    } finally {
+      setAnalyzing(false)
+      setprocessingText({ active: false, message: '' })
+    }
+  }
   if (!userData) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-blue-100">
@@ -777,167 +839,163 @@ const openPromptModal = (type: 'summary' | 'sales') => {
 
             {/* Documents Section */}
             <Card className="p-8 bg-white shadow-lg rounded-2xl border border-blue-100 lg:col-span-3">
-              <h2 className="text-2xl font-bold text-blue-900 mb-8">
-                Documents
-              </h2>
+        <h2 className="mb-8 text-2xl font-bold text-blue-900">Documents</h2>
 
-              <div className="mb-8">
-                <div className="border-2 border-dashed border-blue-300 rounded-2xl p-12 text-center bg-blue-50 hover:bg-blue-100 transition-colors duration-200">
-                  <input
-                    type="file"
-                    id="fileUpload"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        handleMultipleFileUpload(e.target.files)
+        {/* Upload area */}
+        <div className="mb-8">
+          <div className="rounded-2xl border-2 border-dashed border-blue-300 bg-blue-50 p-12 text-center transition-colors duration-200 hover:bg-blue-100">
+            <input
+              id="fileUpload"
+              type="file"
+              multiple
+              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+              onChange={(e) =>
+                e.target.files && handleMultipleFileUpload(e.target.files)
+              }
+              disabled={uploading}
+              className="hidden"
+            />
+            <label
+              htmlFor="fileUpload"
+              className={`flex cursor-pointer flex-col items-center justify-center ${
+                uploading ? 'opacity-50' : 'hover:opacity-80'
+              }`}
+            >
+              <FileUpload 
+              label="Upload Document" 
+               onChange={(e : any)=>{
+                handleMultipleFileUpload(e.target.files)
+               }}
+              />
+              <p className="mt-6 text-sm font-medium text-blue-600">
+                PDF, JPEG, PNG, DOC • 10 MB max
+              </p>
+
+            </label>
+            {uploading && (
+              <div className="mt-6 h-3 w-full rounded-full bg-blue-200">
+                <div className="h-3 w-1/2 animate-pulse rounded-full bg-blue-500" />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Document list */}
+        <div className="space-y-4">
+          {(() => {
+            const docs: { id: string; data: any }[] = []
+            Object.entries(userData.labs || {}).forEach(([key, d]: any) =>
+              docs.push({ id: key, data: d }),
+            )
+            if (!docs.length)
+              return (
+                <p className="text-center text-blue-600">
+                  No documents uploaded yet.
+                </p>
+              )
+            return docs.map(({ id: docId, data }) => (
+              <motion.div
+                key={docId}
+                className="flex items-center justify-between rounded-xl border border-green-100 bg-green-50 p-4 shadow-sm transition hover:shadow-md"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+              >
+                <div className="flex items-center space-x-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-500">
+                    <FileText className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="max-w-[220px] truncate text-sm font-semibold text-gray-900">
+                      {data.name || docId}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {(data.size / 1024).toFixed(1)} KB •{' '}
+                      {new Date(data.uploadedAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-10 w-10 rounded-lg text-gray-500 hover:bg-blue-50 hover:text-blue-500"
+                    onClick={() => handleViewPdf(data.downloadURL)}
+                  >
+                    <Eye className="h-5 w-5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-10 w-10 rounded-lg text-gray-500 hover:bg-green-50 hover:text-green-500"
+                    onClick={async () => {
+                      try {
+                        setDownloadingFile(true)
+                        const a = document.createElement('a')
+                        a.href = data.downloadURL
+                        a.download = data.name
+                        a.click()
+                      } finally {
+                        setDownloadingFile(false)
                       }
                     }}
-                    disabled={uploading}
-                    className="hidden"
-                  />
-
-                  <label
-                    htmlFor="fileUpload"
-                    className={`flex flex-col items-center justify-center cursor-pointer ${
-                      uploading ? 'opacity-50' : 'hover:opacity-80'
-                    }`}
                   >
-                    <div className="text-white mb-6">
-                      <FileUpload
-                        label="Upload Document"
-                        multiple
-                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                        onChange={(e) => {
-                          if (e.target.files && e.target.files.length > 0) {
-                            handleMultipleFileUpload(e.target.files)
-                          }
-                        }}
-                      />
-                      <p className="text-sm text-blue-600 mt-6 font-medium">
-                        Supported formats: PDF, JPEG, PNG, DOC • Max size: 10MB
-                        per file
-                      </p>
-                    </div>
-                    <span className="text-blue-900 font-semibold text-lg mb-2">
-                      {uploading ? 'Uploading...' : 'Upload Document'}
-                    </span>
-                  </label>
-
-                  {uploading && (
-                    <div className="mt-6 w-full bg-blue-200 rounded-full h-3">
-                      <div className="bg-blue-500 h-3 rounded-full w-1/2 animate-pulse"></div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                {(() => {
-                  const categories = ['labs', 'radiology', 'prescriptions']
-                  const allDocs: { id: string; data: any }[] = []
-
-                  categories.forEach((cat) => {
-                    const section = userData?.[cat]
-                    if (section && typeof section === 'object') {
-                      Object.entries(section).forEach(
-                        ([docId, docData]: any) => {
-                          if (docData?.downloadURL) {
-                            allDocs.push({
-                              id: docId,
-                              data: {
-                                ...docData,
-                                category: cat,
-                              },
-                            })
-                          }
-                        },
+                    <Download className="h-5 w-5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-10 w-10 rounded-lg text-gray-500 hover:bg-red-50 hover:text-red-500"
+                    onClick={() =>
+                      handleDeleteFile(
+                        data.category || 'labs',
+                        docId,
+                        data.fullStorageName,
                       )
                     }
-                  })
+                  >
+                    <X className="h-5 w-5" />
+                  </Button>
+                </div>
+              </motion.div>
+            ))
+          })()}
+        </div>
 
-                  if (allDocs.length === 0) {
-                    return (
-                      <p className="text-blue-600 text-center">
-                        No documents uploaded yet.
-                      </p>
-                    )
-                  }
+        {/* Analyze button */}
+    <div className="mt-10 flex justify-center">
+      <Tooltip.Provider>
+        <Tooltip.Root delayDuration={200}>
+          <Tooltip.Trigger asChild>
+            <div>
+              <Button
+                onClick={handleAnalyzeDocuments}
+                className="flex items-center gap-2 rounded-xl bg-[#2A80B3] px-8 py-3 font-semibold 
+                  text-white shadow-lg transition 
+                  disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <UploadCloud className="h-5 w-5" />
+                {analyzing
+                  ? 'Processing uploaded files…'
+                  : 'Process uploaded files'}
+              </Button>
+            </div>
+          </Tooltip.Trigger>
 
-                  return allDocs.map(({ id, data }) => (
-                    <motion.div
-                      key={id}
-                      className="flex justify-between items-center bg-green-50 rounded-xl p-4 border border-green-100 shadow-sm hover:shadow-md transition"
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                    >
-                      <div className="flex items-center space-x-4">
-                        <div className="h-10 w-10 bg-green-500 rounded-lg flex items-center justify-center">
-                          <FileText className="text-white w-5 h-5" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-gray-900 truncate max-w-[220px]">
-                            {data.name || id}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {(data.size / 1024).toFixed(1)} KB •{' '}
-                            {new Date(data.uploadedAt).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
+          {(!Object.keys(userData.labs || {}).length && !uploading && !analyzing) && (
+            <Tooltip.Content
+              side="top"
+              sideOffset={8}
+              className="z-50 rounded-md bg-black px-3 py-2 text-sm text-white shadow-md animate-fadeIn"
+            >
+              Upload at least one document to enable this
+              <Tooltip.Arrow className="fill-black" />
+            </Tooltip.Content>
+          )}
+        </Tooltip.Root>
+      </Tooltip.Provider>
+    </div>
 
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-10 w-10 text-gray-500 hover:text-blue-500 hover:bg-blue-50 rounded-lg"
-                          onClick={() => handleViewPdf(data.downloadURL)}
-                        >
-                          <Eye className="h-5 w-5" />
-                        </Button>
-
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-10 w-10 text-gray-500 hover:text-green-500 hover:bg-green-50 rounded-lg"
-                          onClick={async () => {
-                            try {
-                              setDownloadingFile(true)
-                              const a = document.createElement('a')
-                              a.href = data.downloadURL
-                              a.download = data.name || 'document.pdf'
-                              a.click()
-                            } catch (err) {
-                              console.error('Download error:', err)
-                              toast.error('Download failed.')
-                            } finally {
-                              setDownloadingFile(false)
-                            }
-                          }}
-                        >
-                          <Download className="h-5 w-5" />
-                        </Button>
-
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-10 w-10 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg"
-                          onClick={() =>
-                            handleDeleteFile(
-                              data.category || 'labs',
-                              id,
-                              data.fullStorageName,
-                            )
-                          }
-                        >
-                          <X className="h-5 w-5" />
-                        </Button>
-                      </div>
-                    </motion.div>
-                  ))
-                })()}
-              </div>
-            </Card>
-
+      </Card>
             {/* PDF Viewer */}
             <AnimatePresence>
               {selectedPdf && (

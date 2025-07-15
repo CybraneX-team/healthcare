@@ -175,17 +175,10 @@ export default function UploadPage() {
 
       // Optional loader here
       setloadingMessage({
-        message: 'Uploading and extracting text...',
+        message: 'Uploading...',
         active: true,
       })
-      const res = await fetch('/api/process-pdf', {
-        method: 'POST',
-        body: formData,
-      })
 
-      const { extractedJsonArray } = await res.json()
-
-      // Example: save each file with its associated extractedJson
       await Promise.all(
         fileArray.map(async (file, i) => {
           const uploadedFile: UploadedFile = {
@@ -199,7 +192,7 @@ export default function UploadPage() {
             fullStorageName: '', // Firebase will fill this later
           }
 
-          await simulateFileUpload(uploadedFile, file, extractedJsonArray)
+          await simulateFileUpload(uploadedFile, file)
         }),
       )
 
@@ -215,7 +208,7 @@ export default function UploadPage() {
   const simulateFileUpload = async (
     file: UploadedFile,
     actualFile: File,
-    parsedJson: String,
+    // parsedJson: String,
   ) => {
     try {
       // Get current user ID from auth
@@ -259,12 +252,7 @@ export default function UploadPage() {
         const formData = new FormData()
         formData.append('files', actualFile)
 
-        // const res = await fetch('/api/process-pdf', {
-        //   method: 'POST',
-        //   body: formData,
-        // })
 
-        // const result = await res.json()
 
         await updateUserProfile(user.uid, {
           [file.category]: {
@@ -276,12 +264,9 @@ export default function UploadPage() {
               downloadURL,
               uploadedAt: new Date().toISOString(),
             },
-          },
-          extractedLabData:
-            parsedJson && typeof parsedJson === 'string'
-              ? JSON.parse(parsedJson)
-              : parsedJson,
+          }
         })
+        setUploadingFiles([])
       } catch (err) {
         console.error('Groq extraction failed:', err)
       }
@@ -338,16 +323,7 @@ export default function UploadPage() {
     }
   }
 
-  // this function's implementation  is commented out because file is getting upload already
-  // const handleFinish = () => {
-  // Show loading animation before redirecting
-  // setIsRedirecting(true);
 
-  // // Redirect to dashboard with a slight delay for animation
-  // setTimeout(() => {
-  //   router.push("/dashboard");
-  // }, 1500);
-  // };
 
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return bytes + ' B'
@@ -355,8 +331,51 @@ export default function UploadPage() {
     else return (bytes / 1048576).toFixed(1) + ' MB'
   }
 
-  // Use the keyboard navigation hook
-  // useKeyboardNavigation(handleFinish, [uploadedFiles]);
+
+  const handleProcessUploadedFiles = async () => {
+  try {
+    const user = getCurrentUser()
+    if (!user) throw new Error('User not authenticated')
+    if(uploadedFiles.length <=  0){
+      toast.info("please upload documents to process them")
+      return 
+    }
+    setloadingMessage({ message: 'Processing your documents...', active: true })
+
+    const idToken = await user.getIdToken();  
+
+    const formData = new FormData()
+
+
+    for (const file of activeTabFiles) {
+      const res = await fetch(file.previewUrl!)
+      const blob = await res.blob()
+      formData.append('files', new File([blob], file.name, { type: file.type }))
+    }
+
+    const res = await fetch('/api/process-pdf', {
+      method: 'POST',
+       headers: {
+      Authorization: `Bearer ${idToken}`,
+      'x-user-id': user.uid, // ✅ Add this line
+     },
+      body: formData,
+    })
+
+    const { extractedJsonArray } = await res.json()
+
+    await updateUserProfile(user.uid, {
+      extractedLabData: extractedJsonArray, // or per category if needed
+    })
+
+    toast.success('Files processed successfully!')
+  } catch (error) {
+    console.error('Error processing uploaded files:', error)
+    toast.error('Failed to process files.')
+  } finally {
+    setloadingMessage({ message: '', active: false })
+  }
+}
 
   return (
     <>
@@ -684,6 +703,19 @@ export default function UploadPage() {
                   </Card>
                 </motion.div>
               )}
+
+              <div className="flex justify-center mt-6">
+                <Button
+                  onClick={handleProcessUploadedFiles}
+                  className="flex items-center gap-3 bg-blue-500 
+                  hover:bg-blue-600 text-white px-6 py-3 rounded-2xl 
+                  text-md font-semibold shadow-md hover:shadow-lg transition-all"
+                >
+                  <span>Process Uploaded Files</span>
+                  <UploadCloud className="h-5 w-5" />
+                </Button>
+              </div>
+            
 
               {/* Submit Button */}
 

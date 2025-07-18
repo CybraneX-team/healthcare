@@ -337,10 +337,13 @@ export default function Dashboard() {
           // setIsAdmin(userData.role === "admin");
 
           // 👇 Assuming lab data is stored under `labData` in Firestore
-          
+
           if (userData.extractedLabData) {
-            setExtractedLabData(Object.keys(userData.extractedLabData).length > 0 ? 
-            userData.extractedLabData : samplePdfData  )
+            setExtractedLabData(
+              Object.keys(userData.extractedLabData).length > 0
+                ? userData.extractedLabData
+                : samplePdfData,
+            )
           }
         }
       } catch (error) {
@@ -460,10 +463,12 @@ export default function Dashboard() {
                       ? 'bg-blue-500 text-white'
                       : 'text-gray-700'
                   } text-sm`}
-
-                  onClick={() => {{setActiveTab('overview')
-                    router.push('/dashboard')
-                  }}}
+                  onClick={() => {
+                    {
+                      setActiveTab('overview')
+                      router.push('/dashboard')
+                    }
+                  }}
                 >
                   Digital Twin
                 </Button>

@@ -8,10 +8,10 @@ export function getPromptClinicalAndSalesScript(
   return `
 
           You are a medical assistant. Based on the following medical data, generate a concise ${
-          type === 'summary'
-            ? 'clinical summary with key findings and recommended action items'
-            : 'personalized sales script for a sales rep to speak with the patient about their report'
-        }.
+            type === 'summary'
+              ? 'clinical summary with key findings and recommended action items'
+              : 'personalized sales script for a sales rep to speak with the patient about their report'
+          }.
         Data:
         ${JSON.stringify(flattened, null, 2)}
 

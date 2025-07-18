@@ -252,8 +252,6 @@ export default function UploadPage() {
         const formData = new FormData()
         formData.append('files', actualFile)
 
-
-
         await updateUserProfile(user.uid, {
           [file.category]: {
             [file.id]: {
@@ -264,7 +262,7 @@ export default function UploadPage() {
               downloadURL,
               uploadedAt: new Date().toISOString(),
             },
-          }
+          },
         })
         setUploadingFiles([])
       } catch (err) {
@@ -323,59 +321,61 @@ export default function UploadPage() {
     }
   }
 
-
-
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return bytes + ' B'
     else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB'
     else return (bytes / 1048576).toFixed(1) + ' MB'
   }
 
-
   const handleProcessUploadedFiles = async () => {
-  try {
-    const user = getCurrentUser()
-    if (!user) throw new Error('User not authenticated')
-    if(uploadedFiles.length <=  0){
-      toast.info("please upload documents to process them")
-      return 
+    try {
+      const user = getCurrentUser()
+      if (!user) throw new Error('User not authenticated')
+      if (uploadedFiles.length <= 0) {
+        toast.info('please upload documents to process them')
+        return
+      }
+      setloadingMessage({
+        message: 'Processing your documents...',
+        active: true,
+      })
+
+      const idToken = await user.getIdToken()
+
+      const formData = new FormData()
+
+      for (const file of activeTabFiles) {
+        const res = await fetch(file.previewUrl!)
+        const blob = await res.blob()
+        formData.append(
+          'files',
+          new File([blob], file.name, { type: file.type }),
+        )
+      }
+
+      const res = await fetch('/api/process-pdf', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+          'x-user-id': user.uid, // ✅ Add this line
+        },
+        body: formData,
+      })
+
+      const { extractedJsonArray } = await res.json()
+
+      await updateUserProfile(user.uid, {
+        extractedLabData: extractedJsonArray, // or per category if needed
+      })
+
+      toast.success('Files processed successfully!')
+    } catch (error) {
+      console.error('Error processing uploaded files:', error)
+      toast.error('Failed to process files.')
+    } finally {
+      setloadingMessage({ message: '', active: false })
     }
-    setloadingMessage({ message: 'Processing your documents...', active: true })
-
-    const idToken = await user.getIdToken();  
-
-    const formData = new FormData()
-
-
-    for (const file of activeTabFiles) {
-      const res = await fetch(file.previewUrl!)
-      const blob = await res.blob()
-      formData.append('files', new File([blob], file.name, { type: file.type }))
-    }
-
-    const res = await fetch('/api/process-pdf', {
-      method: 'POST',
-       headers: {
-      Authorization: `Bearer ${idToken}`,
-      'x-user-id': user.uid, // ✅ Add this line
-     },
-      body: formData,
-    })
-
-    const { extractedJsonArray } = await res.json()
-
-    await updateUserProfile(user.uid, {
-      extractedLabData: extractedJsonArray, // or per category if needed
-    })
-
-    toast.success('Files processed successfully!')
-  } catch (error) {
-    console.error('Error processing uploaded files:', error)
-    toast.error('Failed to process files.')
-  } finally {
-    setloadingMessage({ message: '', active: false })
   }
-}
 
   return (
     <>
@@ -715,7 +715,6 @@ export default function UploadPage() {
                   <UploadCloud className="h-5 w-5" />
                 </Button>
               </div>
-            
 
               {/* Submit Button */}
 

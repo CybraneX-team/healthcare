@@ -259,8 +259,11 @@ export default function DashboardMobile() {
 
           // 👇 Assuming lab data is stored under `labData` in Firestore
           if (userData.extractedLabData) {
-            setExtractedLabData(Object.keys(userData.extractedLabData).length > 0 ? 
-            userData.extractedLabData : samplePdfData  )
+            setExtractedLabData(
+              Object.keys(userData.extractedLabData).length > 0
+                ? userData.extractedLabData
+                : samplePdfData,
+            )
           }
         }
       } catch (error) {

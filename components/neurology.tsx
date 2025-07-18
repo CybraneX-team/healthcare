@@ -168,7 +168,9 @@ export default function Component({ extractedLabData }: any) {
                   </div>
                 </div> */}
                 <span className="text-gray-700 text-xs sm:text-sm">
-                {brain?.brain_impression_log ? brain?.brain_impression_log  : "" }
+                  {brain?.brain_impression_log
+                    ? brain?.brain_impression_log
+                    : ''}
                 </span>
               </CardContent>
             </Card>

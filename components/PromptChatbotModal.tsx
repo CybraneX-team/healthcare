@@ -1,4 +1,4 @@
-'use client';
+'use client'
 import {
   useEffect,
   useLayoutEffect,
@@ -7,16 +7,16 @@ import {
   memo,
   useCallback,
   forwardRef,
-} from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import { Button } from '@/components/ui/button';
+} from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { X } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
+import { Button } from '@/components/ui/button'
 
 interface Msg {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
+  id: string
+  role: 'user' | 'assistant'
+  content: string
 }
 
 export default function PromptChatbotModal({
@@ -26,26 +26,26 @@ export default function PromptChatbotModal({
   onClose,
   onSave,
 }: {
-  isOpen: boolean;
-  initialPrompt: string;
-  userName: string;
-  onClose: () => void;
-  onSave: (p: string) => void;
+  isOpen: boolean
+  initialPrompt: string
+  userName: string
+  onClose: () => void
+  onSave: (p: string) => void
 }) {
-  const [history, setHistory] = useState<Msg[] | any>([]);
-  const [draft, setDraft] = useState('');
-  const [thinking, setThinking] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const lastAssistantRef = useRef<HTMLDivElement | null>(null); // new
+  const [history, setHistory] = useState<Msg[] | any>([])
+  const [draft, setDraft] = useState('')
+  const [thinking, setThinking] = useState(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const lastAssistantRef = useRef<HTMLDivElement | null>(null) // new
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) return
 
     const greet: Msg = {
       id: crypto.randomUUID(),
       role: 'assistant',
       content: `👋 Hey ${userName.split(' ')[0]}! I can rewrite your **prompt** – just tell me what to change.`,
-    };
+    }
 
     const promptBubble = initialPrompt.trim()
       ? {
@@ -53,38 +53,38 @@ export default function PromptChatbotModal({
           role: 'assistant',
           content: `💡Current Prompt: ${initialPrompt}`,
         }
-      : null;
+      : null
 
-    setHistory(promptBubble ? [greet, promptBubble] : [greet]);
-    setDraft('');
-  }, [isOpen, initialPrompt, userName]);
+    setHistory(promptBubble ? [greet, promptBubble] : [greet])
+    setDraft('')
+  }, [isOpen, initialPrompt, userName])
 
-  const prevHeightRef = useRef(0);
+  const prevHeightRef = useRef(0)
 
   useLayoutEffect(() => {
-    const feed = scrollRef.current;
-    if (!feed) return;
+    const feed = scrollRef.current
+    if (!feed) return
 
-    const grew = feed.scrollHeight > prevHeightRef.current;
-    const delta = feed.scrollHeight - feed.scrollTop - feed.clientHeight;
+    const grew = feed.scrollHeight > prevHeightRef.current
+    const delta = feed.scrollHeight - feed.scrollTop - feed.clientHeight
 
-    if (grew && delta < 120) feed.scrollTop = feed.scrollHeight;
+    if (grew && delta < 120) feed.scrollTop = feed.scrollHeight
 
-    prevHeightRef.current = feed.scrollHeight;
-  }, [history, thinking]);
+    prevHeightRef.current = feed.scrollHeight
+  }, [history, thinking])
 
   const send = useCallback(async () => {
-    if (!draft.trim()) return;
+    if (!draft.trim()) return
 
     const userMsg: Msg = {
       id: crypto.randomUUID(),
       role: 'user',
       content: draft.trim(),
-    };
+    }
 
-    setHistory((h : any) => [...h, userMsg]);
-    setDraft('');
-    setThinking(true);
+    setHistory((h: any) => [...h, userMsg])
+    setDraft('')
+    setThinking(true)
 
     const res = await fetch('/api/prompt-chat', {
       method: 'POST',
@@ -95,38 +95,38 @@ export default function PromptChatbotModal({
           content,
         })),
       }),
-    });
+    })
 
-    const { assistant } = await res.json();
-    setThinking(false);
+    const { assistant } = await res.json()
+    setThinking(false)
 
     if (assistant?.content) {
-      setHistory((h : any) => [
+      setHistory((h: any) => [
         ...h,
         {
           id: crypto.randomUUID(),
           role: 'assistant',
           content: assistant.content.trim(),
         },
-      ]);
+      ])
 
       setTimeout(() => {
         lastAssistantRef.current?.scrollIntoView({
           behavior: 'smooth',
           block: 'start',
-        });
-      }, 100);
+        })
+      }, 100)
     }
-  }, [draft, history]);
+  }, [draft, history])
 
-  const variants = { hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } };
+  const variants = { hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }
 
   const Avatar = memo(function Avatar({
     label,
     bg,
   }: {
-    label: string;
-    bg: string;
+    label: string
+    bg: string
   }) {
     return (
       <div
@@ -134,14 +134,14 @@ export default function PromptChatbotModal({
       >
         {label}
       </div>
-    );
-  });
+    )
+  })
 
   const Bubble = memo(
     forwardRef<HTMLDivElement, { m: Msg }>(function Bubble({ m }, ref) {
-      const isUser = m.role === 'user';
-      const bgUser = 'bg-[#d5efff] text-gray-900';
-      const bgAI = 'bg-[#e5e8ff] text-gray-800 border border-blue-100';
+      const isUser = m.role === 'user'
+      const bgUser = 'bg-[#d5efff] text-gray-900'
+      const bgAI = 'bg-[#e5e8ff] text-gray-800 border border-blue-100'
 
       return (
         <motion.div
@@ -161,7 +161,9 @@ export default function PromptChatbotModal({
             <ReactMarkdown>{m.content}</ReactMarkdown>
             <span
               className={`absolute -bottom-1 w-2 h-2 rotate-45 ${
-                isUser ? 'right-[-3px] bg-[#d5efff]' : 'left-[-3px] bg-[#e5e8ff]'
+                isUser
+                  ? 'right-[-3px] bg-[#d5efff]'
+                  : 'left-[-3px] bg-[#e5e8ff]'
               }`}
             />
           </div>
@@ -169,9 +171,9 @@ export default function PromptChatbotModal({
             <Avatar label={userName[0].toUpperCase()} bg="bg-blue-600" />
           )}
         </motion.div>
-      );
+      )
     }),
-  );
+  )
 
   const Loader = () => (
     <motion.div
@@ -189,7 +191,7 @@ export default function PromptChatbotModal({
         />
       ))}
     </motion.div>
-  );
+  )
 
   return (
     <AnimatePresence>
@@ -223,7 +225,7 @@ export default function PromptChatbotModal({
               ref={scrollRef}
               className="flex-1 overflow-y-auto px-8 py-6 space-y-6 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
             >
-              {history.map((m  : any, index : any) => (
+              {history.map((m: any, index: any) => (
                 <Bubble
                   key={m.id}
                   m={m}
@@ -239,8 +241,8 @@ export default function PromptChatbotModal({
 
             <form
               onSubmit={(e) => {
-                e.preventDefault();
-                send();
+                e.preventDefault()
+                send()
               }}
               className="px-8 py-5 bg-gradient-to-br from-[#eef3f7] to-[#dce9f7] flex gap-3 border-t border-gray-200"
             >
@@ -267,13 +269,13 @@ export default function PromptChatbotModal({
                 Cancel
               </Button>
               <Button
-                disabled={!history.some((m : any) => m.role === 'assistant')}
+                disabled={!history.some((m: any) => m.role === 'assistant')}
                 onClick={() => {
                   const lastAI = [...history]
                     .reverse()
-                    .find((m) => m.role === 'assistant');
-                  if (lastAI) onSave(lastAI.content);
-                  onClose();
+                    .find((m) => m.role === 'assistant')
+                  if (lastAI) onSave(lastAI.content)
+                  onClose()
                 }}
                 className="bg-emerald-600 hover:bg-emerald-500 text-white shadow disabled:opacity-40 disabled:cursor-not-allowed"
               >
@@ -284,5 +286,5 @@ export default function PromptChatbotModal({
         </motion.div>
       )}
     </AnimatePresence>
-  );
+  )
 }

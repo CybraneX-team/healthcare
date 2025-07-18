@@ -4,6 +4,7 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { Droplet } from 'lucide-react'
 import { sampleDataType } from '@/data/sample-data-type'
+import { Card, CardContent } from '@/components/ui/card'
 
 const Card = ({ children, className = '' }) => (
   <div className={`bg-white border border-gray-200 ${className}`}>
@@ -46,7 +47,7 @@ const itemVariants = {
   },
 }
 
-const Cardiology = ({
+const Respiratory = ({
   extractedLabData,
 }: {
   extractedLabData: sampleDataType
@@ -54,7 +55,7 @@ const Cardiology = ({
   const heart = extractedLabData.heart
 
   return (
-    <div className="h-full p-3 text-black overflow-y-auto lg:overflow-y-hidden">
+    <div className="h-full p-6 text-black overflow-y-auto">
       <motion.div
         variants={containerVariants}
         initial="hidden"
@@ -62,299 +63,117 @@ const Cardiology = ({
         exit="exit"
         className="max-w-7xl mx-auto"
       >
-        <div className="block lg:hidden space-y-4">
-          <motion.div variants={itemVariants}>
-            <Card className="rounded-3xl shadow-sm p-4 md:p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                Scan Cardiology
-              </h2>
-              <div className="space-y-4">
-                <div>
-                  <p className="text-gray-500">Heart Rate</p>
-                  <p className="text-lg font-semibold">
-                    {heart.heart_rate ? heart.heart_rate : 'Null'} BPM
-                  </p>
-                </div>
-                <div>
-                  <p className="text-gray-500">Cardiac Output</p>
-                  <p className="text-lg font-semibold">Null</p>
-                </div>
-                <div>
-                  <p className="text-gray-500">Calcium Score</p>
-                  <p className="text-lg font-semibold">Null</p>
-                </div>
-              </div>
-            </Card>
-          </motion.div>
-
-          <motion.div variants={itemVariants}>
-            <Card className="rounded-3xl shadow-sm p-4 md:p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="bg-gray-100 p-4 rounded-3xl">
-                  <Droplet size={20} className="text-blue-500" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900">
-                    Lipids And Cholesterol
-                  </h2>
-                  <span className="text-lg font-medium text-gray-500">
-                    {heart.cholesterol ?? 'Null'} mg/dl
-                  </span>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-gray-500">Blood Pressure</p>
-                  <p className="text-lg font-semibold">
-                    {heart.blood_pressure?.systolic !== null &&
-                    heart.blood_pressure?.diastolic !== null
-                      ? `${heart.blood_pressure.systolic}/${heart.blood_pressure.diastolic} mm Hg`
-                      : 'Null'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-gray-500">Homocysteine</p>
-                  <p className="text-lg font-semibold">
-                    {heart.homocysteine ?? 'Null'} mcmol/L
-                  </p>
-                </div>
-                <div>
-                  <p className="text-gray-500">LDL</p>
-                  <p className="text-lg font-semibold">Null</p>
-                </div>
-                <div>
-                  <p className="text-gray-500">HDL</p>
-                  <p className="text-lg font-semibold">Null</p>
-                </div>
-              </div>
-            </Card>
-          </motion.div>
-
-          <motion.div variants={itemVariants}>
-            <Card className="rounded-3xl shadow-sm p-4 md:p-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-gray-500">Troponin Levels</p>
-                  <p className="text-lg font-semibold">
-                    {heart.troponin ?? 'Null'} ng/mL
-                  </p>
-                </div>
-                <div>
-                  <p className="text-gray-500">Aortic compliance</p>
-                  <p className="text-lg font-semibold">
-                    {heart.aortic_compliance ?? 'Null'} mL/mmHg
-                  </p>
-                </div>
-                <div>
-                  <p className="text-gray-500">BNP</p>
-                  <p className="text-lg font-semibold">Null</p>
-                </div>
-                <div>
-                  <p className="text-gray-500">NT- BNP</p>
-                  <p className="text-lg font-semibold">
-                    {heart.nt_bnp ?? 'Null'} pg/mL
-                  </p>
-                </div>
-              </div>
-            </Card>
-          </motion.div>
-
-          <motion.div variants={itemVariants}>
-            <Card className="rounded-3xl shadow-sm p-4 md:p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                Vessels and Performance
-              </h2>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center bg-gray-100 px-4 py-3 rounded-2xl">
-                  <p className="text-gray-500 text-sm">Stroke Volume</p>
-                  <p className="text-sm font-semibold">Null</p>
-                </div>
-                <div className="flex justify-between items-center bg-gray-100 px-4 py-3 rounded-2xl">
-                  <p className="text-gray-500 text-sm">Ejection Fraction</p>
-                  <p className="text-sm font-semibold">Null</p>
-                </div>
-                <div className="flex justify-between items-center bg-gray-100 px-4 py-3 rounded-2xl">
-                  <p className="text-gray-500 text-sm">Pulmonary Veins</p>
-                  <p className="text-sm font-semibold">2.2 cm</p>
-                </div>
-                <div className="flex justify-between items-center bg-gray-100 px-4 py-3 rounded-2xl">
-                  <p className="text-gray-500 text-sm">Ascending Aorta</p>
-                  <p className="text-sm font-semibold">3 cm</p>
-                </div>
-                <div className="flex justify-between items-center bg-gray-100 px-4 py-3 rounded-2xl">
-                  <p className="text-gray-500 text-sm">Superior Vena Cava</p>
-                  <p className="text-sm font-semibold">2.2 cm</p>
-                </div>
-                <div className="flex justify-between items-center bg-gray-100 px-4 py-3 rounded-2xl">
-                  <p className="text-gray-500 text-sm">Inferior Vena Cava</p>
-                  <p className="text-sm font-semibold">2.7 cm</p>
-                </div>
-              </div>
-            </Card>
-          </motion.div>
-        </div>
-
-        <div className="hidden lg:grid grid-cols-12 gap-4">
-          <motion.div variants={itemVariants} className="col-span-5">
-            <Card className="rounded-3xl shadow-sm h-full p-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                Scan Cardiology
-              </h2>
-              <div className="space-y-4 -mb-10">
-                <div>
-                  <p className="text-gray-500">Heart Rate</p>
-                  <p className="text-lg font-semibold">
-                    {heart.heart_rate ?? 'Null'} BPM
-                  </p>
-                </div>
-                <div>
-                  <p className="text-gray-500">Cardiac Output</p>
-                  <p className="text-lg font-semibold">Null</p>
-                </div>
-                <div>
-                  <p className="text-gray-500">Calcium Score</p>
-                  <p className="text-lg font-semibold">Null</p>
-                </div>
-              </div>
-            </Card>
-          </motion.div>
-
-          <motion.div
-            variants={itemVariants}
-            className="col-span-7 col-start-6"
-          >
-            <Card className="rounded-3xl shadow-sm h-full p-8">
-              <div className="flex flex-col md:flex-row justify-between items-start">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className="bg-gray-100 p-8 rounded-3xl">
-                      <Droplet size={20} className="text-blue-500" />
-                    </div>
-                    <h2 className="text-xl font-semibold text-gray-900">
-                      Lipids And <br /> Cholesterol
-                      <span className="text-lg font-medium ml-4 text-gray-500">
-                        {heart.cholesterol ?? 'Null'} mg/dl
-                      </span>
-                    </h2>
-                  </div>
-                  <div className="space-y-6 mt-6">
-                    <div>
-                      <p className="text-gray-500">Homocysteine</p>
-                      <p className="text-lg font-semibold">
-                        {heart.homocysteine ?? 'Null'} mcmol/L
+        <div className="grid grid-rows-1 h-auto space-y-4 md:space-y-0">
+          {/* Top Row - Respiratory & Retain Capacity */}
+          <div className="grid grid-cols-1 lg:grid-cols-6 gap-4">
+            {/* Respiratory Card */}
+            <motion.div variants={itemVariants} className="lg:col-span-2">
+              <Card className="rounded-3xl shadow-sm h-auto p-8 bg-gray-100">
+                <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-6 lg:mb-10">
+                  Respiratory
+                </h2>
+                <div className="space-y-2 mt-36">
+                  <div>
+                    <p className="text-2xl font-normal text-gray-900 mb-2">
+                      VO2 Max
+                    </p>
+                    <p className="text-5xl font-bold text-gray-900 flex">
+                      63{' '}
+                      <p className="text-xl mt-4 ml-3 text-gray-600">
+                        Excellent
                       </p>
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
+
+            {/* Oxygen Delivery Card */}
+            <motion.div variants={itemVariants} className="lg:col-span-4">
+              <Card className="rounded-3xl shadow-sm h-auto p-8 bg-gray-100">
+                <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-6 lg:mb-10">
+                  Oxygen Delivery
+                </h2>
+                <div className="grid grid-cols-2 gap-8 mt-40">
+                  <div>
+                    <p className="text-xl text-gray-600 mb-2">HRV</p>
+                    <p className="text-3xl font-semibold text-gray-900">65ms</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xl text-gray-600 mb-2">
+                      Pulmonary capacity
+                    </p>
+                    <p className="text-3xl font-semibold text-gray-900">
+                      6 liters
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
+          </div>
+
+          {/* Bottom Row - Oxygen Delivery & CT Chest */}
+          <div className="grid grid-cols-1 lg:grid-cols-6 gap-4">
+            {/* Retain Capacity Card */}
+            <motion.div variants={itemVariants} className="lg:col-span-3">
+              <Card className="rounded-3xl shadow-sm h-auto p-8 bg-gray-100">
+                <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-10 lg:mb-10">
+                  Retain Capacity
+                </h2>
+                <div className="mt-36">
+                  <p className="text-2xl font-normal text-gray-900 mb-2">
+                    SpO<sub className="text-lg">2</sub>
+                  </p>
+                  <p className="text-5xl font-semibold text-gray-900">95%</p>
+                </div>
+              </Card>
+            </motion.div>
+
+            {/* CT Chest Card */}
+            <motion.div variants={itemVariants} className="lg:col-span-3">
+              <Card className="shadow-sm border-0 bg-white rounded-3xl h-full hover:shadow-md transition-shadow duration-300">
+                <CardContent className="p-4 h-full">
+                  <div className="text-gray-900 text-lg sm:text-xl font-bold mb-4">
+                    CT chest
+                  </div>
+
+                  <div className="p-4 sm:p-6 lg:p-8 bg-gray-100 rounded-3xl min-h-[200px] lg:h-[87%]">
+                    <div className="text-gray-600 text-sm font-bold mb-3">
+                      Impressions
                     </div>
-                    <div className="flex justify-between">
-                      <div>
-                        <p className="text-gray-500">LDL</p>
-                        <p className="text-lg font-semibold">Null</p>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 bg-red-500 rounded-full flex-shrink-0"></div>
+                        <span className="text-sm text-gray-700">
+                          Above high Heart Rate
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 bg-green-500 rounded-full flex-shrink-0"></div>
+                        <span className="text-sm text-gray-700">
+                          Cholesterol in control in last 30 days
+                        </span>
+                      </div>
+
+                      <div className="flex items-start gap-2">
+                        <div className="w-1.5 h-1.5 bg-green-500 rounded-full flex-shrink-0 mt-1.5"></div>
+                        <span className="text-sm text-gray-700">
+                          The lungs are clear without consolidation, effusion,
+                          discreet mass or pneumothorax.
+                        </span>
                       </div>
                     </div>
                   </div>
-                </div>
-                <div className="flex flex-col">
-                  <div className="mb-20">
-                    <p className="text-gray-500">Blood Pressure</p>
-                    <p className="text-lg font-semibold">
-                      {heart.blood_pressure?.systolic !== null &&
-                      heart.blood_pressure?.diastolic !== null
-                        ? `${heart.blood_pressure.systolic}/${heart.blood_pressure.diastolic} mm Hg`
-                        : 'Null'}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-gray-500">HDL</p>
-                    <p className="text-lg font-semibold">Null</p>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </motion.div>
-
-          <motion.div
-            variants={itemVariants}
-            className="col-span-6 col-start-1"
-          >
-            <Card className="rounded-3xl shadow-sm h-full p-8">
-              <div>
-                <p className="text-gray-500">Troponin Levels</p>
-                <p className="text-lg font-semibold">
-                  {heart.troponin ?? 'Null'} ng/mL
-                </p>
-              </div>
-              <div className="mt-6">
-                <p className="text-gray-500">Aortic compliance</p>
-                <p className="text-lg font-semibold">
-                  {heart.aortic_compliance ?? 'Null'} mL/mmHg
-                </p>
-              </div>
-              <div className="flex justify-between mt-10">
-                <div>
-                  <p className="text-gray-500">BNP</p>
-                  <p className="text-lg font-semibold">Null</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-gray-500">NT- BNP</p>
-                  <p className="text-lg font-semibold">
-                    {heart.nt_bnp ?? 'Null'} pg/mL
-                  </p>
-                </div>
-              </div>
-            </Card>
-          </motion.div>
-
-          <motion.div
-            variants={itemVariants}
-            className="col-span-6 col-start-7"
-          >
-            <Card className="rounded-3xl shadow-sm h-full p-3">
-              <div className="flex flex-col md:flex-row w-full items-center mb-4">
-                <h2 className="text-xl font-semibold text-gray-900 ">
-                  Vessels and Performance
-                </h2>
-                <div className="flex justify-between w-full items-center bg-gray-100 px-5 py-4 rounded-3xl ml-2">
-                  <p className="text-gray-500 text-sm">
-                    Stroke
-                    <br /> Volume
-                  </p>
-                  <p className="text-xs font-semibold">Null</p>
-                </div>
-                <div className="flex justify-between w-full items-center bg-gray-100 px-5 py-4 mt-4 md:mt-0 ml-2 rounded-3xl">
-                  <p className="text-gray-500 text-sm">Ejection Fraction</p>
-                  <p className="text-xs font-semibold">Null</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-6 grid-rows-4 -mb-3 gap-2">
-                <div className="col-span-4 row-span-2 row-start-1 col-start-1 flex justify-between items-center bg-gray-100 px-5 py-4 rounded-3xl">
-                  <p className="text-gray-500 text-sm">Pulmonary Veins</p>
-                  <p className="text-xs font-semibold">Null</p>
-                </div>
-                <div className="col-span-2 row-span-2 col-start-5 row-start-1 flex justify-between items-center bg-gray-100 px-5 py-4 rounded-3xl">
-                  <p className="text-gray-500 text-sm">Ascending Aorta</p>
-                  <div className="items-center text-center jsutify-center">
-                    <p className="text-xs font-semibold">Null</p>
-                    {/* <p className="text-xs font-semibold">cm</p> */}
-                  </div>
-                </div>
-                <div className="col-span-2 row-span-2 row-start-3 flex justify-between items-center bg-gray-100 px-5 py-4 rounded-3xl">
-                  <p className="text-gray-500 text-sm">Superior Vena Cava</p>
-                  <p className="text-xs font-semibold">Null</p>
-                </div>
-                <div className="col-span-2 row-span-2 col-start-3 row-start-3 flex justify-between items-center bg-gray-100 px-5 py-4 rounded-3xl">
-                  <p className="text-gray-500 text-sm">Inferior Vena Cava</p>
-                  <p className="text-xs font-semibold">Null</p>
-                </div>
-                <div className="col-span-2 row-span-2 col-start-5 row-start-3 flex justify-between items-center bg-gray-100 px-5 py-4 rounded-3xl">
-                  <p className="text-gray-500 text-sm">Pulmonary Veins</p>
-                  <p className="text-xs font-semibold">Null</p>
-                </div>
-              </div>
-            </Card>
-          </motion.div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
         </div>
       </motion.div>
     </div>
   )
 }
 
-export default Cardiology
+export default Respiratory

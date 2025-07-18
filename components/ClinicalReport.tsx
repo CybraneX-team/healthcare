@@ -15,7 +15,7 @@ export const ClinicalSummaryPdf = ({ summary }: { summary: string }) => (
       <View style={styles.section}>
         {summary.split('\n').map((line, i) => (
           <Text key={i} style={styles.item}>
-             {line}
+            {line}
           </Text>
         ))}
       </View>

@@ -311,7 +311,7 @@ export function VideoPlayerView({
                   {currentVideo.title.toLowerCase()}. This is an important
                   concept that will help you understand the overall framework
                   and approach to health optimization. */}
-                  {currentVideo.description ?  currentVideo.description : ""}
+                  {currentVideo.description ? currentVideo.description : ''}
                 </p>
               </div>
             </div>

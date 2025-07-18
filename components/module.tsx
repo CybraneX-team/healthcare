@@ -111,11 +111,12 @@ export function ModuleOverview({
     return Math.round(totalProgress / moduleCount)
   }
   const sortedModules = React.useMemo(
-  () =>
-    Object.values(programData.modules ?? {})
-      .sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0)),
-  [programData.modules],
-);
+    () =>
+      Object.values(programData.modules ?? {}).sort(
+        (a: any, b: any) => (a.order ?? 0) - (b.order ?? 0),
+      ),
+    [programData.modules],
+  )
 
   return (
     <div className="min-h-screen -ml-3 text-black">
@@ -143,88 +144,106 @@ export function ModuleOverview({
         <div className="grid grid-cols-12 gap-8">
           {/* Left sidebar - Module navigation */}
           <div className="col-span-12 lg:col-span-4">
-<div className="space-y-4">
-  {sortedModules.map((module: any) => {
-    // 🔵 sort videos inside the module the same way
-    const sortedVideos = Object.values(module.videos ?? {}).sort(
-      (a: any, b: any) => (a.order ?? 0) - (b.order ?? 0),
-    );
+            <div className="space-y-4">
+              {sortedModules.map((module: any) => {
+                // 🔵 sort videos inside the module the same way
+                const sortedVideos = Object.values(module.videos ?? {}).sort(
+                  (a: any, b: any) => (a.order ?? 0) - (b.order ?? 0),
+                )
 
-    const completedVideoIds =
-      userCompletedVideos[programId]?.[module.id] || [];
+                const completedVideoIds =
+                  userCompletedVideos[programId]?.[module.id] || []
 
-    const completedCount = completedVideoIds.length;
-    const totalCount = sortedVideos.length;
-    const progress =
-      totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
+                const completedCount = completedVideoIds.length
+                const totalCount = sortedVideos.length
+                const progress =
+                  totalCount === 0
+                    ? 0
+                    : Math.round((completedCount / totalCount) * 100)
 
-    return (
-      <div
-        key={module.id}
-        className="bg-white rounded-xl overflow-hidden shadow-sm"
-      >
-        {/* header -------------------------------------------------- */}
-        <div
-          className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
-          onClick={() => toggleSection(module.id)}
-        >
-          <div className="flex items-center gap-3">
-            <div className="relative h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center">
-              <div className="absolute inset-0">
-                <svg viewBox="0 0 100 100" className="h-full w-full">
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="40"
-                    stroke="#e6e6e6"
-                    strokeWidth="10"
-                    fill="none"
-                  />
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="40"
-                    stroke={progress === 100 ? '#10b981' : '#3b82f6'}
-                    strokeWidth="10"
-                    fill="none"
-                    strokeDasharray={`${progress * 2.51} 251`}
-                    strokeDashoffset="0"
-                    transform="rotate(-90 50 50)"
-                  />
-                </svg>
-              </div>
-              <span className="text-xs font-medium">{progress}%</span>
+                return (
+                  <div
+                    key={module.id}
+                    className="bg-white rounded-xl overflow-hidden shadow-sm"
+                  >
+                    {/* header -------------------------------------------------- */}
+                    <div
+                      className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50"
+                      onClick={() => toggleSection(module.id)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="relative h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center">
+                          <div className="absolute inset-0">
+                            <svg
+                              viewBox="0 0 100 100"
+                              className="h-full w-full"
+                            >
+                              <circle
+                                cx="50"
+                                cy="50"
+                                r="40"
+                                stroke="#e6e6e6"
+                                strokeWidth="10"
+                                fill="none"
+                              />
+                              <circle
+                                cx="50"
+                                cy="50"
+                                r="40"
+                                stroke={
+                                  progress === 100 ? '#10b981' : '#3b82f6'
+                                }
+                                strokeWidth="10"
+                                fill="none"
+                                strokeDasharray={`${progress * 2.51} 251`}
+                                strokeDashoffset="0"
+                                transform="rotate(-90 50 50)"
+                              />
+                            </svg>
+                          </div>
+                          <span className="text-xs font-medium">
+                            {progress}%
+                          </span>
+                        </div>
+                        <h3 className="font-medium text-gray-900">
+                          {module.title}
+                        </h3>
+                      </div>
+                    </div>
+                    {/* videos -------------------------------------------------- */}
+                    {expandedSections[module.id] && (
+                      <div>
+                        {sortedVideos.map((video: any) => (
+                          <div
+                            key={video.id}
+                            className="flex items-center p-4 hover:bg-gray-50 cursor-pointer"
+                            onClick={() =>
+                              onModuleSelect(
+                                module.id,
+                                video.id,
+                                module.title,
+                                video.title,
+                              )
+                            }
+                          >
+                            <div className="flex items-center gap-3">
+                              {completedVideoIds.includes(video.id) ? (
+                                <CheckCircle className="h-5 w-5 text-green-500" />
+                              ) : (
+                                <Circle className="h-5 w-5 text-gray-300" />
+                              )}
+                              <span className="text-sm text-gray-900">
+                                {video.title}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
-            <h3 className="font-medium text-gray-900">{module.title}</h3>
-          </div>
-        </div>
-        {/* videos -------------------------------------------------- */}
-        {expandedSections[module.id] && (
-          <div>
-            {sortedVideos.map((video: any) => (
-              <div
-                key={video.id}
-                className="flex items-center p-4 hover:bg-gray-50 cursor-pointer"
-                onClick={() =>
-                  onModuleSelect(module.id, video.id, module.title, video.title)
-                }
-              >
-                <div className="flex items-center gap-3">
-                  {completedVideoIds.includes(video.id) ? (
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                  ) : (
-                    <Circle className="h-5 w-5 text-gray-300" />
-                  )}
-                  <span className="text-sm text-gray-900">{video.title}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  })}
-</div>
           </div>
 
           {/* Right content - Program details */}
@@ -308,37 +327,44 @@ export function ModuleOverview({
             </div> */}
               </div>
 
-<div className="space-y-4">
-  {sortedModules.map((module: any) => {
-    // (optional) sort videos if you ever need them in order later
-    const sortedVideos = Object.values(module.videos ?? {}).sort(
-      (a: any, b: any) => (a.order ?? 0) - (b.order ?? 0),
-    );
+              <div className="space-y-4">
+                {sortedModules.map((module: any) => {
+                  // (optional) sort videos if you ever need them in order later
+                  const sortedVideos = Object.values(module.videos ?? {}).sort(
+                    (a: any, b: any) => (a.order ?? 0) - (b.order ?? 0),
+                  )
 
-    const completedVideoIds =
-      userCompletedVideos[programId]?.[module.id] || [];
+                  const completedVideoIds =
+                    userCompletedVideos[programId]?.[module.id] || []
 
-    const completedCount = completedVideoIds.length;
-    const totalCount = sortedVideos.length; // ← use the sorted list
-    const progress =
-      totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
+                  const completedCount = completedVideoIds.length
+                  const totalCount = sortedVideos.length // ← use the sorted list
+                  const progress =
+                    totalCount === 0
+                      ? 0
+                      : Math.round((completedCount / totalCount) * 100)
 
-    return (
-      <div key={module.id} className="rounded-xl overflow-hidden shadow-sm">
-        <div className="bg-gray-50 p-4 flex justify-between items-center">
-          <h3 className="font-medium text-gray-900">{module.title}</h3>
+                  return (
+                    <div
+                      key={module.id}
+                      className="rounded-xl overflow-hidden shadow-sm"
+                    >
+                      <div className="bg-gray-50 p-4 flex justify-between items-center">
+                        <h3 className="font-medium text-gray-900">
+                          {module.title}
+                        </h3>
 
-          <div className="text-sm text-gray-500">
-            {totalCount} lessons • {progress}% complete
-          </div>
-        </div>
-        <div className="p-2">
-          <Progress value={progress} className="h-1" />
-        </div>
-      </div>
-    );
-  })}
-</div>
+                        <div className="text-sm text-gray-500">
+                          {totalCount} lessons • {progress}% complete
+                        </div>
+                      </div>
+                      <div className="p-2">
+                        <Progress value={progress} className="h-1" />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           </div>
         </div>

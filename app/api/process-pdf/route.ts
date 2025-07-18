@@ -12,14 +12,21 @@ function bufferToArrayBuffer(buf: Buffer): any {
   return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength)
 }
 
-async function extractTextViaOcr(buffer: Buffer, filename: string): Promise<string> {
+async function extractTextViaOcr(
+  buffer: Buffer,
+  filename: string,
+): Promise<string> {
   try {
     const form = new FormData()
     form.append('apikey', process.env.OCR_SPACE_API_KEY ?? '')
     form.append('language', 'eng')
     form.append('isOverlayRequired', 'false')
     form.append('OCREngine', '2')
-    form.append('file', new Blob([bufferToArrayBuffer(buffer)], { type: 'application/pdf' }), filename)
+    form.append(
+      'file',
+      new Blob([bufferToArrayBuffer(buffer)], { type: 'application/pdf' }),
+      filename,
+    )
 
     const res = await fetch(OCR_API_ENDPOINT, { method: 'POST', body: form })
     if (!res.ok) throw new Error(`OCR.space error: HTTP ${res.status}`)
@@ -32,7 +39,10 @@ async function extractTextViaOcr(buffer: Buffer, filename: string): Promise<stri
   }
 }
 
-async function extractTextFromPDF(buffer: Buffer, filename: string): Promise<string> {
+async function extractTextFromPDF(
+  buffer: Buffer,
+  filename: string,
+): Promise<string> {
   try {
     const parsed = await pdf(buffer)
     const raw = parsed.text?.trim() ?? ''
@@ -44,8 +54,11 @@ async function extractTextFromPDF(buffer: Buffer, filename: string): Promise<str
   }
 }
 
-async function sendToGroqLLM(allText: string, currentData: any): Promise<string | null> {
-const prompt = `
+async function sendToGroqLLM(
+  allText: string,
+  currentData: any,
+): Promise<string | null> {
+  const prompt = `
 You are a medical report parser.
 
 You are given:
@@ -101,7 +114,6 @@ Combined Report Text:
 ${allText}
 `
 
-
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -142,7 +154,7 @@ export async function POST(req: NextRequest) {
       const buffer = Buffer.from(await file.arrayBuffer())
       const text = await extractTextFromPDF(buffer, file.name)
       return `--- FILE: ${file.name} ---\n${text}`
-    })
+    }),
   )
   const combinedText = extractedTexts.join('\n\n')
 
@@ -170,6 +182,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ extractedJsonArray: finalData })
   } catch (err) {
     console.error('JSON parsing faileda:', err, rawReply)
-    return NextResponse.json({ error: 'Groq returned invalid JSON' }, { status: 400 })
+    return NextResponse.json(
+      { error: 'Groq returned invalid JSON' },
+      { status: 400 },
+    )
   }
 }

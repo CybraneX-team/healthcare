@@ -38,7 +38,7 @@ import { ClinicalSummaryPdf } from '@/components/ClinicalReport'
 import { SalesScriptPdf } from '@/components/SalesScriptPdf'
 import OverlayLoader from '@/components/OverlayLoader'
 import { getPromptClinicalAndSalesScript } from '@/data/export-prompts'
-import PromptChatbotModal from '@/components/PromptChatbotModal';
+import PromptChatbotModal from '@/components/PromptChatbotModal'
 
 const Viewer = dynamic(
   () => import('@react-pdf-viewer/core').then((mod) => mod.Viewer),
@@ -58,7 +58,7 @@ export default function UserDetailsPage() {
   const [uploading, setUploading] = useState(false)
   const [availablePrograms, setAvailablePrograms] = useState<string[]>([])
   const viewerRef = useRef<HTMLDivElement>(null)
-  const [chatOpen, setChatOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false)
   const [selectedPrograms, setSelectedPrograms] = useState<string[]>([])
   const [activePromptType, setActivePromptType] = useState<
     'summary' | 'sales' | null
@@ -101,18 +101,18 @@ export default function UserDetailsPage() {
   //   setPromptText(promptValue)
   // }
 
-const openPromptModal = (type: 'summary' | 'sales') => {
-  if (!userData) return;
-  setActivePromptType(type);
+  const openPromptModal = (type: 'summary' | 'sales') => {
+    if (!userData) return
+    setActivePromptType(type)
 
-  const promptValue =
-    type === 'summary'
-      ? getPromptClinicalAndSalesScript('summary', userData.extractedLabData)
-      : getPromptClinicalAndSalesScript('sales',    userData.extractedLabData);
+    const promptValue =
+      type === 'summary'
+        ? getPromptClinicalAndSalesScript('summary', userData.extractedLabData)
+        : getPromptClinicalAndSalesScript('sales', userData.extractedLabData)
 
-  setPromptText(promptValue.trim());
-  setChatOpen(true);
-};
+    setPromptText(promptValue.trim())
+    setChatOpen(true)
+  }
 
   const closePromptModal = () => {
     setActivePromptType(null)
@@ -261,16 +261,16 @@ const openPromptModal = (type: 'summary' | 'sales') => {
       })
 
       // Store full extracted JSON under a single key like "combined_report"
-        const updatePayload: any = {
-          labs: {
-            ...(userData?.labs || {}),
-            ...updatedDocs,
-          },
-        }
+      const updatePayload: any = {
+        labs: {
+          ...(userData?.labs || {}),
+          ...updatedDocs,
+        },
+      }
 
-        if (rawReply !== undefined) {
-          updatePayload.extractedLabData = rawReply
-        }
+      if (rawReply !== undefined) {
+        updatePayload.extractedLabData = rawReply
+      }
 
       await updateDoc(userRef, updatePayload)
 
@@ -446,14 +446,14 @@ const openPromptModal = (type: 'summary' | 'sales') => {
       const { extractedJsonArray } = await res.json()
 
       if (extractedJsonArray !== undefined) {
-  await updateDoc(doc(db, 'users', id as string), {
-    extractedLabData: extractedJsonArray,
-  })
-  setUserData((p: any) => ({
-    ...p,
-    extractedLabData: extractedJsonArray,
-  }))
-}
+        await updateDoc(doc(db, 'users', id as string), {
+          extractedLabData: extractedJsonArray,
+        })
+        setUserData((p: any) => ({
+          ...p,
+          extractedLabData: extractedJsonArray,
+        }))
+      }
 
       setUserData((p: any) => ({
         ...p,
@@ -839,163 +839,165 @@ const openPromptModal = (type: 'summary' | 'sales') => {
 
             {/* Documents Section */}
             <Card className="p-8 bg-white shadow-lg rounded-2xl border border-blue-100 lg:col-span-3">
-        <h2 className="mb-8 text-2xl font-bold text-blue-900">Documents</h2>
+              <h2 className="mb-8 text-2xl font-bold text-blue-900">
+                Documents
+              </h2>
 
-        {/* Upload area */}
-        <div className="mb-8">
-          <div className="rounded-2xl border-2 border-dashed border-blue-300 bg-blue-50 p-12 text-center transition-colors duration-200 hover:bg-blue-100">
-            <input
-              id="fileUpload"
-              type="file"
-              multiple
-              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-              onChange={(e) =>
-                e.target.files && handleMultipleFileUpload(e.target.files)
-              }
-              disabled={uploading}
-              className="hidden"
-            />
-            <label
-              htmlFor="fileUpload"
-              className={`flex cursor-pointer flex-col items-center justify-center ${
-                uploading ? 'opacity-50' : 'hover:opacity-80'
-              }`}
-            >
-              <FileUpload 
-              label="Upload Document" 
-               onChange={(e : any)=>{
-                handleMultipleFileUpload(e.target.files)
-               }}
-              />
-              <p className="mt-6 text-sm font-medium text-blue-600">
-                PDF, JPEG, PNG, DOC • 10 MB max
-              </p>
-
-            </label>
-            {uploading && (
-              <div className="mt-6 h-3 w-full rounded-full bg-blue-200">
-                <div className="h-3 w-1/2 animate-pulse rounded-full bg-blue-500" />
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Document list */}
-        <div className="space-y-4">
-          {(() => {
-            const docs: { id: string; data: any }[] = []
-            Object.entries(userData.labs || {}).forEach(([key, d]: any) =>
-              docs.push({ id: key, data: d }),
-            )
-            if (!docs.length)
-              return (
-                <p className="text-center text-blue-600">
-                  No documents uploaded yet.
-                </p>
-              )
-            return docs.map(({ id: docId, data }) => (
-              <motion.div
-                key={docId}
-                className="flex items-center justify-between rounded-xl border border-green-100 bg-green-50 p-4 shadow-sm transition hover:shadow-md"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-              >
-                <div className="flex items-center space-x-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-500">
-                    <FileText className="h-5 w-5 text-white" />
-                  </div>
-                  <div>
-                    <p className="max-w-[220px] truncate text-sm font-semibold text-gray-900">
-                      {data.name || docId}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {(data.size / 1024).toFixed(1)} KB •{' '}
-                      {new Date(data.uploadedAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-10 w-10 rounded-lg text-gray-500 hover:bg-blue-50 hover:text-blue-500"
-                    onClick={() => handleViewPdf(data.downloadURL)}
-                  >
-                    <Eye className="h-5 w-5" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-10 w-10 rounded-lg text-gray-500 hover:bg-green-50 hover:text-green-500"
-                    onClick={async () => {
-                      try {
-                        setDownloadingFile(true)
-                        const a = document.createElement('a')
-                        a.href = data.downloadURL
-                        a.download = data.name
-                        a.click()
-                      } finally {
-                        setDownloadingFile(false)
-                      }
-                    }}
-                  >
-                    <Download className="h-5 w-5" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-10 w-10 rounded-lg text-gray-500 hover:bg-red-50 hover:text-red-500"
-                    onClick={() =>
-                      handleDeleteFile(
-                        data.category || 'labs',
-                        docId,
-                        data.fullStorageName,
-                      )
+              {/* Upload area */}
+              <div className="mb-8">
+                <div className="rounded-2xl border-2 border-dashed border-blue-300 bg-blue-50 p-12 text-center transition-colors duration-200 hover:bg-blue-100">
+                  <input
+                    id="fileUpload"
+                    type="file"
+                    multiple
+                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                    onChange={(e) =>
+                      e.target.files && handleMultipleFileUpload(e.target.files)
                     }
+                    disabled={uploading}
+                    className="hidden"
+                  />
+                  <label
+                    htmlFor="fileUpload"
+                    className={`flex cursor-pointer flex-col items-center justify-center ${
+                      uploading ? 'opacity-50' : 'hover:opacity-80'
+                    }`}
                   >
-                    <X className="h-5 w-5" />
-                  </Button>
+                    <FileUpload
+                      label="Upload Document"
+                      onChange={(e: any) => {
+                        handleMultipleFileUpload(e.target.files)
+                      }}
+                    />
+                    <p className="mt-6 text-sm font-medium text-blue-600">
+                      PDF, JPEG, PNG, DOC • 10 MB max
+                    </p>
+                  </label>
+                  {uploading && (
+                    <div className="mt-6 h-3 w-full rounded-full bg-blue-200">
+                      <div className="h-3 w-1/2 animate-pulse rounded-full bg-blue-500" />
+                    </div>
+                  )}
                 </div>
-              </motion.div>
-            ))
-          })()}
-        </div>
+              </div>
 
-        {/* Analyze button */}
-    <div className="mt-10 flex justify-center">
-      <Tooltip.Provider>
-        <Tooltip.Root delayDuration={200}>
-          <Tooltip.Trigger asChild>
-            <div>
-              <Button
-                onClick={handleAnalyzeDocuments}
-                className="flex items-center gap-2 rounded-xl bg-[#2A80B3] px-8 py-3 font-semibold 
+              {/* Document list */}
+              <div className="space-y-4">
+                {(() => {
+                  const docs: { id: string; data: any }[] = []
+                  Object.entries(userData.labs || {}).forEach(([key, d]: any) =>
+                    docs.push({ id: key, data: d }),
+                  )
+                  if (!docs.length)
+                    return (
+                      <p className="text-center text-blue-600">
+                        No documents uploaded yet.
+                      </p>
+                    )
+                  return docs.map(({ id: docId, data }) => (
+                    <motion.div
+                      key={docId}
+                      className="flex items-center justify-between rounded-xl border border-green-100 bg-green-50 p-4 shadow-sm transition hover:shadow-md"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                    >
+                      <div className="flex items-center space-x-4">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-500">
+                          <FileText className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <p className="max-w-[220px] truncate text-sm font-semibold text-gray-900">
+                            {data.name || docId}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {(data.size / 1024).toFixed(1)} KB •{' '}
+                            {new Date(data.uploadedAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-10 w-10 rounded-lg text-gray-500 hover:bg-blue-50 hover:text-blue-500"
+                          onClick={() => handleViewPdf(data.downloadURL)}
+                        >
+                          <Eye className="h-5 w-5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-10 w-10 rounded-lg text-gray-500 hover:bg-green-50 hover:text-green-500"
+                          onClick={async () => {
+                            try {
+                              setDownloadingFile(true)
+                              const a = document.createElement('a')
+                              a.href = data.downloadURL
+                              a.download = data.name
+                              a.click()
+                            } finally {
+                              setDownloadingFile(false)
+                            }
+                          }}
+                        >
+                          <Download className="h-5 w-5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-10 w-10 rounded-lg text-gray-500 hover:bg-red-50 hover:text-red-500"
+                          onClick={() =>
+                            handleDeleteFile(
+                              data.category || 'labs',
+                              docId,
+                              data.fullStorageName,
+                            )
+                          }
+                        >
+                          <X className="h-5 w-5" />
+                        </Button>
+                      </div>
+                    </motion.div>
+                  ))
+                })()}
+              </div>
+
+              {/* Analyze button */}
+              <div className="mt-10 flex justify-center">
+                <Tooltip.Provider>
+                  <Tooltip.Root delayDuration={200}>
+                    <Tooltip.Trigger asChild>
+                      <div>
+                        <Button
+                          onClick={handleAnalyzeDocuments}
+                          className="flex items-center gap-2 rounded-xl bg-[#2A80B3] px-8 py-3 font-semibold 
                   text-white shadow-lg transition 
                   disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <UploadCloud className="h-5 w-5" />
-                {analyzing
-                  ? 'Processing uploaded files…'
-                  : 'Process uploaded files'}
-              </Button>
-            </div>
-          </Tooltip.Trigger>
+                        >
+                          <UploadCloud className="h-5 w-5" />
+                          {analyzing
+                            ? 'Processing uploaded files…'
+                            : 'Process uploaded files'}
+                        </Button>
+                      </div>
+                    </Tooltip.Trigger>
 
-          {(!Object.keys(userData.labs || {}).length && !uploading && !analyzing) && (
-            <Tooltip.Content
-              side="top"
-              sideOffset={8}
-              className="z-50 rounded-md bg-black px-3 py-2 text-sm text-white shadow-md animate-fadeIn"
-            >
-              Upload at least one document to enable this
-              <Tooltip.Arrow className="fill-black" />
-            </Tooltip.Content>
-          )}
-        </Tooltip.Root>
-      </Tooltip.Provider>
-    </div>
-
-      </Card>
+                    {!Object.keys(userData.labs || {}).length &&
+                      !uploading &&
+                      !analyzing && (
+                        <Tooltip.Content
+                          side="top"
+                          sideOffset={8}
+                          className="z-50 rounded-md bg-black px-3 py-2 text-sm text-white shadow-md animate-fadeIn"
+                        >
+                          Upload at least one document to enable this
+                          <Tooltip.Arrow className="fill-black" />
+                        </Tooltip.Content>
+                      )}
+                  </Tooltip.Root>
+                </Tooltip.Provider>
+              </div>
+            </Card>
             {/* PDF Viewer */}
             <AnimatePresence>
               {selectedPdf && (
@@ -1090,26 +1092,29 @@ const openPromptModal = (type: 'summary' | 'sales') => {
         )} */}
 
         {chatOpen && (
-     <PromptChatbotModal
-       isOpen={chatOpen}
-       initialPrompt={promptText}
-       userName={userData.fullName || 'You'}
-       onClose={() => {
-         setChatOpen(false)
-         setActivePromptType(null)
-       }}
-       onSave={async (newPrompt) => {
-         if (!id) return
-         const field =
-        activePromptType === 'summary' ? 'clinicalPrompt' : 'salesPrompt'
-         await updateDoc(doc(db, 'users', id as string), { [field]: newPrompt })
-         setUserData((p: any) => ({ ...p, [field]: newPrompt }))
-         setPromptText(newPrompt)
-         toast.success('Prompt updated successfully.')
-
-       }}
-     />
-   )}
+          <PromptChatbotModal
+            isOpen={chatOpen}
+            initialPrompt={promptText}
+            userName={userData.fullName || 'You'}
+            onClose={() => {
+              setChatOpen(false)
+              setActivePromptType(null)
+            }}
+            onSave={async (newPrompt) => {
+              if (!id) return
+              const field =
+                activePromptType === 'summary'
+                  ? 'clinicalPrompt'
+                  : 'salesPrompt'
+              await updateDoc(doc(db, 'users', id as string), {
+                [field]: newPrompt,
+              })
+              setUserData((p: any) => ({ ...p, [field]: newPrompt }))
+              setPromptText(newPrompt)
+              toast.success('Prompt updated successfully.')
+            }}
+          />
+        )}
       </div>
     </>
   )

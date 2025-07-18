@@ -3,7 +3,7 @@ import OpenAI from 'openai'
 import { Buffer } from 'buffer'
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
 })
 
 export async function POST(req: Request) {
@@ -114,7 +114,7 @@ export async function POST(req: Request) {
     })
 
     const analysisText = response.choices[0]?.message?.content
-    console.log(response)
+    // console.log(response)
 
     if (!analysisText) {
       return NextResponse.json(

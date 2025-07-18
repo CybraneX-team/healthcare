@@ -142,9 +142,9 @@ export default function Component({ extractedLabData }: any) {
             <Card className="shadow-sm border-0 bg-white rounded-2xl hover:shadow-md transition-shadow duration-300 h-auto">
               <CardContent className="p-4 sm:p-6">
                 <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">
-                  Migraine or neurological
-                  <br />
-                  symptoms log
+                  MRI {" "}
+                  {/* <br /> */}
+                   log's
                 </h3>
 
                 {/* <div className="space-y-3 sm:space-y-4">
@@ -168,8 +168,8 @@ export default function Component({ extractedLabData }: any) {
                   </div>
                 </div> */}
                 <span className="text-gray-700 text-xs sm:text-sm">
-                  {brain?.brain_impression_log
-                    ? brain?.brain_impression_log
+                  {brain?.mri
+                    ? brain?.mri
                     : ''}
                 </span>
               </CardContent>

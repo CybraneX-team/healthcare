@@ -3,6 +3,7 @@ import { z } from 'zod'
 export const samplePdfData = {
   liver: {
     bilirubin: null,
+    gutHealth  : null ,// should be score based on data extracted
     alt: null,
     ast: null,
     ggt: null,
@@ -48,10 +49,16 @@ export const samplePdfData = {
       dopamine: null,
       serotonin: null,
     },
-    brain_impression_log: '',
-  },
+    //* brain_impression_log - mri
+    mri: '',
+ },
 
   heart: {
+    //lipids , apoB , calcium , ejection fraction
+    lipids : null,
+    apoB : null,
+    calcium : null ,
+    ejectionFraction : null,
     heart_rate: null,
     heart_recovery_rate: null,
     heart_rate_variability: null,
@@ -66,7 +73,8 @@ export const samplePdfData = {
     },
     imt: null,
     troponin: null,
-    CtChestImpression: null,
+    // ct calcims score
+    ctCalcimsScore: null,
   },
 
   lungs: {

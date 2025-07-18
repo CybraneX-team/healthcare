@@ -38,7 +38,8 @@ import { ClinicalSummaryPdf } from '@/components/ClinicalReport'
 import { SalesScriptPdf } from '@/components/SalesScriptPdf'
 import OverlayLoader from '@/components/OverlayLoader'
 import { getPromptClinicalAndSalesScript } from '@/data/export-prompts'
-import PromptChatbotModal from '@/components/PromptChatbotModal'
+import PromptChatbotModal from '@/components/PromptChatbotModal';
+import { samplePdfData } from '@/sameple-text-json'
 
 const Viewer = dynamic(
   () => import('@react-pdf-viewer/core').then((mod) => mod.Viewer),
@@ -48,6 +49,11 @@ const Worker = dynamic(
   () => import('@react-pdf-viewer/core').then((mod) => mod.Worker),
   { ssr: false },
 )
+
+type ContentItem = {
+  type: string;
+  text: string;
+};
 
 export default function UserDetailsPage() {
   const { id } = useParams()
@@ -101,9 +107,65 @@ export default function UserDetailsPage() {
   //   setPromptText(promptValue)
   // }
 
-  const openPromptModal = (type: 'summary' | 'sales') => {
-    if (!userData) return
-    setActivePromptType(type)
+const prompt =` You are a medical data extraction assistant.
+
+Your task is to analyze the provided medical report files (PDFs or scans) and extract all relevant lab results or medical values **strictly based on the following schema**:
+
+--- BEGIN SCHEMA ---
+${JSON.stringify(samplePdfData, null, 2)}
+--- END SCHEMA ---
+
+### IMPORTANT INSTRUCTIONS:
+
+1. **Do NOT change the structure of the schema.**
+   - You must return a single JSON object with all top-level and nested keys **exactly as shown** above.
+   - The schema includes categories like: liver, kidney, brain, heart, lungs, hormonal_reproductive, etc.
+
+2. **Include every field from the schema**, even if its value is missing.
+   - If a value is present in the reports, extract and assign it.
+   - If it's not found, use:
+     - null for numbers, booleans, and objects
+     - "" (empty string) for strings, logs, or impressions
+
+3. **Do NOT add any new fields.**
+   - You must extract only what is in the schema above. Any additional information should be ignored.
+
+4. **Apply smart field matching:**
+   - Field names in the PDF may vary from the schema. Use case-insensitive, flexible matching.
+   - Examples of smart mappings:
+     - "AST (SGOT)" or "AST" → ast
+     - "ALT (SGPT)" or "ALT" → alt
+     - "GGT" or "GGTP" → ggt
+     - "Total Bilirubin" → bilirubin
+     - "HbA1c" or "Hemoglobin A1c" → hba1c
+     - "TSH" → tsh
+     - "Testosterone Total" or "Total Testosterone" → testosterone_total
+     - "SHBG" → shbg
+     - "25-Hydroxy Vitamin D" → vitamin_d_25oh_total
+
+   Use medical knowledge to match common aliases with their correct schema field.
+
+5. **Return clean JSON output:**
+   - No Markdown formatting
+   - No explanations or extra text
+   - Output must be directly parsable as a JSON object
+
+### Example Behavior:
+
+- If "ALT (SGPT)" = 34 appears in the report, map it to "liver.alt": 34
+- If "GGT" is not present in the report, return "ggt": null
+- If "Fatty Liver Grade 1 appears, return "fatty_liver": "grade 1" (as string)
+- For any log/impression text like "Chest X-ray normal", add it as a string under its correct log field
+
+---
+
+🔁 Repeat the above process for all documents provided. Final result = one merged JSON object matching the schema exactly.
+`;
+
+
+const openPromptModal = (type: 'summary' | 'sales') => {
+  if (!userData) return;
+  setActivePromptType(type);
 
     const promptValue =
       type === 'summary'
@@ -436,30 +498,59 @@ export default function UserDetailsPage() {
         formData.append('files', file)
       }
 
-      const res = await fetch('/api/process-pdf', {
-        method: 'POST',
-        headers: { 'x-user-id': id as string },
-        body: formData,
+      const openAiRes = await fetch("https://api.openai.com/v1/responses", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${process.env.NEXT_PUBLIC_OPENAI_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "gpt-4o", 
+          input: [
+            {
+              role: "user",
+              content: [
+                ...filesMeta.map(meta => ({
+                  type: "input_file",
+                  file_url: meta.downloadURL,
+                })),
+                {
+                  type: "input_text",
+                  text: prompt 
+                }
+              ]
+            }
+          ]
+        })
       })
 
-      if (!res.ok) throw new Error('LLM extraction failed')
-      const { extractedJsonArray } = await res.json()
+      const result = await openAiRes.json();
+      const replyText = result.output?.[0]?.content?.find((c: ContentItem) => c.type === 'output_text')?.text;
 
-      if (extractedJsonArray !== undefined) {
-        await updateDoc(doc(db, 'users', id as string), {
-          extractedLabData: extractedJsonArray,
-        })
-        setUserData((p: any) => ({
-          ...p,
-          extractedLabData: extractedJsonArray,
-        }))
+      if (!replyText) {
+        throw new Error("No output text returned by OpenAI");
       }
 
-      setUserData((p: any) => ({
-        ...p,
-        extractedLabData: extractedJsonArray,
-      }))
+      const cleaned = replyText.replace(/```json|```/g, '').trim();
 
+      let parsed;
+      try {
+        parsed = JSON.parse(cleaned);
+      } catch (err) {
+        console.error("Failed to parse JSON:", cleaned);
+        throw err;
+      }
+
+      if (typeof id !== 'string') {
+      throw new Error('Invalid user ID');
+    }
+      await updateDoc(doc(db, 'users', id), {
+      extractedLabData: parsed
+    });
+      setUserData((prev : any) => ({
+        ...prev,
+        extractedLabData: parsed
+      }));
       toast.success('Documents analyzed!')
     } catch (err) {
       console.error(err)

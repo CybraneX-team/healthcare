@@ -54,7 +54,7 @@ type HeartData = {
     diastolic: number | null
   }
   aortic_compliance: number | null
-  CtChestImpression: any
+  ctCalcimsScore: any
 }
 export const HeartComponent = ({ extractedLabData }: any) => {
   const heartData: HeartData = extractedLabData
@@ -299,8 +299,8 @@ export const HeartComponent = ({ extractedLabData }: any) => {
           <motion.div variants={itemVariants} className="lg:col-span-3">
             <Card className="shadow-sm border-0 bg-white rounded-3xl h-full hover:shadow-md transition-shadow duration-300">
               <CardContent className="p-4 h-full">
-                <div className="text-gray-900 text-lg sm:text-xl font-bold mb-4">
-                  CT scan
+                <div className="text-gray-900 text-lg sm:text-xl font-bold mb-4 capitalize">
+                  CT calcium score
                 </div>
 
                 <div className="p-4 sm:p-6 lg:p-8 bg-gray-100 rounded-3xl min-h-[200px] lg:h-[87%]">
@@ -332,9 +332,9 @@ export const HeartComponent = ({ extractedLabData }: any) => {
                     </div>
                   </div> */}
                   <span className="text-sm text-gray-700">
-                    {heartData?.CtChestImpression
-                      ? heartData?.CtChestImpression
-                      : 'no data for CT chest'}
+                    {heartData?.ctCalcimsScore
+                      ? heartData?.ctCalcimsScore
+                      : 'no data for CT calcium score'}
                   </span>
                 </div>
               </CardContent>

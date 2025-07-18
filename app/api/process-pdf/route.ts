@@ -83,12 +83,18 @@ MAPPING HINTS:
 "ALT (SGPT)" → alt  
 "GGT" / "GGTP" → ggt  
 "Total Bilirubin" → bilirubin
+not just for firlds mentioned above for all fields 
+
+- Be flexible with lab test naming (e.g. case variations like "hsCRP" or "hs-crp" should map to "hs_crp").
+- Normalize test names using lowercase and underscores when necessary (e.g. ALT → alt, Total Bilirubin → bilirubin).
+- If a term resembles a known schema key, match it even if formatting or capitalization differs.
 
 ---
 
 SPECIAL LOG FIELDS:
 - If report contains radiology phrases (e.g. "lungs are clear…") → store in \`lungs.chest_impression_log\`
 - If it contains neuro or migraine findings → store in \`brain.brain_impression_log\`
+
 Use full natural sentences. Leave as empty string "" if not found.
 
 ---
@@ -121,7 +127,7 @@ ${allText}
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+      model: 'llama-3.3-70b-versatile',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.1,
     }),
@@ -170,7 +176,7 @@ export async function POST(req: NextRequest) {
   }
 
   const rawReply = await sendToGroqLLM(combinedText, currentData)
-
+  // console.log("combinedText", combinedText)
   try {
     const cleaned = rawReply?.replace(/```json|```/gi, '').trim() ?? '{}'
     const start = cleaned.indexOf('{')

@@ -38,7 +38,7 @@ import { ClinicalSummaryPdf } from '@/components/ClinicalReport'
 import { SalesScriptPdf } from '@/components/SalesScriptPdf'
 import OverlayLoader from '@/components/OverlayLoader'
 import { getPromptClinicalAndSalesScript } from '@/data/export-prompts'
-import PromptChatbotModal from '@/components/PromptChatbotModal';
+import PromptChatbotModal from '@/components/PromptChatbotModal'
 import { samplePdfData } from '@/sameple-text-json'
 
 const Viewer = dynamic(
@@ -51,9 +51,9 @@ const Worker = dynamic(
 )
 
 type ContentItem = {
-  type: string;
-  text: string;
-};
+  type: string
+  text: string
+}
 
 export default function UserDetailsPage() {
   const { id } = useParams()
@@ -107,7 +107,7 @@ export default function UserDetailsPage() {
   //   setPromptText(promptValue)
   // }
 
-const prompt =` You are a medical data extraction assistant.
+  const prompt = ` You are a medical data extraction assistant.
 
 Your task is to analyze the provided medical report files (PDFs or scans) and extract all relevant lab results or medical values **strictly based on the following schema**:
 
@@ -160,12 +160,11 @@ ${JSON.stringify(samplePdfData, null, 2)}
 ---
 
 🔁 Repeat the above process for all documents provided. Final result = one merged JSON object matching the schema exactly.
-`;
+`
 
-
-const openPromptModal = (type: 'summary' | 'sales') => {
-  if (!userData) return;
-  setActivePromptType(type);
+  const openPromptModal = (type: 'summary' | 'sales') => {
+    if (!userData) return
+    setActivePromptType(type)
 
     const promptValue =
       type === 'summary'
@@ -498,59 +497,61 @@ const openPromptModal = (type: 'summary' | 'sales') => {
         formData.append('files', file)
       }
 
-      const openAiRes = await fetch("https://api.openai.com/v1/responses", {
-        method: "POST",
+      const openAiRes = await fetch('https://api.openai.com/v1/responses', {
+        method: 'POST',
         headers: {
-          "Authorization": `Bearer ${process.env.NEXT_PUBLIC_OPENAI_API_KEY}`,
-          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: "gpt-4o", 
+          model: 'gpt-4o',
           input: [
             {
-              role: "user",
+              role: 'user',
               content: [
-                ...filesMeta.map(meta => ({
-                  type: "input_file",
+                ...filesMeta.map((meta) => ({
+                  type: 'input_file',
                   file_url: meta.downloadURL,
                 })),
                 {
-                  type: "input_text",
-                  text: prompt 
-                }
-              ]
-            }
-          ]
-        })
+                  type: 'input_text',
+                  text: prompt,
+                },
+              ],
+            },
+          ],
+        }),
       })
 
-      const result = await openAiRes.json();
-      const replyText = result.output?.[0]?.content?.find((c: ContentItem) => c.type === 'output_text')?.text;
+      const result = await openAiRes.json()
+      const replyText = result.output?.[0]?.content?.find(
+        (c: ContentItem) => c.type === 'output_text',
+      )?.text
 
       if (!replyText) {
-        throw new Error("No output text returned by OpenAI");
+        throw new Error('No output text returned by OpenAI')
       }
 
-      const cleaned = replyText.replace(/```json|```/g, '').trim();
+      const cleaned = replyText.replace(/```json|```/g, '').trim()
 
-      let parsed;
+      let parsed
       try {
-        parsed = JSON.parse(cleaned);
+        parsed = JSON.parse(cleaned)
       } catch (err) {
-        console.error("Failed to parse JSON:", cleaned);
-        throw err;
+        console.error('Failed to parse JSON:', cleaned)
+        throw err
       }
 
       if (typeof id !== 'string') {
-      throw new Error('Invalid user ID');
-    }
+        throw new Error('Invalid user ID')
+      }
       await updateDoc(doc(db, 'users', id), {
-      extractedLabData: parsed
-    });
-      setUserData((prev : any) => ({
+        extractedLabData: parsed,
+      })
+      setUserData((prev: any) => ({
         ...prev,
-        extractedLabData: parsed
-      }));
+        extractedLabData: parsed,
+      }))
       toast.success('Documents analyzed!')
     } catch (err) {
       console.error(err)

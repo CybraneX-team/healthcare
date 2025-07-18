@@ -78,7 +78,7 @@ const Respiratory = ({
                       VO2 Max
                     </p>
                     <p className="text-5xl font-bold text-gray-900 flex">
-                      {lungs.vo2_max ? lungs.vo2_max  : "null" }
+                      {lungs.vo2_max ? lungs.vo2_max : 'null'}
                       {/* <span className="text-xl mt-4 ml-3 text-gray-600">
                         Excellent
                       </span> */}
@@ -97,16 +97,22 @@ const Respiratory = ({
                 <div className="grid grid-cols-2 gap-8 mt-40">
                   <div>
                     <p className="text-xl text-gray-600 mb-2">HRV</p>
-                    <p className="text-3xl font-semibold text-gray-900"> { lungs.heart_rate_variability
-                      ? lungs.heart_rate_variability : "null"} </p>
+                    <p className="text-3xl font-semibold text-gray-900">
+                      {' '}
+                      {lungs.heart_rate_variability
+                        ? lungs.heart_rate_variability
+                        : 'null'}{' '}
+                    </p>
                   </div>
                   <div className="text-right">
                     <p className="text-xl text-gray-600 mb-2">
                       Pulmonary capacity
                     </p>
                     <p className="text-3xl font-semibold text-gray-900">
-                      {lungs.pulmonary_capacity ?
-                    lungs.pulmonary_capacity : "null"} liters
+                      {lungs.pulmonary_capacity
+                        ? lungs.pulmonary_capacity
+                        : 'null'}{' '}
+                      liters
                     </p>
                   </div>
                 </div>
@@ -126,7 +132,10 @@ const Respiratory = ({
                   <p className="text-2xl font-normal text-gray-900 mb-2">
                     SpO<sub className="text-lg">2</sub>
                   </p>
-                  <p className="text-5xl font-semibold text-gray-900"> {lungs.spo2 ? lungs.spo2  : "null" } %</p>
+                  <p className="text-5xl font-semibold text-gray-900">
+                    {' '}
+                    {lungs.spo2 ? lungs.spo2 : 'null'} %
+                  </p>
                 </div>
               </Card>
             </motion.div>
@@ -152,25 +161,23 @@ const Respiratory = ({
                         </span>
                       </div> */}
 
-                      <div className="flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 bg-green-500 rounded-full flex-shrink-0"></div>
-                        <span className="text-sm text-gray-700">
-                          {
-                          lungs?.chest_impression_log ? 
-                          lungs?.chest_impression_log : 
-                          "no data for  chest impression log"  
-                          }
-                        </span>
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 bg-green-500 rounded-full flex-shrink-0"></div>
+                      <span className="text-sm text-gray-700">
+                        {lungs?.chest_impression_log
+                          ? lungs?.chest_impression_log
+                          : 'no data for  chest impression log'}
+                      </span>
+                    </div>
 
-                      {/* <div className="flex items-start gap-2">
+                    {/* <div className="flex items-start gap-2">
                         <div className="w-1.5 h-1.5 bg-green-500 rounded-full flex-shrink-0 mt-1.5"></div>
                         <span className="text-sm text-gray-700">
                           The lungs are clear without consolidation, effusion,
                           discreet mass or pneumothorax.
                         </span>
                       </div> */}
-                    </div>
+                  </div>
 
                   {/* </div> */}
                 </CardContent>

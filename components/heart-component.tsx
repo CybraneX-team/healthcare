@@ -54,7 +54,7 @@ type HeartData = {
     diastolic: number | null
   }
   aortic_compliance: number | null
-  ctCalcimsScore: any
+  CtChestImpression: any
 }
 export const HeartComponent = ({ extractedLabData }: any) => {
   const heartData: HeartData = extractedLabData
@@ -249,13 +249,22 @@ export const HeartComponent = ({ extractedLabData }: any) => {
             <Card className="shadow-sm border-0 bg-white rounded-3xl h-full hover:shadow-md transition-shadow duration-300">
               <CardContent className="p-4 md:p-6 h-auto flex flex-col justify-center space-y-4 lg:space-y-6">
                 {/* Troponin Levels */}
-                <div>
-                  <div className="text-gray-400 text-sm mb-2">
-                    Troponin Levels
+                <div className="flex justify-between">
+                  <div>
+                    <div className="text-gray-400 text-sm mb-2">
+                      Troponin Levels
+                    </div>
+                    <div className="text-black text-xl sm:text-2xl font-bold">
+                      {troponin ?? 'null'}{' '}
+                      <span className="text-sm font-normal">ng/mL</span>
+                    </div>
                   </div>
-                  <div className="text-black text-xl sm:text-2xl font-bold">
-                    {troponin ?? 'null'}{' '}
-                    <span className="text-sm font-normal">ng/mL</span>
+                  <div className="text-right">
+                    <div className="text-gray-400 text-sm mb-2">ApoB</div>
+                    <div className="text-black text-xl sm:text-2xl font-bold">
+                      {troponin ?? 'null'}{' '}
+                      <span className="text-sm font-normal">mg/dL</span>
+                    </div>
                   </div>
                 </div>
 
@@ -299,8 +308,8 @@ export const HeartComponent = ({ extractedLabData }: any) => {
           <motion.div variants={itemVariants} className="lg:col-span-3">
             <Card className="shadow-sm border-0 bg-white rounded-3xl h-full hover:shadow-md transition-shadow duration-300">
               <CardContent className="p-4 h-full">
-                <div className="text-gray-900 text-lg sm:text-xl font-bold mb-4 capitalize">
-                  CT calcium score
+                <div className="text-gray-900 text-lg sm:text-xl font-bold mb-4">
+                  CT scan
                 </div>
 
                 <div className="p-4 sm:p-6 lg:p-8 bg-gray-100 rounded-3xl min-h-[200px] lg:h-[87%]">
@@ -332,9 +341,9 @@ export const HeartComponent = ({ extractedLabData }: any) => {
                     </div>
                   </div> */}
                   <span className="text-sm text-gray-700">
-                    {heartData?.ctCalcimsScore
-                      ? heartData?.ctCalcimsScore
-                      : 'no data for CT calcium score'}
+                    {heartData?.CtChestImpression
+                      ? heartData?.CtChestImpression
+                      : 'no data for CT chest'}
                   </span>
                 </div>
               </CardContent>

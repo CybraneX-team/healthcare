@@ -283,11 +283,25 @@ export default function ReproductiveHealth({ extractedLabData }: any) {
                         <h3 className="text-sm font-medium text-gray-500">
                           Testosterone
                         </h3>
-                        <p className="text-xl font-bold text-gray-900">
+                        <p className="text-lg font-semibold text-gray-800">
+                          <span className="text-xl font-bold text-gray-900">
+                            Total: &nbsp;
+                          </span>
                           {hormonal_reproductive.men.testosterone_total
                             ? hormonal_reproductive.men.testosterone_total
                             : 'Null'}
                           <span className="text-sm font-normal text-gray-700">
+                            ng/dL
+                          </span>
+                        </p>
+                        <p className="text-md font-normal text-gray-800">
+                          <span className="text-lg font-semibold text-gray-900">
+                            Free: &nbsp;
+                          </span>
+                          {hormonal_reproductive.men.testosterone_free
+                            ? hormonal_reproductive.men.testosterone_free
+                            : 'Null'}
+                          <span className="text-xs font-light text-gray-700">
                             ng/dL
                           </span>
                         </p>

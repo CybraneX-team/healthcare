@@ -354,7 +354,7 @@ export default function UploadPage() {
         )
       }
 
-const prompt =` You are a medical data extraction assistant.
+      const prompt = ` You are a medical data extraction assistant.
 
 Your task is to analyze the provided medical report files (PDFs or scans) and extract all relevant lab results or medical values **strictly based on the following schema**:
 
@@ -407,50 +407,47 @@ ${JSON.stringify(samplePdfData, null, 2)}
 ---
 
 🔁 Repeat the above process for all documents provided. Final result = one merged JSON object matching the schema exactly.
-`;
+`
 
+      // console.log("activeTabFiles", activeTabFiles)
+      const openAiRes = await fetch('https://api.openai.com/v1/responses', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          input: [
+            {
+              role: 'user',
+              content: [
+                ...activeTabFiles.map((file) => ({
+                  type: 'input_file',
+                  file_url: file.previewUrl!,
+                })),
+                {
+                  type: 'input_text',
+                  text: prompt,
+                },
+              ],
+            },
+          ],
+        }),
+      })
 
-// console.log("activeTabFiles", activeTabFiles)
-const openAiRes = await fetch("https://api.openai.com/v1/responses", {
-  method: "POST",
-  headers: {
-    "Authorization": `Bearer ${process.env.NEXT_PUBLIC_OPENAI_API_KEY}`,
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({
-    model: "gpt-4o",
-    input: [
-      {
-        role : "user",
-        content : [
-          ...activeTabFiles.map(file => ({
-            type: "input_file",
-            file_url: file.previewUrl!,
-          })),
-          {
-            type: "input_text",
-            text: prompt,
-          }
+      const result = await openAiRes.json()
+      const replyText = result.output?.[0]?.content?.find(
+        (c: any) => c.type === 'output_text',
+      )?.text
+      if (!replyText) throw new Error('No output text returned')
 
-        ]
-      }
-    ]
-  }),
-})
+      const cleaned = replyText.replace(/```json|```/g, '').trim()
+      const parsed = JSON.parse(cleaned)
 
-
-
-const result = await openAiRes.json()
-const replyText = result.output?.[0]?.content?.find((c: any) => c.type === 'output_text')?.text
-if (!replyText) throw new Error('No output text returned')
-
-const cleaned = replyText.replace(/```json|```/g, '').trim()
-const parsed = JSON.parse(cleaned)
-
-await updateUserProfile(user.uid, {
-  extractedLabData: parsed,
-})
-
+      await updateUserProfile(user.uid, {
+        extractedLabData: parsed,
+      })
 
       toast.success('Files processed successfully!')
     } catch (error) {

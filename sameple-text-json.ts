@@ -3,7 +3,7 @@ import { z } from 'zod'
 export const samplePdfData = {
   liver: {
     bilirubin: null,
-    gutHealth  : null ,// should be score based on data extracted
+    gutHealth: null, // should be score based on data extracted
     alt: null,
     ast: null,
     ggt: null,
@@ -51,14 +51,14 @@ export const samplePdfData = {
     },
     //* brain_impression_log - mri
     mri: '',
- },
+  },
 
   heart: {
     //lipids , apoB , calcium , ejection fraction
-    lipids : null,
-    apoB : null,
-    calcium : null ,
-    ejectionFraction : null,
+    lipids: null,
+    apoB: null,
+    calcium: null,
+    ejectionFraction: null,
     heart_rate: null,
     heart_recovery_rate: null,
     heart_rate_variability: null,
